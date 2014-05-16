@@ -106,6 +106,8 @@ function getImmutableCompilationSettings(settings: compile.Settings): typescript
 	if (settings.declarationFiles !== undefined)
 		tsSettings.generateDeclarationFiles = settings.declarationFiles;
 	
+	tsSettings.useCaseSensitiveFileResolution = false;
+
 	return typescript.ImmutableCompilationSettings.fromCompilationSettings(tsSettings);
 }
 

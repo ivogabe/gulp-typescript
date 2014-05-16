@@ -95,15 +95,15 @@ var Project = (function () {
     * Adds a file to the project.
     */
     Project.prototype.addFile = function (file) {
-        this.currentFiles[file.path] = this.getFileDataFromGulpFile(file);
+        this.currentFiles[this.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
     };
 
     Project.prototype.getOriginalName = function (filename) {
         return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts');
     };
     Project.prototype.getError = function (info) {
-        var file = this.currentFiles[this.getOriginalName(info.fileName())];
-        var filename = '';
+        var filename = this.getOriginalName(info.fileName());
+        var file = this.currentFiles[filename];
 
         if (file) {
             filename = path.relative(file.file.cwd, info.fileName());
@@ -166,7 +166,7 @@ var Project = (function () {
                 var references = typescript.ReferenceResolver.resolve([filename], this, false);
 
                 var referenceStrings = references.resolvedFiles.map(function (ref) {
-                    return ref.path;
+                    return _this.normalizePath(ref.path);
                 });
                 this.references = this.references.concat(referenceStrings);
 
@@ -220,6 +220,7 @@ var Project = (function () {
     Project.prototype.handleReferences = function (references) {
         var _this = this;
         references.forEach(function (filename) {
+            filename = _this.normalizePath(filename);
             if (!(_this.currentFiles[filename] || _this.additionalFiles[filename].addedToCompiler)) {
                 var data = _this.additionalFiles[filename];
 
@@ -233,7 +234,7 @@ var Project = (function () {
     Project.prototype.getFileDataFromGulpFile = function (file) {
         var str = file.contents.toString('utf8');
 
-        var data = this.getFileData(file.path, str);
+        var data = this.getFileData(this.normalizePath(file.path), str);
         data.file = file;
 
         return data;
@@ -278,8 +279,18 @@ var Project = (function () {
         return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
     };
 
+    Project.prototype.normalizePath = function (path) {
+        path = this.resolvePath(path);
+
+        // Switch to forward slashes
+        path = typescript.switchToForwardSlashes(path);
+
+        return path;
+    };
+
     // IReferenceResolverHost
     Project.prototype.getScriptSnapshot = function (filename) {
+        filename = this.normalizePath(filename);
         if (this.currentFiles[filename]) {
             return this.currentFiles[filename].scriptSnapshot;
         } else if (this.additionalFiles[filename]) {

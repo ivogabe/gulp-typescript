@@ -126,15 +126,15 @@ export class Project implements typescript.IReferenceResolverHost {
 	 * Adds a file to the project.
 	 */
 	addFile(file: gutil.File) {
-		this.currentFiles[file.path] = this.getFileDataFromGulpFile(file);
+		this.currentFiles[this.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
 	}
 	
 	private getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
 	private getError(info: typescript.Diagnostic) {
-		var file = this.currentFiles[this.getOriginalName(info.fileName())];
-		var filename = '';
+		var filename = this.getOriginalName(info.fileName())
+		var file = this.currentFiles[filename];
 		
 		if (file) {
 			filename = path.relative(file.file.cwd, info.fileName());
@@ -202,7 +202,7 @@ export class Project implements typescript.IReferenceResolverHost {
 
 				var references: typescript.ReferenceResolutionResult = typescript.ReferenceResolver.resolve([filename], this, false);
 
-				var referenceStrings: string[] = references.resolvedFiles.map<string>((ref) => ref.path);
+				var referenceStrings: string[] = references.resolvedFiles.map<string>((ref) => this.normalizePath(ref.path));
 				this.references = this.references.concat(referenceStrings);
 
 				this.hasNoDefaultLibTag = this.hasNoDefaultLibTag || references.seenNoDefaultLibTag;
@@ -251,6 +251,7 @@ export class Project implements typescript.IReferenceResolverHost {
 	
 	private handleReferences(references: string[]) {
 		references.forEach((filename) => {
+			filename = this.normalizePath(filename);
 			if (!(this.currentFiles[filename] || this.additionalFiles[filename].addedToCompiler)) {
 				var data = this.additionalFiles[filename];
 				
@@ -264,7 +265,7 @@ export class Project implements typescript.IReferenceResolverHost {
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
 		
-		var data = this.getFileData(file.path, str);
+		var data = this.getFileData(this.normalizePath(file.path), str);
 		data.file = file;
 		
 		return data;
@@ -308,8 +309,18 @@ export class Project implements typescript.IReferenceResolverHost {
 		return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
 	}
 	
+	normalizePath(path: string) {
+		path = this.resolvePath(path);
+
+		// Switch to forward slashes
+		path = typescript.switchToForwardSlashes(path);
+
+		return path;
+	}
+
 	// IReferenceResolverHost
 	getScriptSnapshot(filename: string): typescript.IScriptSnapshot {
+		filename = this.normalizePath(filename);
 		if (this.currentFiles[filename]) {
 			return this.currentFiles[filename].scriptSnapshot;
 		} else if (this.additionalFiles[filename]) {
