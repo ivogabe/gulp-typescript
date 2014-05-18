@@ -96,3 +96,9 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 Concatate files
 ------------
 The ```tsc``` command has the ability to concatate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
+
+How to build
+------------
+First you have to install gulp using ```npm install gulp -g```, if you haven't done already. Then you must install the npm dependencies, using ```npm install```.
+
+The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
