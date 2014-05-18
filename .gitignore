@@ -1,3 +1,4 @@
 node_modules
 .DS_Store
 release-2
+test/output
