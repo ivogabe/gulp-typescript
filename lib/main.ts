@@ -33,9 +33,8 @@ class CompileStream extends stream.Writable {
 	}
 	
 	private compile() {
-		this._project.compile(this.js, this.dts, this.map, (err) => { console.error(err.message); });
+		this._project.compile(this.js, this.dts, (err) => { console.error(err.message); });
 		this.js.push(null);
-		this.map.push(null);
 		this.dts.push(null);
 	}
 	
@@ -45,7 +44,6 @@ class CompileStream extends stream.Writable {
 	}
 	
 	js: stream.Readable = new CompileOutputStream();
-	map: stream.Readable = new CompileOutputStream();
 	dts: stream.Readable = new CompileOutputStream();
 }
 class CompileOutputStream extends stream.Readable {
@@ -100,13 +98,12 @@ function getImmutableCompilationSettings(settings: compile.Settings): typescript
 		tsSettings.codeGenTarget = langMap[(settings.target || 'es3').toLowerCase()];
 	if (settings.module !== undefined)
 		tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
-	
-	if (settings.sourceMap !== undefined)
-		tsSettings.mapSourceFiles = settings.sourceMap;
+
 	if (settings.declarationFiles !== undefined)
 		tsSettings.generateDeclarationFiles = settings.declarationFiles;
 	
 	tsSettings.useCaseSensitiveFileResolution = false;
+	tsSettings.mapSourceFiles = true;
 
 	return typescript.ImmutableCompilationSettings.fromCompilationSettings(tsSettings);
 }
@@ -121,8 +118,7 @@ module compile {
 		noLib?: boolean;
 		target?: string;
 		module?: string;
-		
-		sourceMap?: boolean;
+
 		declarationFiles?: boolean;
 		
 		//useCaseSensitiveFileResolution?: boolean;

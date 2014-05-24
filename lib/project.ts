@@ -5,6 +5,7 @@ import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import fs = require('fs'); // Only used for readonly access
+import sourcemapApply = require('vinyl-sourcemaps-apply');
 
 var defaultLibSnapshot = typescript.ScriptSnapshot.fromString(
 	fs.readFileSync(path.join(__dirname, '../lib.d.ts')).toString('utf8')
@@ -152,7 +153,7 @@ export class Project implements typescript.IReferenceResolverHost {
 	/**
 	 * Compiles the input files
 	 */
-	compile(jsStream: stream.Readable, declStream: stream.Readable, mapStream: stream.Readable, errorCallback: (err: Error) => void) {
+	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
 		// Delete files that are in previousFiles, but not in currentFiles
 		for (var filename in this.previousFiles) {
 			if (!Object.prototype.hasOwnProperty.call(this.previousFiles, filename)) {
@@ -214,6 +215,9 @@ export class Project implements typescript.IReferenceResolverHost {
 		
 		var results = this.compiler.compile(path => typescript.IO.resolvePath(path));
 		
+		var outputJS: gutil.File[] = [];
+		var sourcemaps: { [ filename: string ]: string } = {};
+
 		while (results.moveNext()) {
 			var res = results.current();
 			
@@ -227,25 +231,43 @@ export class Project implements typescript.IReferenceResolverHost {
 				
 				if (!original) return;
 				
-				var file = new gutil.File({
-					path: outputFile.name,
-					contents: new Buffer(outputFile.text),
-					cwd: original.file.cwd,
-					base: original.file.base
-				});
+				if (outputFile.fileType === typescript.OutputFileType.SourceMap) {
+					sourcemaps[originalName] = outputFile.text;
+				}
 				
 				switch (outputFile.fileType) {
 					case typescript.OutputFileType.JavaScript:
-						jsStream.push(file);
+						var file = new gutil.File({
+							path: outputFile.name,
+							contents: new Buffer(this.removeSourceMapComment(outputFile.text)),
+							cwd: original.file.cwd,
+							base: original.file.base
+						});
+
+						if (original.file.sourceMap) file.sourceMap = original.file.sourceMap;
+						outputJS.push(file);
 						break;
 					case typescript.OutputFileType.Declaration:
+						var file = new gutil.File({
+							path: outputFile.name,
+							contents: new Buffer(outputFile.text),
+							cwd: original.file.cwd,
+							base: original.file.base
+						});
+
 						declStream.push(file);
-						break;
-					case typescript.OutputFileType.SourceMap:
-						mapStream.push(file);
 						break;
 				}
 			});
+		}
+		for (var i = 0; i < outputJS.length; ++i) {
+			var file = outputJS[i];
+			var originalName = this.getOriginalName(file.path);
+			var map = sourcemaps[originalName];
+
+			if (map) sourcemapApply(file, map);
+
+			jsStream.push(file);
 		}
 	}
 	
@@ -309,6 +331,15 @@ export class Project implements typescript.IReferenceResolverHost {
 		return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
 	}
 	
+	private removeSourceMapComment(content: string): string {
+		// By default the TypeScript automaticly inserts a source map comment.
+		// This should be removed because gulp-sourcemaps takes care of that.
+		// The comment is always on the last line, so it's easy to remove it
+		// (But the last line also ends with a \n, so we need to look for the \n before the other)
+		var index = content.lastIndexOf('\n', content.length - 2);
+		return content.substring(0, index) + '\n';
+	}
+
 	normalizePath(path: string) {
 		path = this.resolvePath(path);
 
