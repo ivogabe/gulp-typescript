@@ -4,6 +4,7 @@ var gutil = require('gulp-util');
 var path = require('path');
 
 var fs = require('fs');
+var sourcemapApply = require('vinyl-sourcemaps-apply');
 
 var defaultLibSnapshot = typescript.ScriptSnapshot.fromString(fs.readFileSync(path.join(__dirname, '../lib.d.ts')).toString('utf8'));
 
@@ -121,7 +122,7 @@ var Project = (function () {
     /**
     * Compiles the input files
     */
-    Project.prototype.compile = function (jsStream, declStream, mapStream, errorCallback) {
+    Project.prototype.compile = function (jsStream, declStream, errorCallback) {
         var _this = this;
         for (var filename in this.previousFiles) {
             if (!Object.prototype.hasOwnProperty.call(this.previousFiles, filename)) {
@@ -181,6 +182,9 @@ var Project = (function () {
             return typescript.IO.resolvePath(path);
         });
 
+        var outputJS = [];
+        var sourcemaps = {};
+
         while (results.moveNext()) {
             var res = results.current();
 
@@ -195,25 +199,45 @@ var Project = (function () {
                 if (!original)
                     return;
 
-                var file = new gutil.File({
-                    path: outputFile.name,
-                    contents: new Buffer(outputFile.text),
-                    cwd: original.file.cwd,
-                    base: original.file.base
-                });
+                if (outputFile.fileType === 1 /* SourceMap */) {
+                    sourcemaps[originalName] = outputFile.text;
+                }
 
                 switch (outputFile.fileType) {
                     case 0 /* JavaScript */:
-                        jsStream.push(file);
+                        var file = new gutil.File({
+                            path: outputFile.name,
+                            contents: new Buffer(_this.removeSourceMapComment(outputFile.text)),
+                            cwd: original.file.cwd,
+                            base: original.file.base
+                        });
+
+                        if (original.file.sourceMap)
+                            file.sourceMap = original.file.sourceMap;
+                        outputJS.push(file);
                         break;
                     case 2 /* Declaration */:
+                        var file = new gutil.File({
+                            path: outputFile.name,
+                            contents: new Buffer(outputFile.text),
+                            cwd: original.file.cwd,
+                            base: original.file.base
+                        });
+
                         declStream.push(file);
-                        break;
-                    case 1 /* SourceMap */:
-                        mapStream.push(file);
                         break;
                 }
             });
+        }
+        for (var i = 0; i < outputJS.length; ++i) {
+            var file = outputJS[i];
+            var originalName = this.getOriginalName(file.path);
+            var map = sourcemaps[originalName];
+
+            if (map)
+                sourcemapApply(file, map);
+
+            jsStream.push(file);
         }
     };
 
@@ -277,6 +301,15 @@ var Project = (function () {
         }
 
         return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
+    };
+
+    Project.prototype.removeSourceMapComment = function (content) {
+        // By default the TypeScript automaticly inserts a source map comment.
+        // This should be removed because gulp-sourcemaps takes care of that.
+        // The comment is always on the last line, so it's easy to remove it
+        // (But the last line also ends with a \n, so we need to look for the \n before the other)
+        var index = content.lastIndexOf('\n', content.length - 2);
+        return content.substring(0, index) + '\n';
     };
 
     Project.prototype.normalizePath = function (path) {

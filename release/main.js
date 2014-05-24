@@ -18,7 +18,6 @@ var CompileStream = (function (_super) {
     function CompileStream(proj) {
         _super.call(this, { objectMode: true });
         this.js = new CompileOutputStream();
-        this.map = new CompileOutputStream();
         this.dts = new CompileOutputStream();
 
         this._project = proj;
@@ -42,11 +41,10 @@ var CompileStream = (function (_super) {
     };
 
     CompileStream.prototype.compile = function () {
-        this._project.compile(this.js, this.dts, this.map, function (err) {
+        this._project.compile(this.js, this.dts, function (err) {
             console.error(err.message);
         });
         this.js.push(null);
-        this.map.push(null);
         this.dts.push(null);
     };
 
@@ -106,12 +104,11 @@ function getImmutableCompilationSettings(settings) {
     if (settings.module !== undefined)
         tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
 
-    if (settings.sourceMap !== undefined)
-        tsSettings.mapSourceFiles = settings.sourceMap;
     if (settings.declarationFiles !== undefined)
         tsSettings.generateDeclarationFiles = settings.declarationFiles;
 
     tsSettings.useCaseSensitiveFileResolution = false;
+    tsSettings.mapSourceFiles = true;
 
     return typescript.ImmutableCompilationSettings.fromCompilationSettings(tsSettings);
 }
