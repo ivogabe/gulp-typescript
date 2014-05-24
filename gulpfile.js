@@ -2,6 +2,9 @@ var gulp = require('gulp');
 var clean = require('gulp-clean');
 var ts = require('./release/main');
 
+var sourcemaps = require('gulp-sourcemaps');
+var concat = require('gulp-concat-sourcemap');
+
 var tsProject = ts.createProject({
 	target: 'es5',
 	module: 'commonjs',
@@ -33,43 +36,50 @@ gulp.task('scripts', ['clean'], function() {
 
 gulp.task('test-1', ['scripts', 'clean-test'], function() {
 	var newTS = require('./release-2/main');
-	var tsResult = gulp.src('test/test-1/test-1.ts')
+	var tsResult = gulp.src('test/test-1/*')
+					   .pipe(sourcemaps.init())
 					   .pipe(newTS({
-						   sourceMap: true,
 						   declarationFiles: true,
 						   noExternalResolve: true
 					   }));
 	
-	tsResult.map.pipe(gulp.dest('test/output/test-1/map'));
+	// tsResult.map.pipe(gulp.dest('test/output/test-1/map'));
 	tsResult.dts.pipe(gulp.dest('test/output/test-1/dts'));
-	return tsResult.js.pipe(gulp.dest('test/output/test-1/js'));
+	// tsResult.js.pipe(sourcemaps.write()).pipe(gulp.dest('test/output/test-1/js'));
+
+	return tsResult.js.pipe(concat('concat.js'))
+						.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
+						.pipe(gulp.dest('test/output/test-1/js'));
 });
 gulp.task('test-2', ['scripts', 'clean-test'], function() { // Test external resolve.
 	var newTS = require('./release-2/main');
 	var tsResult = gulp.src('test/test-2/test-2.ts')
+					   .pipe(sourcemaps.init())
 					   .pipe(newTS({
-						   sourceMap: true,
 						   declarationFiles: true,
 						   module: 'commonjs'
 					   }));
 	
-	tsResult.map.pipe(gulp.dest('test/output/test-2/map'));
+	// tsResult.map.pipe(gulp.dest('test/output/test-2/map'));
 	tsResult.dts.pipe(gulp.dest('test/output/test-2/dts'));
-	return tsResult.js.pipe(gulp.dest('test/output/test-2/js'));
+	return tsResult.js
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-2/' }))
+			.pipe(gulp.dest('test/output/test-2/js'));
 });
 gulp.task('test-3', ['scripts', 'clean-test'], function() { // Test external resolve.
 	var newTS = require('./release-2/main');
 	var tsResult = gulp.src('test/test-3/*.ts')
 					   .pipe(newTS({
-						   sourceMap: true,
 						   declarationFiles: true,
 						   module: 'amd',
 						   noExternalResolve: true
 					   }));
 	
-	tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
+	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
 	tsResult.dts.pipe(gulp.dest('test/output/test-3/dts'));
-	return tsResult.js.pipe(gulp.dest('test/output/test-3/js'));
+	return tsResult.js
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-3/' }))
+			.pipe(gulp.dest('test/output/test-3/js'));
 });
 gulp.task('test', ['test-1', 'test-2', 'test-3']);
 
