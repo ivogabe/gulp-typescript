@@ -15,6 +15,8 @@ declare module 'gulp-util' {
 		cwd: string;
 		path: string;
 		
+		sourceMap: any;
+
 		isNull(): boolean;
 		isStream(): boolean;
 		isBuffer(): boolean;
