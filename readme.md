@@ -6,7 +6,8 @@ Features
 --------
 - Incremental compilation (so faster builds)
 - Error reporting
-- Different output streams for .js, .d.ts files and source maps.
+- Different output streams for .js, .d.ts files.
+- Support for sourcemaps using gulp-sourcemaps
 - Not just a wrapper around the ```tsc``` command, but a plugin that uses the TypeScript API.
 
 How to install
@@ -21,7 +22,6 @@ Easy usage
 var ts = require('gulp-type');
 [...]
 var t sResult = [...].pipe(ts(options));
-tsResult.map.pipe(...)
 tsResult.dts.pipe(...)
 tsResult.js.pipe(...)
 ```
@@ -31,12 +31,10 @@ var ts = require('gulp-type');
 gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts({
-						   sourceMap: true,
 						   declarationFiles: true,
 						   noExternalResolve: true
 					   }));
 	
-	tsResult.map.pipe(gulp.dest('release/js'));
 	tsResult.dts.pipe(gulp.dest('release/definitions'));
 	return tsResult.js.pipe(gulp.dest('release/js'));
 });
@@ -49,7 +47,6 @@ Instead of calling ```ts(options)```, you can create a project first, and then c
 var ts = require('gulp-type');
 
 var tsProject = ts.createProject({
-	sourceMap: true,
 	declarationFiles: true,
 	noExternalResolve: true
 });
@@ -58,7 +55,6 @@ gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts(tsProject));
 	
-	tsResult.map.pipe(gulp.dest('release/js'));
 	tsResult.dts.pipe(gulp.dest('release/definitions'));
 	return tsResult.js.pipe(gulp.dest('release/js'));
 });
@@ -77,7 +73,6 @@ Options
 - ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), or 'ES5'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'
-- ```sourceMap``` (boolean) - Generates corresponding .map files.
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 
@@ -96,6 +91,29 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 Concatate files
 ------------
 The ```tsc``` command has the ability to concatate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
+
+Source maps
+----------
+Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
+```
+var ts = require('gulp-type');
+var concat = require('gulp-concat-sourcemap');
+var sourcemaps = require('gulp-sourcemaps');
+
+gulp.task('scripts', function() {
+	var tsResult = gulp.src('lib/*.ts')
+					   .pipe(sourcemaps.init()) // This means sourcemaps will be generated
+					   .pipe(ts({
+						   // ...
+					   }));
+	
+	return tsResult.js
+				.pipe(concat('output.js')) // You can use other plugins that also support gulp-sourcemaps
+				.pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
+				.pipe(gulp.dest('release/js'));
+});
+```
+For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
 
 How to build
 ------------
