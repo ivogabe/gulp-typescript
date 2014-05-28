@@ -64,7 +64,7 @@ function compile(param?: any): any {
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
-		proj = new project.Project(getImmutableCompilationSettings(param || {}), (param && param.noExternalResolve) || false);
+		proj = new project.Project(getImmutableCompilationSettings(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
 	}
 	
 	proj.reset();
@@ -124,10 +124,11 @@ module compile {
 		//useCaseSensitiveFileResolution?: boolean;
 		
 		noExternalResolve?: boolean;
+		sortOutput?: boolean;
 	}
 	export import Project = project.Project;
 	export function createProject(settings: Settings): Project {
-		return new Project(getImmutableCompilationSettings(settings), settings.noExternalResolve ? true : false);
+		return new Project(getImmutableCompilationSettings(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
 	}
 }
 

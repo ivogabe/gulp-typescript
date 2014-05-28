@@ -69,7 +69,7 @@ function compile(param) {
     if (param instanceof project.Project) {
         proj = param;
     } else {
-        proj = new project.Project(getImmutableCompilationSettings(param || {}), (param && param.noExternalResolve) || false);
+        proj = new project.Project(getImmutableCompilationSettings(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
     }
 
     proj.reset();
@@ -118,7 +118,7 @@ var compile;
     var Project = project.Project;
     compile.Project = Project;
     function createProject(settings) {
-        return new Project(getImmutableCompilationSettings(settings), settings.noExternalResolve ? true : false);
+        return new Project(getImmutableCompilationSettings(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
     }
     compile.createProject = createProject;
 })(compile || (compile = {}));

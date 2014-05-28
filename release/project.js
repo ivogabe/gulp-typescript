@@ -9,7 +9,7 @@ var sourcemapApply = require('vinyl-sourcemaps-apply');
 var defaultLibSnapshot = typescript.ScriptSnapshot.fromString(fs.readFileSync(path.join(__dirname, '../lib.d.ts')).toString('utf8'));
 
 var Project = (function () {
-    function Project(settings, noExternalResolve) {
+    function Project(settings, noExternalResolve, sortOutput) {
         /**
         * Files from the previous compilation.
         * Used to find the differences with the previous compilation, to make the new compilation faster.
@@ -53,6 +53,7 @@ var Project = (function () {
         }
 
         this.noExternalResolve = noExternalResolve;
+        this.sortOutput = sortOutput;
     }
     /**
     * Adds or removes lib.d.ts
@@ -139,6 +140,11 @@ var Project = (function () {
                 continue;
             }
 
+            var references = typescript.ReferenceResolver.resolve([filename], this, false);
+            var referenceStrings = references.resolvedFiles.map(function (ref) {
+                return _this.normalizePath(ref.path);
+            });
+
             var fileData = this.currentFiles[filename];
             fileData.addedToCompiler = true;
             if (this.previousFiles[filename]) {
@@ -154,13 +160,13 @@ var Project = (function () {
         }
 
         // Look for external files (imports and references to files outside the input files)
-        if (!this.noExternalResolve) {
+        if (!this.noExternalResolve || this.sortOutput) {
             for (var filename in this.currentFiles) {
                 if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
                     continue;
                 }
 
-                if (this.references.indexOf(filename) != -1) {
+                if (this.references.indexOf(filename) != -1 && !this.sortOutput) {
                     continue;
                 }
 
@@ -169,14 +175,19 @@ var Project = (function () {
                 var referenceStrings = references.resolvedFiles.map(function (ref) {
                     return _this.normalizePath(ref.path);
                 });
+
+                this.currentFiles[filename].referencedFiles = referenceStrings;
+
                 this.references = this.references.concat(referenceStrings);
 
                 this.hasNoDefaultLibTag = this.hasNoDefaultLibTag || references.seenNoDefaultLibTag;
             }
-            this.setDefaultLib(!this.hasNoDefaultLibTag);
         }
 
-        this.handleReferences(this.references);
+        if (!this.noExternalResolve) {
+            this.setDefaultLib(!this.hasNoDefaultLibTag);
+            this.handleReferences(this.references);
+        }
 
         var results = this.compiler.compile(function (path) {
             return typescript.IO.resolvePath(path);
@@ -229,15 +240,49 @@ var Project = (function () {
                 }
             });
         }
-        for (var i = 0; i < outputJS.length; ++i) {
-            var file = outputJS[i];
-            var originalName = this.getOriginalName(file.path);
+
+        var emit = function (originalName, file) {
             var map = sourcemaps[originalName];
 
             if (map)
                 sourcemapApply(file, map);
 
             jsStream.push(file);
+        };
+
+        if (this.sortOutput) {
+            var done = {};
+
+            var sortedEmit = function (originalName, file) {
+                if (done[originalName])
+                    return;
+                done[originalName] = true;
+
+                var inputFile = _this.currentFiles[originalName];
+
+                for (var j = 0; j < outputJS.length; ++j) {
+                    var other = outputJS[j];
+                    var otherName = _this.getOriginalName(other.path);
+
+                    if (inputFile.referencedFiles.indexOf(otherName) !== -1) {
+                        sortedEmit(otherName, other);
+                    }
+                }
+
+                emit(originalName, file);
+            };
+
+            for (var i = 0; i < outputJS.length; ++i) {
+                var file = outputJS[i];
+                var originalName = this.getOriginalName(file.path);
+                sortedEmit(originalName, file);
+            }
+        } else {
+            for (var i = 0; i < outputJS.length; ++i) {
+                var file = outputJS[i];
+                var originalName = this.getOriginalName(file.path);
+                emit(originalName, file);
+            }
         }
     };
 

@@ -75,6 +75,7 @@ Options
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
+- ```sortOrder``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 
 Resolving files
 ---------------
@@ -91,6 +92,8 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 Concatenate files
 ------------
 The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
+
+The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-type``` does this when you enable the ```sortOutput``` option.
 
 Source maps
 ----------

@@ -40,7 +40,8 @@ gulp.task('test-1', ['scripts', 'clean-test'], function() {
 					   .pipe(sourcemaps.init())
 					   .pipe(newTS({
 						   declarationFiles: true,
-						   noExternalResolve: true
+						   noExternalResolve: true,
+						   sortOutput: true
 					   }));
 	
 	// tsResult.map.pipe(gulp.dest('test/output/test-1/map'));

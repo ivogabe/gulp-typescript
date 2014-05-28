@@ -66,6 +66,11 @@ export class Project implements typescript.IReferenceResolverHost {
 	 * - If you forget some directory, your compile will fail.
 	 */
 	private noExternalResolve: boolean;
+	/**
+	 * Sort output based on <reference> tags.
+	 * tsc does this when you pass the --out parameter.
+	 */
+	private sortOutput: boolean;
 	
 	compiler: typescript.TypeScriptCompiler;
 	
@@ -76,7 +81,7 @@ export class Project implements typescript.IReferenceResolverHost {
 	 */
 	version: number = 0;
 
-	constructor(settings: typescript.ImmutableCompilationSettings, noExternalResolve: boolean) {
+	constructor(settings: typescript.ImmutableCompilationSettings, noExternalResolve: boolean, sortOutput: boolean) {
 		this.compiler = new typescript.TypeScriptCompiler(new typescript.NullLogger(), settings);
 		
 		if (!settings.noLib()) {
@@ -84,6 +89,7 @@ export class Project implements typescript.IReferenceResolverHost {
 		}
 		
 		this.noExternalResolve = noExternalResolve;
+		this.sortOutput = sortOutput;
 	}
 	
 	/**
@@ -191,27 +197,32 @@ export class Project implements typescript.IReferenceResolverHost {
 		}
 		
 		// Look for external files (imports and references to files outside the input files)
-		if (!this.noExternalResolve) {
+		if (!this.noExternalResolve || this.sortOutput) {
 			for (var filename in this.currentFiles) {
 				if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
 					continue;
 				}
 
-				if (this.references.indexOf(filename) != -1) {
+				if (this.references.indexOf(filename) != -1 && !this.sortOutput) {
 					continue;
 				}
 
 				var references: typescript.ReferenceResolutionResult = typescript.ReferenceResolver.resolve([filename], this, false);
 
 				var referenceStrings: string[] = references.resolvedFiles.map<string>((ref) => this.normalizePath(ref.path));
+
+				this.currentFiles[filename].referencedFiles = referenceStrings;
+
 				this.references = this.references.concat(referenceStrings);
 
 				this.hasNoDefaultLibTag = this.hasNoDefaultLibTag || references.seenNoDefaultLibTag;
 			}
-			this.setDefaultLib(!this.hasNoDefaultLibTag);
 		}
 		
-		this.handleReferences(this.references);
+		if (!this.noExternalResolve) {
+			this.setDefaultLib(!this.hasNoDefaultLibTag);
+			this.handleReferences(this.references);
+		}
 		
 		var results = this.compiler.compile(path => typescript.IO.resolvePath(path));
 		
@@ -260,14 +271,47 @@ export class Project implements typescript.IReferenceResolverHost {
 				}
 			});
 		}
-		for (var i = 0; i < outputJS.length; ++i) {
-			var file = outputJS[i];
-			var originalName = this.getOriginalName(file.path);
+
+		var emit = (originalName: string, file: gutil.File) => {
 			var map = sourcemaps[originalName];
 
 			if (map) sourcemapApply(file, map);
 
 			jsStream.push(file);
+		};
+
+		if (this.sortOutput) {
+			var done: { [ filename: string] : boolean } = {};
+
+			var sortedEmit = (originalName: string, file: gutil.File) => {
+				if (done[originalName]) return;
+				done[originalName] = true;
+
+				var inputFile = this.currentFiles[originalName];
+
+				for (var j = 0; j < outputJS.length; ++j) {
+					var other = outputJS[j];
+					var otherName = this.getOriginalName(other.path);
+
+					if (inputFile.referencedFiles.indexOf(otherName) !== -1) {
+						sortedEmit(otherName, other);
+					}
+				}
+
+				emit(originalName, file);
+			};
+
+			for (var i = 0; i < outputJS.length; ++i) {
+				var file = outputJS[i];
+				var originalName = this.getOriginalName(file.path);
+				sortedEmit(originalName, file);
+			}
+		} else {
+			for (var i = 0; i < outputJS.length; ++i) {
+				var file = outputJS[i];
+				var originalName = this.getOriginalName(file.path);
+				emit(originalName, file);
+			}
 		}
 	}
 	
