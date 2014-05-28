@@ -140,11 +140,6 @@ var Project = (function () {
                 continue;
             }
 
-            var references = typescript.ReferenceResolver.resolve([filename], this, false);
-            var referenceStrings = references.resolvedFiles.map(function (ref) {
-                return _this.normalizePath(ref.path);
-            });
-
             var fileData = this.currentFiles[filename];
             fileData.addedToCompiler = true;
             if (this.previousFiles[filename]) {
