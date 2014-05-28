@@ -91,7 +91,7 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 
 Concatenate files
 ------------
-The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
+The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that, or - if you want sourcemaps - ```gulp-concat-sourcemaps```.
 
 The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-type``` does this when you enable the ```sortOutput``` option.
 
@@ -107,6 +107,7 @@ gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(sourcemaps.init()) // This means sourcemaps will be generated
 					   .pipe(ts({
+						   sortOutput: true,
 						   // ...
 					   }));
 	
