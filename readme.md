@@ -88,9 +88,9 @@ Advice: turn it on, and make sure you list all the input files.
 
 Files that are resolved when ```noExternalResolve``` is off, won't be pushed to the output stream.
 
-Concatate files
+Concatenate files
 ------------
-The ```tsc``` command has the ability to concatate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
+The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
 
 Source maps
 ----------
