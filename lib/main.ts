@@ -33,7 +33,10 @@ class CompileStream extends stream.Writable {
 	}
 	
 	private compile() {
-		this._project.compile(this.js, this.dts, (err) => { console.error(err.message); });
+		this._project.compile(this.js, this.dts, (err) => { 
+			console.error(err.message);
+			this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+		});
 		this.js.push(null);
 		this.dts.push(null);
 	}
