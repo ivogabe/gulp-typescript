@@ -21,6 +21,10 @@ var CompileStream = (function (_super) {
         this.dts = new CompileOutputStream();
 
         this._project = proj;
+
+        // Prevent "Unhandled stream error in pipe" when compilation error occurs.
+        this.on('error', function () {
+        });
     }
     CompileStream.prototype._write = function (file, encoding, cb) {
         if (typeof cb === "undefined") { cb = function (err) {

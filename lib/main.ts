@@ -13,6 +13,9 @@ class CompileStream extends stream.Writable {
 		super({objectMode: true});
 		
 		this._project = proj;
+
+		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
+		this.on('error', () => {}); 
 	}
 	
 	private _project: project.Project;
