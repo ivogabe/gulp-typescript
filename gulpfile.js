@@ -82,7 +82,22 @@ gulp.task('test-3', ['scripts', 'clean-test'], function() { // Test external res
 			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-3/' }))
 			.pipe(gulp.dest('test/output/test-3/js'));
 });
-gulp.task('test', ['test-1', 'test-2', 'test-3']);
+gulp.task('test-4', ['scripts', 'clean-test'], function() { // Test catch errors.
+	var newTS = require('./release-2/main');
+	var tsResult = gulp.src('test/test-4/*.ts')
+					   .pipe(newTS())
+					   .on('error', function(err)
+					   	{
+					   		console.log('caught error:', err.message);
+					   	});
+	
+	tsResult.dts.pipe(gulp.dest('test/output/test-4/dts'));
+	return tsResult.js
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-4/' }))
+			.pipe(gulp.dest('test/output/test-4/js'));
+});
+gulp.task('test', ['test-1', 'test-2', 'test-3', 'test-4']);
+
 
 gulp.task('release', function() {
 	return gulp.src(paths.releaseBeta + '/**').pipe(gulp.dest(paths.release));

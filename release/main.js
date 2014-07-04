@@ -21,6 +21,10 @@ var CompileStream = (function (_super) {
         this.dts = new CompileOutputStream();
 
         this._project = proj;
+
+        // Prevent "Unhandled stream error in pipe" when compilation error occurs.
+        this.on('error', function () {
+        });
     }
     CompileStream.prototype._write = function (file, encoding, cb) {
         if (typeof cb === "undefined") { cb = function (err) {
@@ -41,8 +45,10 @@ var CompileStream = (function (_super) {
     };
 
     CompileStream.prototype.compile = function () {
+        var _this = this;
         this._project.compile(this.js, this.dts, function (err) {
             console.error(err.message);
+            _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
         });
         this.js.push(null);
         this.dts.push(null);

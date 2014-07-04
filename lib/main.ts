@@ -13,6 +13,9 @@ class CompileStream extends stream.Writable {
 		super({objectMode: true});
 		
 		this._project = proj;
+
+		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
+		this.on('error', () => {}); 
 	}
 	
 	private _project: project.Project;
@@ -33,7 +36,10 @@ class CompileStream extends stream.Writable {
 	}
 	
 	private compile() {
-		this._project.compile(this.js, this.dts, (err) => { console.error(err.message); });
+		this._project.compile(this.js, this.dts, (err) => { 
+			console.error(err.message);
+			this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+		});
 		this.js.push(null);
 		this.dts.push(null);
 	}
