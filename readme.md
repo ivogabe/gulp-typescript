@@ -75,7 +75,7 @@ Options
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
-- ```sortOrder``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
+- ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 
 Resolving files
 ---------------
