@@ -105,6 +105,11 @@ function getImmutableCompilationSettings(settings: compile.Settings): typescript
 	if (settings.module !== undefined)
 		tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
 
+	if (settings.sourceRoot === undefined)
+		tsSettings.sourceRoot = process.cwd();
+	else
+		tsSettings.sourceRoot = settings.sourceRoot;
+
 	if (settings.declarationFiles !== undefined)
 		tsSettings.generateDeclarationFiles = settings.declarationFiles;
 	
@@ -124,6 +129,7 @@ module compile {
 		noLib?: boolean;
 		target?: string;
 		module?: string;
+		sourceRoot?: string;
 
 		declarationFiles?: boolean;
 		

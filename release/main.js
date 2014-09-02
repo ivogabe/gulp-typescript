@@ -110,6 +110,11 @@ function getImmutableCompilationSettings(settings) {
     if (settings.module !== undefined)
         tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
 
+    if (settings.sourceRoot === undefined)
+        tsSettings.sourceRoot = process.cwd();
+    else
+        tsSettings.sourceRoot = settings.sourceRoot;
+
     if (settings.declarationFiles !== undefined)
         tsSettings.generateDeclarationFiles = settings.declarationFiles;
 
