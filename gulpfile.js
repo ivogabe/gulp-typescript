@@ -2,6 +2,8 @@ var gulp = require('gulp');
 var clean = require('gulp-clean');
 var ts = require('./release/main');
 
+var gutil = require('gulp-util');
+
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat-sourcemap');
 
@@ -84,12 +86,20 @@ gulp.task('test-3', ['scripts', 'clean-test'], function() { // Test external res
 });
 gulp.task('test-4', ['scripts', 'clean-test'], function() { // Test catch errors.
 	var newTS = require('./release-2/main');
+	var errors = 0;
 	var tsResult = gulp.src('test/test-4/*.ts')
-					   .pipe(newTS())
-					   .on('error', function(err)
-					   	{
-					   		console.log('caught error:', err.message);
-					   	});
+					   .pipe(newTS());
+	
+	tsResult.on('error', function(err) {
+		errors++;
+		console.log('[test-4] Caught error:', err.message, 'This error was intentional');
+	});
+	
+	tsResult.js.on('end', function() {
+		if (errors !== 1) {
+			console.log('[test-4] ' + gutil.colors.red('Expected 1 error, got ' + errors + '.'));
+		}
+	});
 	
 	tsResult.dts.pipe(gulp.dest('test/output/test-4/dts'));
 	return tsResult.js
