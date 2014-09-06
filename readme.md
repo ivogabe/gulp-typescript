@@ -73,6 +73,7 @@ Options
 - ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), or 'ES5'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'
+- ```sourceRoot``` (string) - Specifies the location where debugger should locate TypeScript files instead of source locations.
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
