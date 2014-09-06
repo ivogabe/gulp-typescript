@@ -1,5 +1,5 @@
 var gulp = require('gulp');
-var clean = require('gulp-clean');
+var rimraf = require('rimraf');
 var ts = require('./release/main');
 
 var gutil = require('gulp-util');
@@ -19,14 +19,17 @@ var paths = {
 	release: 'release'
 };
 
-gulp.task('clean', function() {
-	gulp.src([paths.releaseBeta + '/*'], { read: false }).pipe(clean());
+gulp.task('clean', function(cb) {
+	rimraf(paths.releaseBeta, cb);
+	// gulp.src([paths.releaseBeta + '/*'], { read: false }).pipe(clean());
 });
-gulp.task('clean-test', function() {
-	gulp.src(['test/output/*'], { read: false }).pipe(clean());
+gulp.task('clean-test', function(cb) {
+	rimraf('test/output', cb);
+	// gulp.src(['test/output/*'], { read: false }).pipe(clean());
 });
-gulp.task('clean-release', function() {
-	gulp.src([paths.release + '/*'], { read: false }).pipe(clean());
+gulp.task('clean-release', function(cb) {
+	rimraf(paths.release, cb);
+	// gulp.src([paths.release + '/*'], { read: false }).pipe(clean());
 });
 
 gulp.task('scripts', ['clean'], function() {
