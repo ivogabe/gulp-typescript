@@ -16,15 +16,15 @@
   },
   "main": "release/main.js",
   "dependencies": {
-    "gulp-util": "~2.2.14",
+    "gulp-util": "~3.0.1",
     "typescript-api": "1.0.0",
     "vinyl-sourcemaps-apply": "0.1.1"
   },
   "devDependencies": {
-    "gulp": "~3.6.2",
+    "gulp": "~3.8.7",
     "rimraf": "~2.2.8",
-    "gulp-sourcemaps": "~0.3.1",
-    "gulp-concat-sourcemap": "~1.3.0"
+    "gulp-sourcemaps": "~1.1.4",
+    "gulp-concat-sourcemap": "~1.3.1"
   },
   "repository": {
     "type" : "git",
