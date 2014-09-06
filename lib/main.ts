@@ -92,26 +92,33 @@ var moduleMap: project.Map<typescript.ModuleGenTarget> = {
 function getImmutableCompilationSettings(settings: compile.Settings): typescript.ImmutableCompilationSettings {
 	var tsSettings = new typescript.CompilationSettings();
 	
-	if (settings.removeComments !== undefined)
+	if (settings.removeComments !== undefined) {
 		tsSettings.removeComments = settings.removeComments;
+	}
 	
-	if (settings.noImplicitAny !== undefined)
+	if (settings.noImplicitAny !== undefined) {
 		tsSettings.noImplicitAny = settings.noImplicitAny;
-	if (settings.noLib !== undefined)
+	}
+	if (settings.noLib !== undefined) {
 		tsSettings.noLib = settings.noLib;
+	}
 	
-	if (settings.target !== undefined)
+	if (settings.target !== undefined) {
 		tsSettings.codeGenTarget = langMap[(settings.target || 'es3').toLowerCase()];
-	if (settings.module !== undefined)
+	}
+	if (settings.module !== undefined) {
 		tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
+	}
 
-	if (settings.sourceRoot === undefined)
+	if (settings.sourceRoot === undefined) {
 		tsSettings.sourceRoot = process.cwd();
-	else
+	} else {
 		tsSettings.sourceRoot = settings.sourceRoot;
+	}
 
-	if (settings.declarationFiles !== undefined)
+	if (settings.declarationFiles !== undefined) {
 		tsSettings.generateDeclarationFiles = settings.declarationFiles;
+	}
 	
 	tsSettings.useCaseSensitiveFileResolution = false;
 	tsSettings.mapSourceFiles = true;
