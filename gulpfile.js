@@ -41,21 +41,16 @@ gulp.task('scripts', ['clean'], function() {
 
 gulp.task('test-1', ['scripts', 'clean-test'], function() {
 	var newTS = require('./release-2/main');
-	var tsResult = gulp.src('test/test-1/*')
-					   .pipe(sourcemaps.init())
-					   .pipe(newTS({
-						   declarationFiles: true,
-						   noExternalResolve: true,
-						   sortOutput: true
-					   }));
-	
-	// tsResult.map.pipe(gulp.dest('test/output/test-1/map'));
-	tsResult.dts.pipe(gulp.dest('test/output/test-1/dts'));
-	// tsResult.js.pipe(sourcemaps.write()).pipe(gulp.dest('test/output/test-1/js'));
-
-	return tsResult.js.pipe(concat('concat.js'))
-						.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
-						.pipe(gulp.dest('test/output/test-1/js'));
+	return gulp.src('test/test-1/*')
+		.pipe(sourcemaps.init())
+		.pipe(newTS({
+			declarationFiles: true,
+			noExternalResolve: true,
+			sortOutput: true
+		}))
+		.pipe(concat('concat.js'))
+		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
+		.pipe(gulp.dest('test/output/test-1/js'));
 });
 gulp.task('test-2', ['scripts', 'clean-test'], function() { // Test external resolve.
 	var newTS = require('./release-2/main');
