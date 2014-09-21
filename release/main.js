@@ -11,16 +11,18 @@ var gutil = require('gulp-util');
 var stream = require('stream');
 var project = require('./project');
 
-var PLUGIN_NAME = 'gulp-typescript-compiler';
+var PLUGIN_NAME = 'gulp-typescript';
 
 var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(proj) {
         _super.call(this, { objectMode: true });
-        this.js = new CompileOutputStream();
         this.dts = new CompileOutputStream();
 
         this._project = proj;
+
+        // Backwards compatibility
+        this.js = this;
 
         // Prevent "Unhandled stream error in pipe" when compilation error occurs.
         this.on('error', function () {
@@ -43,6 +45,8 @@ var CompileStream = (function (_super) {
         this._project.addFile(file);
         cb();
     };
+    CompileStream.prototype._read = function () {
+    };
 
     CompileStream.prototype.compile = function () {
         var _this = this;
@@ -59,7 +63,7 @@ var CompileStream = (function (_super) {
         this.compile();
     };
     return CompileStream;
-})(stream.Writable);
+})(stream.Duplex);
 var CompileOutputStream = (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
