@@ -8,11 +8,14 @@ import project = require('./project');
 
 var PLUGIN_NAME = 'gulp-typescript-compiler';
 
-class CompileStream extends stream.Writable {
+class CompileStream extends stream.Duplex {
 	constructor(proj: project.Project) {
 		super({objectMode: true});
 		
 		this._project = proj;
+		
+		// Backwards compatibility
+		this.js = this;
 
 		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
 		this.on('error', () => {}); 
@@ -34,6 +37,9 @@ class CompileStream extends stream.Writable {
 		this._project.addFile(file);
 		cb();
 	}
+	_read() {
+		
+	}
 	
 	private compile() {
 		this._project.compile(this.js, this.dts, (err) => { 
@@ -49,7 +55,7 @@ class CompileStream extends stream.Writable {
 		this.compile();
 	}
 	
-	js: stream.Readable = new CompileOutputStream();
+	js: stream.Readable;
 	dts: stream.Readable = new CompileOutputStream();
 }
 class CompileOutputStream extends stream.Readable {
