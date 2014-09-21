@@ -8,7 +8,12 @@
   "keywords": [
     "typescript",
     "gulpplugin",
-    "incremental compilation"
+    "incremental compilation",
+    "ts",
+    "tsc",
+    "compile",
+    "compiler",
+    "transpile"
   ],
   "author": {
     "name": "Ivo Gabe de Wolff",
