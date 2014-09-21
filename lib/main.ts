@@ -6,7 +6,7 @@ import path = require('path');
 import stream = require('stream');
 import project = require('./project');
 
-var PLUGIN_NAME = 'gulp-typescript-compiler';
+var PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
 	constructor(proj: project.Project) {
