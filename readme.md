@@ -1,5 +1,5 @@
-gulp-type
-=========
+gulp-typescript
+===============
 A gulp plugin that compiles TypeScript files.
 
 Features
@@ -13,13 +13,13 @@ Features
 How to install
 --------------
 ```
-npm install gulp-type
+npm install gulp-typescript
 ```
 
 Easy usage
 ----------
 ```
-var ts = require('gulp-type');
+var ts = require('gulp-typescript');
 [...]
 var t sResult = [...].pipe(ts(options));
 tsResult.dts.pipe(...)
@@ -27,7 +27,7 @@ tsResult.js.pipe(...)
 ```
 Example gulpfile:
 ```
-var ts = require('gulp-type');
+var ts = require('gulp-typescript');
 gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts({
@@ -44,7 +44,7 @@ Incremental compilation
 -----------------------
 Instead of calling ```ts(options)```, you can create a project first, and then call ```ts(project)```. An example:
 ```
-var ts = require('gulp-type');
+var ts = require('gulp-typescript');
 
 var tsProject = ts.createProject({
 	declarationFiles: true,
@@ -80,9 +80,9 @@ Options
 
 Resolving files
 ---------------
-By default, gulp-type will try to resolve the files you require and reference. These files are parsed, but not emitted (so you will not see them in the output stream).
+By default, gulp-typescript will try to resolve the files you require and reference. These files are parsed, but not emitted (so you will not see them in the output stream).
 
-If you set the option ```noExternalResolve``` to true, gulp-type will not resolve all the requires and references. It assumes that all the necessary files are in the input stream. For example, if you have your ```.ts``` files in the ```lib``` folder, and the ```.d.ts``` files in the ```definitions``` folder, you must use ```gulp.src(['lib/**.ts', 'definitions/**.ts'])``` instead of ```gulp.src(['lib/**.ts'])``` in your gulpfile if you use the option ```noExternalResolve```.
+If you set the option ```noExternalResolve``` to true, gulp-typescript will not resolve all the requires and references. It assumes that all the necessary files are in the input stream. For example, if you have your ```.ts``` files in the ```lib``` folder, and the ```.d.ts``` files in the ```definitions``` folder, you must use ```gulp.src(['lib/**.ts', 'definitions/**.ts'])``` instead of ```gulp.src(['lib/**.ts'])``` in your gulpfile if you use the option ```noExternalResolve```.
 
 Advantage of ```noExternalResolve```: faster compilation.
 Disadvantage of ```noExternalResolve```: won't work when you forgot some input files.
@@ -92,15 +92,15 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 
 Concatenate files
 ------------
-The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-type``` doesn't have that, because you should use the ```gulp-concat``` plugin for that, or - if you want sourcemaps - ```gulp-concat-sourcemaps```.
+The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-typescript``` doesn't have that, because you should use the ```gulp-concat``` plugin for that, or - if you want sourcemaps - ```gulp-concat-sourcemaps```.
 
-The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-type``` does this when you enable the ```sortOutput``` option.
+The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-typescript``` does this when you enable the ```sortOutput``` option.
 
 Source maps
 ----------
 Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
 ```
-var ts = require('gulp-type');
+var ts = require('gulp-typescript');
 var concat = require('gulp-concat-sourcemap');
 var sourcemaps = require('gulp-sourcemaps');
 
