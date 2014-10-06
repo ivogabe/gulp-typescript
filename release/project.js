@@ -115,7 +115,7 @@ var Project = (function () {
 
         var err = new Error();
         err.name = 'TypeScript error';
-        err.message = gutil.colors.red(filename + '(' + info.line() + ',' + info.character() + '): ') + info.message();
+        err.message = gutil.colors.red(filename + '(' + (info.line() + 1) + ',' + (info.character() + 1) + '): ') + info.message();
 
         return err;
     };
