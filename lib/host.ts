@@ -1,10 +1,27 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
 import gutil = require('gulp-util');
+import project = require('./project');
+import fs = require('fs');
+import path = require('path');
+
+var libDefault = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
 
 export class Host implements ts.CompilerHost {
 	private currentDirectory: string;
-	private files: { [ filename: string]: gutil.File; };
+	private files: project.Map<project.FileData>;
+	output: project.Map<string>;
+	
+	constructor(currentDirectory: string, files: project.Map<project.FileData>) {
+		this.currentDirectory = currentDirectory;
+		this.files = files;
+		
+		this.reset();
+	}
+	
+	private reset() {
+		this.output = {};
+	}
 	
 	getNewLine() {
 		return '\n';
@@ -24,11 +41,15 @@ export class Host implements ts.CompilerHost {
 	}
 	
 	writeFile(filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
-		console.log('write ' + filename);
+		this.output[filename] = data;
 	}
 	
 	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
-		var text = this.files[filename].contents;
+		var text = this.files[filename].content;
+		
+		// TODO: Incremental compilation (reuse SourceFiles from previous build)
+		
+		if (filename === '__lib.d.ts') text = libDefault; // TODO: Create a SourceFile once for the default lib
 		
 		return (typeof text !== 'string') ? ts.createSourceFile(filename, text, languageVersion, "0") : undefined;
 	}
