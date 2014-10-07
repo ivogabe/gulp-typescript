@@ -12,13 +12,13 @@ Features
 
 How to install
 --------------
-```
+```shell
 npm install gulp-typescript
 ```
 
 Easy usage
 ----------
-```
+```javascript
 var ts = require('gulp-typescript');
 [...]
 var t sResult = [...].pipe(ts(options));
@@ -26,7 +26,7 @@ tsResult.dts.pipe(...)
 tsResult.js.pipe(...)
 ```
 Example gulpfile:
-```
+```javascript
 var ts = require('gulp-typescript');
 gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
@@ -43,7 +43,7 @@ gulp.task('scripts', function() {
 Incremental compilation
 -----------------------
 Instead of calling ```ts(options)```, you can create a project first, and then call ```ts(project)```. An example:
-```
+```javascript
 var ts = require('gulp-typescript');
 
 var tsProject = ts.createProject({
@@ -99,7 +99,7 @@ The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-
 Source maps
 ----------
 Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
-```
+```javascript
 var ts = require('gulp-typescript');
 var concat = require('gulp-concat-sourcemap');
 var sourcemaps = require('gulp-sourcemaps');
