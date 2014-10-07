@@ -45,12 +45,16 @@ export class Host implements ts.CompilerHost {
 	}
 	
 	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
-		var text = this.files[filename].content;
+		var text: string;
+		
+		if (this.files[filename]) {
+			text = this.files[filename].content;
+		} else if (filename === '__lib.d.ts') {
+			text = libDefault; // TODO: Create a SourceFile once for the default lib
+		}
 		
 		// TODO: Incremental compilation (reuse SourceFiles from previous build)
 		
-		if (filename === '__lib.d.ts') text = libDefault; // TODO: Create a SourceFile once for the default lib
-		
-		return (typeof text !== 'string') ? ts.createSourceFile(filename, text, languageVersion, "0") : undefined;
+		return (typeof text === 'string') ? ts.createSourceFile(filename, text, languageVersion, "0") : undefined;
 	}
 }
