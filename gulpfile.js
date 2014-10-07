@@ -6,6 +6,7 @@ var gutil = require('gulp-util');
 
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat-sourcemap');
+var header = require('gulp-header');
 
 var tsProject = ts.createProject({
 	target: 'es5',
@@ -36,7 +37,9 @@ gulp.task('scripts', ['clean'], function() {
 	var tsResult = gulp.src(paths.scripts)
 					   .pipe(ts(tsProject));
 	
-	return tsResult.js.pipe(gulp.dest(paths.releaseBeta));
+	return tsResult.js
+		.pipe(header('var ts = require(\'../typescript/ts\');\n'))
+		.pipe(gulp.dest(paths.releaseBeta));
 });
 
 gulp.task('test-1', ['scripts', 'clean-test'], function() {
