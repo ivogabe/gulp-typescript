@@ -22,7 +22,6 @@
   "main": "release/main.js",
   "dependencies": {
     "gulp-util": "~3.0.1",
-    "typescript-api": "1.0.0",
     "vinyl-sourcemaps-apply": "0.1.1"
   },
   "devDependencies": {
