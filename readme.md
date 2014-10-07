@@ -28,6 +28,7 @@ tsResult.js.pipe(...)
 Example gulpfile:
 ```javascript
 var ts = require('gulp-typescript');
+var eventStream = require('event-stream');
 gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts({
@@ -35,8 +36,10 @@ gulp.task('scripts', function() {
 						   noExternalResolve: true
 					   }));
 	
-	tsResult.dts.pipe(gulp.dest('release/definitions'));
-	return tsResult.js.pipe(gulp.dest('release/js'));
+	return eventStream.merge(
+		tsResult.dts.pipe(gulp.dest('release/definitions')),
+		tsResult.js.pipe(gulp.dest('release/js'))
+	);
 });
 ```
 
@@ -45,6 +48,7 @@ Incremental compilation
 Instead of calling ```ts(options)```, you can create a project first, and then call ```ts(project)```. An example:
 ```javascript
 var ts = require('gulp-typescript');
+var eventStream = require('event-stream');
 
 var tsProject = ts.createProject({
 	declarationFiles: true,
@@ -55,8 +59,10 @@ gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts(tsProject));
 	
-	tsResult.dts.pipe(gulp.dest('release/definitions'));
-	return tsResult.js.pipe(gulp.dest('release/js'));
+	return eventStream.merge( // Merge the two output streams, so this task is finished when the IO of both operations are done.
+		tsResult.dts.pipe(gulp.dest('release/definitions')),
+		tsResult.js.pipe(gulp.dest('release/js'))
+	);
 });
 gulp.task('watch', ['scripts'], function() {
     gulp.watch('lib/*.ts', ['scripts']);
