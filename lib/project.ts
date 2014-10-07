@@ -101,6 +101,15 @@ export class Project {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
 	private getError(info: ts.Diagnostic) {
+		var err = new Error();
+		err.name = 'TypeScript error';
+		
+		if (!info.file) {
+			err.message = info.code + ' ' + info.messageText;
+			
+			return err;
+		}
+		
 		var filename = this.getOriginalName(info.file.filename)
 		var file = this.currentFiles[filename];
 		
@@ -112,8 +121,6 @@ export class Project {
 		
 		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
 		
-		var err = new Error();
-		err.name = 'TypeScript error';
 		err.message = gutil.colors.red(filename + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ') + info.code + ' ' + info.messageText;
 		
 		return err;
