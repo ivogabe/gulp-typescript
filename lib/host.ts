@@ -48,7 +48,7 @@ export class Host implements ts.CompilerHost {
 		var text: string;
 		
 		if (this.files[filename]) {
-			text = this.files[filename].content;
+			return this.files[filename].ts;
 		} else if (filename === '__lib.d.ts') {
 			text = libDefault; // TODO: Create a SourceFile once for the default lib
 		}

@@ -12,7 +12,9 @@ export interface Map<T> {
 }
 export interface FileData {
 	file?: gutil.File;
+	filename: string;
 	content: string;
+	ts: ts.SourceFile;
 }
 
 export class Project {
@@ -57,7 +59,7 @@ export class Project {
 	 * This number is increased for every compilation in the same gulp session.
 	 * Used for incremental builds.
 	 */
-	// version: number = 0;
+	version: number = 0;
 	
 	options: ts.CompilerOptions;
 	host: host.Host;
@@ -88,7 +90,7 @@ export class Project {
 		this.currentFiles = {};
 		this.additionalFiles = {};
 		
-		//this.version++;
+		this.version++;
 	}
 	/**
 	 * Adds a file to the project.
@@ -126,11 +128,71 @@ export class Project {
 		return err;
 	}
 	
+	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
+		// TODO: resolve external files that are imported
+		var references = file.ts.referencedFiles.map(item => ts.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
+		
+		
+		
+		for (var i = 0; i < references.length; ++i) {
+			var ref = references[i];
+			
+			if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
+				session.tasks++;
+				this.additionalFiles[ref] = undefined;
+				
+				fs.readFile(ref, (error, data) => {
+					if (data) { // Typescript will throw an error when a file isn't found.
+						var file = this.getFileData(ref, data.toString('utf8'));
+						this.additionalFiles[ref] = file;
+						
+						this.resolve(session, file);
+					}
+					
+					session.tasks--;
+					if (session.tasks === 0) session.callback();
+				});
+			}
+		}
+	}
+	resolveAll(callback: () => void) {
+		if (this.noExternalResolve) {
+			callback();
+			return;
+		}
+		
+		var session = {
+			tasks: 1,
+			callback: callback
+		};
+		
+		for (var i in this.currentFiles) {
+			if (this.currentFiles.hasOwnProperty(i)) {
+				this.resolve(session, this.currentFiles[i]);
+			}
+		}
+		
+		session.tasks--;
+	}
+	
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
-		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', this.currentFiles);
+		var files: Map<FileData> = {};
+		
+		for (var filename in this.currentFiles) {
+			if (this.currentFiles.hasOwnProperty(filename)) {
+				files[filename] = this.currentFiles[filename];
+			}
+		}
+		for (var filename in this.additionalFiles) {
+			if (this.additionalFiles.hasOwnProperty(filename)) {
+				files[filename] = this.additionalFiles[filename];
+			}
+		}
+		
+		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files);
 		
 		// Creating a program compiles the sources
 		this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
@@ -245,7 +307,9 @@ export class Project {
 	
 	private getFileData(filename: string, content: string): FileData {
 		return {
-			content: content
+			filename: filename,
+			content: content,
+			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
 	}
 	

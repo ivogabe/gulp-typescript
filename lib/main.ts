@@ -41,12 +41,14 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private compile() {
-		this._project.compile(this.js, this.dts, (err) => { 
-			console.error(err.message);
-			this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+		this._project.resolveAll(() => {
+			this._project.compile(this.js, this.dts, (err) => { 
+				console.error(err.message);
+				this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+			});
+			this.js.push(null);
+			this.dts.push(null);
 		});
-		this.js.push(null);
-		this.dts.push(null);
 	}
 	
 	end(chunk?, encoding?, callback?) {
