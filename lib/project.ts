@@ -82,7 +82,8 @@ export class Project {
 		}
 		
 		return result;
-	}/**
+	}
+	/**
 	 * Resets the compiler.
 	 * The compiler needs to be reset for incremental builds.
 	 */
@@ -130,9 +131,28 @@ export class Project {
 	
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
 		// TODO: resolve external files that are imported
-		var references = file.ts.referencedFiles.map(item => ts.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
+		var references = file.ts.referencedFiles.map(item => this.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
 		
+		ts.forEachChild(file.ts, (node) => {
+			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+				var importNode = <ts.ImportDeclaration> node;
+				
+				if (importNode.externalModuleName !== undefined) {
+					var ref = this.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+					
+					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
+					
+					if (ref.substr(-3) === '.ts') {
+						references.push(ref);
+					} else {
+						references.push(ref + '.ts');
+						references.push(ref + '.d.ts');
+					}
+				}
+			}
+		});
 		
+		console.log(references);
 		
 		for (var i = 0; i < references.length; ++i) {
 			var ref = references[i];
@@ -323,10 +343,7 @@ export class Project {
 	}
 
 	normalizePath(path: string) {
-		// Switch to forward slashes
-		path = path.replace(/\\/g, '/');
-
-		return path;
+		return ts.normalizePath(path).toLowerCase();
 	}
 
 	// IReferenceResolverHost
