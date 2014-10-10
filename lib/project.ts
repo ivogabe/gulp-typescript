@@ -119,11 +119,11 @@ export class Project {
 			return err;
 		}
 		
-		var filename = this.getOriginalName(info.file.filename)
+		var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
 		var file = this.currentFiles[filename];
 		
 		if (file) {
-			filename = path.relative(file.file.cwd, info.file.filename);
+			filename = path.relative(file.file.cwd, file.file.path);
 		} else {
 			filename = info.file.filename;
 		}
