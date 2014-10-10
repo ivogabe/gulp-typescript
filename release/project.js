@@ -11,7 +11,7 @@ var Project = (function () {
          * Files from the previous compilation.
          * Used to find the differences with the previous compilation, to make the new compilation faster.
          */
-        //previousFiles: Map<FileData> = {};
+        this.previousFiles = {};
         /**
          * The files in the current compilation.
          * This Map only contains the files in the project, not external files. Those are in Project#additionalFiles.
@@ -48,6 +48,7 @@ var Project = (function () {
      * The compiler needs to be reset for incremental builds.
      */
     Project.prototype.reset = function () {
+        this.previousFiles = this.currentFiles;
         this.currentFiles = {};
         this.additionalFiles = {};
         this.version++;
@@ -56,7 +57,28 @@ var Project = (function () {
      * Adds a file to the project.
      */
     Project.prototype.addFile = function (file) {
-        this.currentFiles[Project.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
+        var fileData;
+        var filename = Project.normalizePath(file.path);
+        // Incremental compilation
+        var oldFileData = this.previousFiles[filename];
+        if (oldFileData) {
+            if (oldFileData.content === file.contents.toString('utf8')) {
+                // Unchanged, we can use the (ts) file from previous build.
+                fileData = {
+                    file: file,
+                    filename: oldFileData.content,
+                    content: oldFileData.content,
+                    ts: oldFileData.ts
+                };
+            }
+            else {
+                fileData = this.getFileDataFromGulpFile(file);
+            }
+        }
+        else {
+            fileData = this.getFileDataFromGulpFile(file);
+        }
+        this.currentFiles[Project.normalizePath(file.path)] = fileData;
     };
     Project.prototype.getOriginalName = function (filename) {
         return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts');
@@ -68,10 +90,10 @@ var Project = (function () {
             err.message = info.code + ' ' + info.messageText;
             return err;
         }
-        var filename = this.getOriginalName(info.file.filename);
+        var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
         var file = this.currentFiles[filename];
         if (file) {
-            filename = path.relative(file.file.cwd, info.file.filename);
+            filename = path.relative(file.file.cwd, file.file.path);
         }
         else {
             filename = info.file.filename;
