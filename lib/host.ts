@@ -10,11 +10,14 @@ var libDefault = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts'))
 export class Host implements ts.CompilerHost {
 	private currentDirectory: string;
 	private files: project.Map<project.FileData>;
+	private externalResolve: boolean;
 	output: project.Map<string>;
 	
-	constructor(currentDirectory: string, files: project.Map<project.FileData>) {
+	constructor(currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
 		this.currentDirectory = currentDirectory;
 		this.files = files;
+		
+		this.externalResolve = externalResolve;
 		
 		this.reset();
 	}
@@ -47,14 +50,34 @@ export class Host implements ts.CompilerHost {
 	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
 		var text: string;
 		
+		filename = project.Project.normalizePath(filename);
+		
 		if (this.files[filename]) {
-			return this.files[filename].ts;
+			if (this.files[filename] === project.Project.unresolvedFile) {
+				return undefined;
+			} else {
+				return this.files[filename].ts;
+			}
 		} else if (filename === '__lib.d.ts') {
-			text = libDefault; // TODO: Create a SourceFile once for the default lib
+			text = libDefault;
+		} else {
+			if (this.externalResolve) {
+				try {
+					text = fs.readFileSync(filename).toString('utf8');
+				} catch (ex) {
+					return undefined;
+				}
+			}
 		}
 		
-		// TODO: Incremental compilation (reuse SourceFiles from previous build)
+		if (typeof text !== 'string') return undefined;
 		
-		return (typeof text === 'string') ? ts.createSourceFile(filename, text, languageVersion, "0") : undefined;
+		var file = ts.createSourceFile(filename, text, languageVersion, "0");
+		this.files[filename] = {
+			filename: filename,
+			content: text,
+			ts: file
+		}
+		return file;
 	}
 }

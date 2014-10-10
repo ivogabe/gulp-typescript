@@ -18,6 +18,12 @@ export interface FileData {
 }
 
 export class Project {
+	static unresolvedFile: FileData = {
+		filename: undefined,
+		content: undefined,
+		ts: undefined
+	};
+	
 	/**
 	 * Files from the previous compilation.
 	 * Used to find the differences with the previous compilation, to make the new compilation faster.
@@ -97,7 +103,7 @@ export class Project {
 	 * Adds a file to the project.
 	 */
 	addFile(file: gutil.File) {
-		this.currentFiles[this.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
+		this.currentFiles[Project.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
 	}
 	
 	private getOriginalName(filename: string): string {
@@ -130,49 +136,49 @@ export class Project {
 	}
 	
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		// TODO: resolve external files that are imported
-		var references = file.ts.referencedFiles.map(item => this.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
+		var references = file.ts.referencedFiles.map(item => Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
 		
 		ts.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
 				
 				if (importNode.externalModuleName !== undefined) {
-					var ref = this.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+					var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
 					
 					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
-					
+					// We guess what file the user wants. This will be right in most cases.
+					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
+					// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
 					if (ref.substr(-3) === '.ts') {
 						references.push(ref);
 					} else {
 						references.push(ref + '.ts');
-						references.push(ref + '.d.ts');
 					}
 				}
 			}
 		});
 		
-		console.log(references);
-		
 		for (var i = 0; i < references.length; ++i) {
-			var ref = references[i];
-			
-			if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
-				session.tasks++;
-				this.additionalFiles[ref] = undefined;
-				
-				fs.readFile(ref, (error, data) => {
-					if (data) { // Typescript will throw an error when a file isn't found.
-						var file = this.getFileData(ref, data.toString('utf8'));
-						this.additionalFiles[ref] = file;
-						
-						this.resolve(session, file);
-					}
+			((i: number) => { // create scope
+				var ref = references[i];
+
+				if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
+					session.tasks++;
 					
-					session.tasks--;
-					if (session.tasks === 0) session.callback();
-				});
-			}
+					this.additionalFiles[ref] = Project.unresolvedFile;
+					
+					fs.readFile(ref, (error, data) => {
+						if (data) { // Typescript will throw an error when a file isn't found.
+							var file = this.getFileData(ref, data.toString('utf8'));
+							this.additionalFiles[ref] = file;
+							this.resolve(session, file);
+						}
+
+						session.tasks--;
+						if (session.tasks === 0) session.callback();
+					});
+				}
+			})(i);
 		}
 	}
 	resolveAll(callback: () => void) {
@@ -182,7 +188,7 @@ export class Project {
 		}
 		
 		var session = {
-			tasks: 1,
+			tasks: 0,
 			callback: callback
 		};
 		
@@ -192,7 +198,7 @@ export class Project {
 			}
 		}
 		
-		session.tasks--;
+		//session.tasks--;
 	}
 	
 	/**
@@ -212,7 +218,7 @@ export class Project {
 			}
 		}
 		
-		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files);
+		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 		
 		// Creating a program compiles the sources
 		this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
@@ -247,9 +253,11 @@ export class Project {
 			
 			var data: string = this.host.output[filename];
 			
+			var fullOriginalName = original.file.path;
+			
 			if (filename.substr(-3) === '.js') {
 				var file = new gutil.File({
-					path: filename,
+					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
 					contents: new Buffer(this.removeSourceMapComment(data)),
 					cwd: original.file.cwd,
 					base: original.file.base
@@ -259,7 +267,7 @@ export class Project {
 				outputJS.push(file);
 			} else if (filename.substr(-5) === '.d.ts') {
 				var file = new gutil.File({
-					path: filename,
+					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
 					contents: new Buffer(this.removeSourceMapComment(data)),
 					cwd: original.file.cwd,
 					base: original.file.base
@@ -267,7 +275,7 @@ export class Project {
 				
 				declStream.push(file);
 			} else if (filename.substr(-4) === '.map') {
-				sourcemaps[filename] = data;
+				sourcemaps[originalName] = data;
 			}
 		}
 		
@@ -319,7 +327,7 @@ export class Project {
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
 		
-		var data = this.getFileData(this.normalizePath(file.path), str);
+		var data = this.getFileData(Project.normalizePath(file.path), str);
 		data.file = file;
 		
 		return data;
@@ -327,7 +335,7 @@ export class Project {
 	
 	private getFileData(filename: string, content: string): FileData {
 		return {
-			filename: filename,
+			filename: Project.normalizePath(filename),
 			content: content,
 			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
@@ -342,7 +350,7 @@ export class Project {
 		return content.substring(0, index) + '\n';
 	}
 
-	normalizePath(path: string) {
+	static normalizePath(path: string) {
 		return ts.normalizePath(path).toLowerCase();
 	}
 
