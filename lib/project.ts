@@ -28,7 +28,7 @@ export class Project {
 	 * Files from the previous compilation.
 	 * Used to find the differences with the previous compilation, to make the new compilation faster.
 	 */
-	//previousFiles: Map<FileData> = {};
+	previousFiles: Map<FileData> = {};
 	/**
 	 * The files in the current compilation.
 	 * This Map only contains the files in the project, not external files. Those are in Project#additionalFiles.
@@ -94,6 +94,8 @@ export class Project {
 	 * The compiler needs to be reset for incremental builds.
 	 */
 	reset() {
+		this.previousFiles = this.currentFiles;
+		
 		this.currentFiles = {};
 		this.additionalFiles = {};
 		
@@ -103,7 +105,28 @@ export class Project {
 	 * Adds a file to the project.
 	 */
 	addFile(file: gutil.File) {
-		this.currentFiles[Project.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
+		var fileData: FileData;
+		var filename = Project.normalizePath(file.path);
+		
+		// Incremental compilation
+		var oldFileData = this.previousFiles[filename];
+		if (oldFileData) {
+			if (oldFileData.content === file.contents.toString('utf8')) {
+				// Unchanged, we can use the (ts) file from previous build.
+				fileData = {
+					file: file,
+					filename: oldFileData.content,
+					content: oldFileData.content,
+					ts: oldFileData.ts
+				};
+			} else {
+				fileData = this.getFileDataFromGulpFile(file);
+			}
+		} else {
+			fileData = this.getFileDataFromGulpFile(file);
+		}
+		
+		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
 	
 	private getOriginalName(filename: string): string {
