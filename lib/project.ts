@@ -198,7 +198,9 @@ export class Project {
 			}
 		}
 		
-		//session.tasks--;
+		if (session.tasks === 0) {
+			callback();
+		}
 	}
 	
 	/**
