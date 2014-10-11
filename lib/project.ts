@@ -293,7 +293,7 @@ export class Project {
 			} else if (filename.substr(-5) === '.d.ts') {
 				var file = new gutil.File({
 					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
-					contents: new Buffer(this.removeSourceMapComment(data)),
+					contents: new Buffer(data),
 					cwd: original.file.cwd,
 					base: original.file.base
 				});
