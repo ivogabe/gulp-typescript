@@ -235,6 +235,7 @@ var Project = (function () {
         if (this.sortOutput) {
             var done = {};
             var sortedEmit = function (originalName, file) {
+                originalName = Project.normalizePath(originalName);
                 if (done[originalName])
                     return;
                 done[originalName] = true;

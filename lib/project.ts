@@ -316,6 +316,8 @@ export class Project {
 			var done: { [ filename: string] : boolean } = {};
 
 			var sortedEmit = (originalName: string, file: gutil.File) => {
+				originalName = Project.normalizePath(originalName);
+				
 				if (done[originalName]) return;
 				done[originalName] = true;
 
