@@ -346,6 +346,7 @@ export class Project {
 			for (var i = 0; i < outputJS.length; ++i) {
 				var file = outputJS[i];
 				var originalName = this.getOriginalName(file.path);
+				originalName = Project.normalizePath(originalName);
 				emit(originalName, file);
 			}
 		}
