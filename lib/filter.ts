@@ -3,7 +3,7 @@ import main = require('./main');
 
 export class Filter {
 	project: project.Project;
-	constructor(_project: project.Project, filters: main.Filters) {
+	constructor(_project: project.Project, filters: main.FilterSettings) {
 		this.project = _project;
 		
 		if (filters.referencedFrom !== undefined) {
