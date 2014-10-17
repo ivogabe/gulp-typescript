@@ -75,7 +75,6 @@ function compile();
 function compile(proj: project.Project, filters: compile.FilterSettings);
 function compile(settings: compile.Settings, filters: compile.FilterSettings);
 function compile(param?: any, filters?: compile.FilterSettings): any {
-	// TODO: filters
 	var proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
@@ -84,6 +83,7 @@ function compile(param?: any, filters?: compile.FilterSettings): any {
 	}
 	
 	proj.reset();
+	proj.filterSettings = filters;
 	
 	var inputStream = new CompileStream(proj);
 	
