@@ -1,29 +1,29 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
-import typescript = require('typescript-api');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import fs = require('fs'); // Only used for readonly access
 import sourcemapApply = require('vinyl-sourcemaps-apply');
-
-var defaultLibSnapshot = typescript.ScriptSnapshot.fromString(
-	fs.readFileSync(path.join(__dirname, '../lib.d.ts')).toString('utf8')
-);
+import host = require('./host');
 
 export interface Map<T> {
 	[key: string]: T;
 }
 export interface FileData {
 	file?: gutil.File;
+	filename: string;
 	content: string;
-	scriptSnapshot: typescript.IScriptSnapshot;
-	byteOrderMark: typescript.ByteOrderMark;
-	referencedFiles: string[];
-	addedToCompiler: boolean;
+	ts: ts.SourceFile;
 }
 
-export class Project implements typescript.IReferenceResolverHost {
+export class Project {
+	static unresolvedFile: FileData = {
+		filename: undefined,
+		content: undefined,
+		ts: undefined
+	};
+	
 	/**
 	 * Files from the previous compilation.
 	 * Used to find the differences with the previous compilation, to make the new compilation faster.
@@ -41,19 +41,7 @@ export class Project implements typescript.IReferenceResolverHost {
 	 * is added to this Map. The file property of the FileData objects in this Map are not set.
 	 */
 	additionalFiles: Map<FileData> = {};
-	/**
-	 * A complete list of all the files in the current compilation.
-	 * The list can contain duplicates, but that doesn't matter for the code below.
-	 */
-	references: string[] = [];
-	/**
-	 * Whether there was a 'no-default-lib' tag found in one of the files in the current compilation.
-	 */
-	private hasNoDefaultLibTag: boolean = false;
-	/**
-	 * Whether the default lib.d.ts was added to the compiler. Used by Project#setDefaultLib.
-	 */
-	private defaultLibInCompiler: boolean = false;
+	
 	/**
 	 * Whether there should not be loaded external files to the project.
 	 * Example:
@@ -72,206 +60,250 @@ export class Project implements typescript.IReferenceResolverHost {
 	 */
 	private sortOutput: boolean;
 	
-	compiler: typescript.TypeScriptCompiler;
-	
 	/**
 	 * The version number of the compilation.
 	 * This number is increased for every compilation in the same gulp session.
 	 * Used for incremental builds.
 	 */
 	version: number = 0;
+	
+	options: ts.CompilerOptions;
+	host: host.Host;
+	program: ts.Program;
 
-	constructor(settings: typescript.ImmutableCompilationSettings, noExternalResolve: boolean, sortOutput: boolean) {
-		this.compiler = new typescript.TypeScriptCompiler(new typescript.NullLogger(), settings);
-		
-		if (!settings.noLib()) {
-			this.setDefaultLib(true);
-		}
+	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean) {
+		this.options = options;
 		
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
 	}
 	
-	/**
-	 * Adds or removes lib.d.ts
-	 */
-	setDefaultLib(active: boolean) {
-		if (active != this.defaultLibInCompiler) {
-			if (active) {
-				// Add defaultLib
-				this.compiler.addFile('lib.d.ts', defaultLibSnapshot, typescript.ByteOrderMark.Utf8, this.version, false, []);
-			} else {
-				// Remove lib.d.ts
-				this.compiler.removeFile('lib.d.ts');
+	getCurrentFilenames(): string[] {
+		var result: string[] = [];
+		
+		for (var i in this.currentFiles) {
+			if (this.currentFiles.hasOwnProperty(i)) {
+				result.push(this.currentFiles[i].file.path);
 			}
-			
-			this.defaultLibInCompiler = active;
 		}
+		
+		return result;
 	}
-	
 	/**
 	 * Resets the compiler.
 	 * The compiler needs to be reset for incremental builds.
 	 */
 	reset() {
 		this.previousFiles = this.currentFiles;
+		
 		this.currentFiles = {};
-		this.references = [];
-		
-		for (var filename in this.additionalFiles) {
-			if (!Object.prototype.hasOwnProperty.call(this.additionalFiles, filename)) {
-				continue;
-			}
-			this.compiler.removeFile(filename);
-		}
-		
 		this.additionalFiles = {};
+		
 		this.version++;
-		this.hasNoDefaultLibTag = false;
 	}
 	/**
 	 * Adds a file to the project.
 	 */
 	addFile(file: gutil.File) {
-		this.currentFiles[this.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
+		var fileData: FileData;
+		var filename = Project.normalizePath(file.path);
+		
+		// Incremental compilation
+		var oldFileData = this.previousFiles[filename];
+		if (oldFileData) {
+			if (oldFileData.content === file.contents.toString('utf8')) {
+				// Unchanged, we can use the (ts) file from previous build.
+				fileData = {
+					file: file,
+					filename: oldFileData.content,
+					content: oldFileData.content,
+					ts: oldFileData.ts
+				};
+			} else {
+				fileData = this.getFileDataFromGulpFile(file);
+			}
+		} else {
+			fileData = this.getFileDataFromGulpFile(file);
+		}
+		
+		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
 	
 	private getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
-	private getError(info: typescript.Diagnostic) {
-		var filename = this.getOriginalName(info.fileName())
+	private getError(info: ts.Diagnostic) {
+		var err = new Error();
+		err.name = 'TypeScript error';
+		
+		if (!info.file) {
+			err.message = info.code + ' ' + info.messageText;
+			
+			return err;
+		}
+		
+		var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
 		var file = this.currentFiles[filename];
 		
 		if (file) {
-			filename = path.relative(file.file.cwd, info.fileName());
+			filename = path.relative(file.file.cwd, file.file.path);
 		} else {
-			filename = info.fileName();
+			filename = info.file.filename;
 		}
 		
-		var err = new Error();
-		err.name = 'TypeScript error';
-		err.message = gutil.colors.red(filename + '(' + (info.line() + 1) + ',' + (info.character() + 1) + '): ') + info.message();
+		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
+		
+		err.message = gutil.colors.red(filename + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ') + info.code + ' ' + info.messageText;
 		
 		return err;
+	}
+	
+	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
+		var references = file.ts.referencedFiles.map(item => Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
+		
+		ts.forEachChild(file.ts, (node) => {
+			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+				var importNode = <ts.ImportDeclaration> node;
+				
+				if (importNode.externalModuleName !== undefined) {
+					var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+					
+					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
+					// We guess what file the user wants. This will be right in most cases.
+					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
+					// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
+					if (ref.substr(-3) === '.ts') {
+						references.push(ref);
+					} else {
+						references.push(ref + '.ts');
+					}
+				}
+			}
+		});
+		
+		for (var i = 0; i < references.length; ++i) {
+			((i: number) => { // create scope
+				var ref = references[i];
+
+				if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
+					session.tasks++;
+					
+					this.additionalFiles[ref] = Project.unresolvedFile;
+					
+					fs.readFile(ref, (error, data) => {
+						if (data) { // Typescript will throw an error when a file isn't found.
+							var file = this.getFileData(ref, data.toString('utf8'));
+							this.additionalFiles[ref] = file;
+							this.resolve(session, file);
+						}
+
+						session.tasks--;
+						if (session.tasks === 0) session.callback();
+					});
+				}
+			})(i);
+		}
+	}
+	resolveAll(callback: () => void) {
+		if (this.noExternalResolve) {
+			callback();
+			return;
+		}
+		
+		var session = {
+			tasks: 0,
+			callback: callback
+		};
+		
+		for (var i in this.currentFiles) {
+			if (this.currentFiles.hasOwnProperty(i)) {
+				this.resolve(session, this.currentFiles[i]);
+			}
+		}
+		
+		if (session.tasks === 0) {
+			callback();
+		}
 	}
 	
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
-		// Delete files that are in previousFiles, but not in currentFiles
-		for (var filename in this.previousFiles) {
-			if (!Object.prototype.hasOwnProperty.call(this.previousFiles, filename)) {
-				continue;
-			}
-			
-			if (!this.currentFiles[filename]) {
-				this.compiler.removeFile(filename);
-			}
-		}
+		var files: Map<FileData> = {};
 		
-		// Add / update files in currentFiles
 		for (var filename in this.currentFiles) {
-			if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
-				continue;
+			if (this.currentFiles.hasOwnProperty(filename)) {
+				files[filename] = this.currentFiles[filename];
 			}
-			
-			
-			
-			var fileData = this.currentFiles[filename];
-			fileData.addedToCompiler = true;
-			if (this.previousFiles[filename]) {
-				// Update
-				var range = this.getTextChangeRange(this.previousFiles[filename].content, fileData.content);
-				if (range != typescript.TextChangeRange.unchanged) {
-					this.compiler.updateFile(filename, fileData.scriptSnapshot, this.version, false, range);
-					
-				}
-			} else {
-				// Add
-				this.compiler.addFile(filename, fileData.scriptSnapshot, fileData.byteOrderMark, this.version, false, /*referenceStrings*/ []);
-			}
-			
-			
 		}
-		
-		// Look for external files (imports and references to files outside the input files)
-		if (!this.noExternalResolve || this.sortOutput) {
-			for (var filename in this.currentFiles) {
-				if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
-					continue;
-				}
-
-				if (this.references.indexOf(filename) != -1 && !this.sortOutput) {
-					continue;
-				}
-
-				var references: typescript.ReferenceResolutionResult = typescript.ReferenceResolver.resolve([filename], this, false);
-
-				var referenceStrings: string[] = references.resolvedFiles.map<string>((ref) => this.normalizePath(ref.path));
-
-				this.currentFiles[filename].referencedFiles = referenceStrings;
-
-				this.references = this.references.concat(referenceStrings);
-
-				this.hasNoDefaultLibTag = this.hasNoDefaultLibTag || references.seenNoDefaultLibTag;
+		for (var filename in this.additionalFiles) {
+			if (this.additionalFiles.hasOwnProperty(filename)) {
+				files[filename] = this.additionalFiles[filename];
 			}
 		}
 		
-		if (!this.noExternalResolve) {
-			this.setDefaultLib(!this.hasNoDefaultLibTag);
-			this.handleReferences(this.references);
-		}
+		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 		
-		var results = this.compiler.compile(path => typescript.IO.resolvePath(path));
+		// Creating a program compiles the sources
+		this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
+		
+		var errors = this.program.getDiagnostics();
+        
+		if (!errors.length) {
+			// If there are no syntax errors, check types
+			var checker = this.program.getTypeChecker(true);
+			
+			var semanticErrors = checker.getDiagnostics();
+			
+            var emitErrors = checker.emitFiles().errors;
+            
+            errors = semanticErrors.concat(emitErrors);
+        }
+		
+		for (var i = 0; i < errors.length; i++) {
+			errorCallback(this.getError(errors[i]));
+		}
 		
 		var outputJS: gutil.File[] = [];
 		var sourcemaps: { [ filename: string ]: string } = {};
-
-		while (results.moveNext()) {
-			var res = results.current();
+		
+		for (var filename in this.host.output) {
+			if (!this.host.output.hasOwnProperty(filename)) continue;
 			
-			res.diagnostics.forEach(item => {
-				errorCallback(this.getError(item));
-			});
+			var originalName = this.getOriginalName(filename);
+			var original: FileData = this.currentFiles[originalName];
 			
-			res.outputFiles.forEach(outputFile => {
-				var originalName = this.getOriginalName(outputFile.name);
-				var original: FileData = this.currentFiles[originalName];
-				
-				if (!original) return;
-				
-				if (outputFile.fileType === typescript.OutputFileType.SourceMap) {
-					sourcemaps[originalName] = outputFile.text;
-				}
-				
-				switch (outputFile.fileType) {
-					case typescript.OutputFileType.JavaScript:
-						var file = new gutil.File({
-							path: outputFile.name,
-							contents: new Buffer(this.removeSourceMapComment(outputFile.text)),
-							cwd: original.file.cwd,
-							base: original.file.base
-						});
+			if (!original) continue;
+			
+			var data: string = this.host.output[filename];
+			
+			var fullOriginalName = original.file.path;
+			
+			if (filename.substr(-3) === '.js') {
+				var file = new gutil.File({
+					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
+					contents: new Buffer(this.removeSourceMapComment(data)),
+					cwd: original.file.cwd,
+					base: original.file.base
+				});
 
-						if (original.file.sourceMap) file.sourceMap = original.file.sourceMap;
-						outputJS.push(file);
-						break;
-					case typescript.OutputFileType.Declaration:
-						var file = new gutil.File({
-							path: outputFile.name,
-							contents: new Buffer(outputFile.text),
-							cwd: original.file.cwd,
-							base: original.file.base
-						});
-
-						declStream.push(file);
-						break;
-				}
-			});
+				if (original.file.sourceMap) file.sourceMap = original.file.sourceMap;
+				outputJS.push(file);
+			} else if (filename.substr(-5) === '.d.ts') {
+				var file = new gutil.File({
+					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
+					contents: new Buffer(data),
+					cwd: original.file.cwd,
+					base: original.file.base
+				});
+				
+				declStream.push(file);
+			} else if (filename.substr(-4) === '.map') {
+				sourcemaps[originalName] = data;
+			}
 		}
-
+		
 		var emit = (originalName: string, file: gutil.File) => {
 			var map = sourcemaps[originalName];
 
@@ -279,21 +311,25 @@ export class Project implements typescript.IReferenceResolverHost {
 
 			jsStream.push(file);
 		};
-
+		
 		if (this.sortOutput) {
 			var done: { [ filename: string] : boolean } = {};
 
 			var sortedEmit = (originalName: string, file: gutil.File) => {
+				originalName = Project.normalizePath(originalName);
+				
 				if (done[originalName]) return;
 				done[originalName] = true;
 
 				var inputFile = this.currentFiles[originalName];
-
+				var tsFile = this.program.getSourceFile(originalName);
+				var references = tsFile.referencedFiles.map(file => file.filename);
+				
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
 					var otherName = this.getOriginalName(other.path);
 
-					if (inputFile.referencedFiles.indexOf(otherName) !== -1) {
+					if (references.indexOf(otherName) !== -1) {
 						sortedEmit(otherName, other);
 					}
 				}
@@ -310,28 +346,16 @@ export class Project implements typescript.IReferenceResolverHost {
 			for (var i = 0; i < outputJS.length; ++i) {
 				var file = outputJS[i];
 				var originalName = this.getOriginalName(file.path);
+				originalName = Project.normalizePath(originalName);
 				emit(originalName, file);
 			}
 		}
 	}
 	
-	private handleReferences(references: string[]) {
-		references.forEach((filename) => {
-			filename = this.normalizePath(filename);
-			if (!(this.currentFiles[filename] || this.additionalFiles[filename].addedToCompiler)) {
-				var data = this.additionalFiles[filename];
-				
-				this.compiler.addFile(filename, data.scriptSnapshot, data.byteOrderMark, this.version, false, []);
-				
-				data.addedToCompiler = true;
-			}
-		});
-	}
-	
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
 		
-		var data = this.getFileData(this.normalizePath(file.path), str);
+		var data = this.getFileData(Project.normalizePath(file.path), str);
 		data.file = file;
 		
 		return data;
@@ -339,40 +363,10 @@ export class Project implements typescript.IReferenceResolverHost {
 	
 	private getFileData(filename: string, content: string): FileData {
 		return {
+			filename: Project.normalizePath(filename),
 			content: content,
-			scriptSnapshot: typescript.ScriptSnapshot.fromString(content),
-			byteOrderMark: typescript.ByteOrderMark.Utf8,
-			referencedFiles: [],
-			addedToCompiler: false
-		}
-	}
-	
-	private getTextChangeRange(oldStr: string, newStr: string) {
-		var begin = 0;
-		var end = 0;
-		
-		var max = newStr.length > oldStr.length ? newStr : oldStr;
-		var min = newStr.length > oldStr.length ? oldStr : newStr;
-		
-		if (min == max) return typescript.TextChangeRange.unchanged;
-		
-		for (var i = 0; i < min.length; ++i) {
-			if (min.charAt(i) == max.charAt(i)) {
-				begin = i + 1;
-			} else {
-				break;
-			}
-		}
-		
-		for (var i = 0; i + begin < min.length; ++i) {
-			if (min.charAt(min.length - 1 - i) == max.charAt(max.length - 1 - i)) {
-				end = i + 1;
-			} else {
-				break;
-			}
-		}
-		
-		return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
+			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
+		};
 	}
 	
 	private removeSourceMapComment(content: string): string {
@@ -384,17 +378,12 @@ export class Project implements typescript.IReferenceResolverHost {
 		return content.substring(0, index) + '\n';
 	}
 
-	normalizePath(path: string) {
-		path = this.resolvePath(path);
-
-		// Switch to forward slashes
-		path = typescript.switchToForwardSlashes(path);
-
-		return path;
+	static normalizePath(path: string) {
+		return ts.normalizePath(path).toLowerCase();
 	}
 
 	// IReferenceResolverHost
-	getScriptSnapshot(filename: string): typescript.IScriptSnapshot {
+	/*getScriptSnapshot(filename: string): typescript.IScriptSnapshot {
 		filename = this.normalizePath(filename);
 		if (this.currentFiles[filename]) {
 			return this.currentFiles[filename].scriptSnapshot;
@@ -473,5 +462,5 @@ export class Project implements typescript.IReferenceResolverHost {
 	}
 	resolvePath(path: string): string {
 		return typescript.IO.resolvePath(path);
-	}
+	}*/
 }

@@ -1,6 +1,5 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
-import typescript = require('typescript-api');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
@@ -42,12 +41,14 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private compile() {
-		this._project.compile(this.js, this.dts, (err) => { 
-			console.error(err.message);
-			this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+		this._project.resolveAll(() => {
+			this._project.compile(this.js, this.dts, (err) => { 
+				console.error(err.message);
+				this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+			});
+			this.js.push(null);
+			this.dts.push(null);
 		});
-		this.js.push(null);
-		this.dts.push(null);
 	}
 	
 	end(chunk?, encoding?, callback?) {
@@ -76,7 +77,7 @@ function compile(param?: any): any {
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
-		proj = new project.Project(getImmutableCompilationSettings(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
+		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
 	}
 	
 	proj.reset();
@@ -86,17 +87,17 @@ function compile(param?: any): any {
 	return inputStream;
 }
 
-var langMap: project.Map<typescript.LanguageVersion> = {
-	'es3': typescript.LanguageVersion.EcmaScript3,
-	'es5': typescript.LanguageVersion.EcmaScript5
+var langMap: project.Map<ts.ScriptTarget> = {
+	'es3': ts.ScriptTarget.ES3,
+	'es5': ts.ScriptTarget.ES5
 }
-var moduleMap: project.Map<typescript.ModuleGenTarget> = {
-	'commonjs': typescript.ModuleGenTarget.Synchronous,
-	'amd': typescript.ModuleGenTarget.Asynchronous
+var moduleMap: project.Map<ts.ModuleKind> = {
+	'commonjs': ts.ModuleKind.CommonJS,
+	'amd': ts.ModuleKind.AMD
 }
 
-function getImmutableCompilationSettings(settings: compile.Settings): typescript.ImmutableCompilationSettings {
-	var tsSettings = new typescript.CompilationSettings();
+function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
+	var tsSettings: ts.CompilerOptions = {};
 	
 	if (settings.removeComments !== undefined) {
 		tsSettings.removeComments = settings.removeComments;
@@ -110,10 +111,10 @@ function getImmutableCompilationSettings(settings: compile.Settings): typescript
 	}
 	
 	if (settings.target !== undefined) {
-		tsSettings.codeGenTarget = langMap[(settings.target || 'es3').toLowerCase()];
+		tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
 	}
 	if (settings.module !== undefined) {
-		tsSettings.moduleGenTarget = moduleMap[(settings.module || 'none').toLowerCase()];
+		tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
 	}
 
 	if (settings.sourceRoot === undefined) {
@@ -123,13 +124,12 @@ function getImmutableCompilationSettings(settings: compile.Settings): typescript
 	}
 
 	if (settings.declarationFiles !== undefined) {
-		tsSettings.generateDeclarationFiles = settings.declarationFiles;
+		tsSettings.declaration = settings.declarationFiles;
 	}
-	
-	tsSettings.useCaseSensitiveFileResolution = false;
-	tsSettings.mapSourceFiles = true;
 
-	return typescript.ImmutableCompilationSettings.fromCompilationSettings(tsSettings);
+	tsSettings.sourceMap = true;
+	
+	return tsSettings;
 }
 
 module compile {
@@ -153,7 +153,7 @@ module compile {
 	}
 	export import Project = project.Project;
 	export function createProject(settings: Settings): Project {
-		return new Project(getImmutableCompilationSettings(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
 	}
 }
 

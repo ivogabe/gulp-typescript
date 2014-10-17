@@ -1,348 +1,284 @@
+var ts = require('../typescript/ts');
 ///<reference path='../definitions/ref.d.ts'/>
-var typescript = require('typescript-api');
 var gutil = require('gulp-util');
 var path = require('path');
-
-var fs = require('fs');
+var fs = require('fs'); // Only used for readonly access
 var sourcemapApply = require('vinyl-sourcemaps-apply');
-
-var defaultLibSnapshot = typescript.ScriptSnapshot.fromString(fs.readFileSync(path.join(__dirname, '../lib.d.ts')).toString('utf8'));
-
+var host = require('./host');
 var Project = (function () {
-    function Project(settings, noExternalResolve, sortOutput) {
+    function Project(options, noExternalResolve, sortOutput) {
         /**
-        * Files from the previous compilation.
-        * Used to find the differences with the previous compilation, to make the new compilation faster.
-        */
+         * Files from the previous compilation.
+         * Used to find the differences with the previous compilation, to make the new compilation faster.
+         */
         this.previousFiles = {};
         /**
-        * The files in the current compilation.
-        * This Map only contains the files in the project, not external files. Those are in Project#additionalFiles.
-        * The file property of the FileData objects in this Map are set.
-        */
+         * The files in the current compilation.
+         * This Map only contains the files in the project, not external files. Those are in Project#additionalFiles.
+         * The file property of the FileData objects in this Map are set.
+         */
         this.currentFiles = {};
         /**
-        * External files of the current compilation.
-        * When a file is imported by or referenced from another file, and the file is not one of the input files, it
-        * is added to this Map. The file property of the FileData objects in this Map are not set.
-        */
+         * External files of the current compilation.
+         * When a file is imported by or referenced from another file, and the file is not one of the input files, it
+         * is added to this Map. The file property of the FileData objects in this Map are not set.
+         */
         this.additionalFiles = {};
         /**
-        * A complete list of all the files in the current compilation.
-        * The list can contain duplicates, but that doesn't matter for the code below.
-        */
-        this.references = [];
-        /**
-        * Whether there was a 'no-default-lib' tag found in one of the files in the current compilation.
-        */
-        this.hasNoDefaultLibTag = false;
-        /**
-        * Whether the default lib.d.ts was added to the compiler. Used by Project#setDefaultLib.
-        */
-        this.defaultLibInCompiler = false;
-        /**
-        * The version number of the compilation.
-        * This number is increased for every compilation in the same gulp session.
-        * Used for incremental builds.
-        */
+         * The version number of the compilation.
+         * This number is increased for every compilation in the same gulp session.
+         * Used for incremental builds.
+         */
         this.version = 0;
-        this.compiler = new typescript.TypeScriptCompiler(new typescript.NullLogger(), settings);
-
-        if (!settings.noLib()) {
-            this.setDefaultLib(true);
-        }
-
+        this.options = options;
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
     }
-    /**
-    * Adds or removes lib.d.ts
-    */
-    Project.prototype.setDefaultLib = function (active) {
-        if (active != this.defaultLibInCompiler) {
-            if (active) {
-                // Add defaultLib
-                this.compiler.addFile('lib.d.ts', defaultLibSnapshot, 1 /* Utf8 */, this.version, false, []);
-            } else {
-                // Remove lib.d.ts
-                this.compiler.removeFile('lib.d.ts');
+    Project.prototype.getCurrentFilenames = function () {
+        var result = [];
+        for (var i in this.currentFiles) {
+            if (this.currentFiles.hasOwnProperty(i)) {
+                result.push(this.currentFiles[i].file.path);
             }
-
-            this.defaultLibInCompiler = active;
         }
+        return result;
     };
-
     /**
-    * Resets the compiler.
-    * The compiler needs to be reset for incremental builds.
-    */
+     * Resets the compiler.
+     * The compiler needs to be reset for incremental builds.
+     */
     Project.prototype.reset = function () {
         this.previousFiles = this.currentFiles;
         this.currentFiles = {};
-        this.references = [];
-
-        for (var filename in this.additionalFiles) {
-            if (!Object.prototype.hasOwnProperty.call(this.additionalFiles, filename)) {
-                continue;
-            }
-            this.compiler.removeFile(filename);
-        }
-
         this.additionalFiles = {};
         this.version++;
-        this.hasNoDefaultLibTag = false;
     };
-
     /**
-    * Adds a file to the project.
-    */
+     * Adds a file to the project.
+     */
     Project.prototype.addFile = function (file) {
-        this.currentFiles[this.normalizePath(file.path)] = this.getFileDataFromGulpFile(file);
+        var fileData;
+        var filename = Project.normalizePath(file.path);
+        // Incremental compilation
+        var oldFileData = this.previousFiles[filename];
+        if (oldFileData) {
+            if (oldFileData.content === file.contents.toString('utf8')) {
+                // Unchanged, we can use the (ts) file from previous build.
+                fileData = {
+                    file: file,
+                    filename: oldFileData.content,
+                    content: oldFileData.content,
+                    ts: oldFileData.ts
+                };
+            }
+            else {
+                fileData = this.getFileDataFromGulpFile(file);
+            }
+        }
+        else {
+            fileData = this.getFileDataFromGulpFile(file);
+        }
+        this.currentFiles[Project.normalizePath(file.path)] = fileData;
     };
-
     Project.prototype.getOriginalName = function (filename) {
         return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts');
     };
     Project.prototype.getError = function (info) {
-        var filename = this.getOriginalName(info.fileName());
-        var file = this.currentFiles[filename];
-
-        if (file) {
-            filename = path.relative(file.file.cwd, info.fileName());
-        } else {
-            filename = info.fileName();
-        }
-
         var err = new Error();
         err.name = 'TypeScript error';
-        err.message = gutil.colors.red(filename + '(' + (info.line() + 1) + ',' + (info.character() + 1) + '): ') + info.message();
-
+        if (!info.file) {
+            err.message = info.code + ' ' + info.messageText;
+            return err;
+        }
+        var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
+        var file = this.currentFiles[filename];
+        if (file) {
+            filename = path.relative(file.file.cwd, file.file.path);
+        }
+        else {
+            filename = info.file.filename;
+        }
+        var startPos = info.file.getLineAndCharacterFromPosition(info.start);
+        err.message = gutil.colors.red(filename + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ') + info.code + ' ' + info.messageText;
         return err;
     };
-
+    Project.prototype.resolve = function (session, file) {
+        var _this = this;
+        var references = file.ts.referencedFiles.map(function (item) { return Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)); });
+        ts.forEachChild(file.ts, function (node) {
+            if (node.kind === 174 /* ImportDeclaration */) {
+                var importNode = node;
+                if (importNode.externalModuleName !== undefined) {
+                    var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+                    // Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
+                    // We guess what file the user wants. This will be right in most cases.
+                    // The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
+                    // If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
+                    if (ref.substr(-3) === '.ts') {
+                        references.push(ref);
+                    }
+                    else {
+                        references.push(ref + '.ts');
+                    }
+                }
+            }
+        });
+        for (var i = 0; i < references.length; ++i) {
+            (function (i) {
+                var ref = references[i];
+                if (!_this.currentFiles.hasOwnProperty(ref) && !_this.additionalFiles.hasOwnProperty(ref)) {
+                    session.tasks++;
+                    _this.additionalFiles[ref] = Project.unresolvedFile;
+                    fs.readFile(ref, function (error, data) {
+                        if (data) {
+                            var file = _this.getFileData(ref, data.toString('utf8'));
+                            _this.additionalFiles[ref] = file;
+                            _this.resolve(session, file);
+                        }
+                        session.tasks--;
+                        if (session.tasks === 0)
+                            session.callback();
+                    });
+                }
+            })(i);
+        }
+    };
+    Project.prototype.resolveAll = function (callback) {
+        if (this.noExternalResolve) {
+            callback();
+            return;
+        }
+        var session = {
+            tasks: 0,
+            callback: callback
+        };
+        for (var i in this.currentFiles) {
+            if (this.currentFiles.hasOwnProperty(i)) {
+                this.resolve(session, this.currentFiles[i]);
+            }
+        }
+        if (session.tasks === 0) {
+            callback();
+        }
+    };
     /**
-    * Compiles the input files
-    */
+     * Compiles the input files
+     */
     Project.prototype.compile = function (jsStream, declStream, errorCallback) {
         var _this = this;
-        for (var filename in this.previousFiles) {
-            if (!Object.prototype.hasOwnProperty.call(this.previousFiles, filename)) {
-                continue;
-            }
-
-            if (!this.currentFiles[filename]) {
-                this.compiler.removeFile(filename);
-            }
-        }
-
+        var files = {};
         for (var filename in this.currentFiles) {
-            if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
-                continue;
-            }
-
-            var fileData = this.currentFiles[filename];
-            fileData.addedToCompiler = true;
-            if (this.previousFiles[filename]) {
-                // Update
-                var range = this.getTextChangeRange(this.previousFiles[filename].content, fileData.content);
-                if (range != typescript.TextChangeRange.unchanged) {
-                    this.compiler.updateFile(filename, fileData.scriptSnapshot, this.version, false, range);
-                }
-            } else {
-                // Add
-                this.compiler.addFile(filename, fileData.scriptSnapshot, fileData.byteOrderMark, this.version, false, []);
+            if (this.currentFiles.hasOwnProperty(filename)) {
+                files[filename] = this.currentFiles[filename];
             }
         }
-
-        // Look for external files (imports and references to files outside the input files)
-        if (!this.noExternalResolve || this.sortOutput) {
-            for (var filename in this.currentFiles) {
-                if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
-                    continue;
-                }
-
-                if (this.references.indexOf(filename) != -1 && !this.sortOutput) {
-                    continue;
-                }
-
-                var references = typescript.ReferenceResolver.resolve([filename], this, false);
-
-                var referenceStrings = references.resolvedFiles.map(function (ref) {
-                    return _this.normalizePath(ref.path);
-                });
-
-                this.currentFiles[filename].referencedFiles = referenceStrings;
-
-                this.references = this.references.concat(referenceStrings);
-
-                this.hasNoDefaultLibTag = this.hasNoDefaultLibTag || references.seenNoDefaultLibTag;
+        for (var filename in this.additionalFiles) {
+            if (this.additionalFiles.hasOwnProperty(filename)) {
+                files[filename] = this.additionalFiles[filename];
             }
         }
-
-        if (!this.noExternalResolve) {
-            this.setDefaultLib(!this.hasNoDefaultLibTag);
-            this.handleReferences(this.references);
+        this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
+        // Creating a program compiles the sources
+        this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
+        var errors = this.program.getDiagnostics();
+        if (!errors.length) {
+            // If there are no syntax errors, check types
+            var checker = this.program.getTypeChecker(true);
+            var semanticErrors = checker.getDiagnostics();
+            var emitErrors = checker.emitFiles().errors;
+            errors = semanticErrors.concat(emitErrors);
         }
-
-        var results = this.compiler.compile(function (path) {
-            return typescript.IO.resolvePath(path);
-        });
-
+        for (var i = 0; i < errors.length; i++) {
+            errorCallback(this.getError(errors[i]));
+        }
         var outputJS = [];
         var sourcemaps = {};
-
-        while (results.moveNext()) {
-            var res = results.current();
-
-            res.diagnostics.forEach(function (item) {
-                errorCallback(_this.getError(item));
-            });
-
-            res.outputFiles.forEach(function (outputFile) {
-                var originalName = _this.getOriginalName(outputFile.name);
-                var original = _this.currentFiles[originalName];
-
-                if (!original)
-                    return;
-
-                if (outputFile.fileType === 1 /* SourceMap */) {
-                    sourcemaps[originalName] = outputFile.text;
-                }
-
-                switch (outputFile.fileType) {
-                    case 0 /* JavaScript */:
-                        var file = new gutil.File({
-                            path: outputFile.name,
-                            contents: new Buffer(_this.removeSourceMapComment(outputFile.text)),
-                            cwd: original.file.cwd,
-                            base: original.file.base
-                        });
-
-                        if (original.file.sourceMap)
-                            file.sourceMap = original.file.sourceMap;
-                        outputJS.push(file);
-                        break;
-                    case 2 /* Declaration */:
-                        var file = new gutil.File({
-                            path: outputFile.name,
-                            contents: new Buffer(outputFile.text),
-                            cwd: original.file.cwd,
-                            base: original.file.base
-                        });
-
-                        declStream.push(file);
-                        break;
-                }
-            });
+        for (var filename in this.host.output) {
+            if (!this.host.output.hasOwnProperty(filename))
+                continue;
+            var originalName = this.getOriginalName(filename);
+            var original = this.currentFiles[originalName];
+            if (!original)
+                continue;
+            var data = this.host.output[filename];
+            var fullOriginalName = original.file.path;
+            if (filename.substr(-3) === '.js') {
+                var file = new gutil.File({
+                    path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
+                    contents: new Buffer(this.removeSourceMapComment(data)),
+                    cwd: original.file.cwd,
+                    base: original.file.base
+                });
+                if (original.file.sourceMap)
+                    file.sourceMap = original.file.sourceMap;
+                outputJS.push(file);
+            }
+            else if (filename.substr(-5) === '.d.ts') {
+                var file = new gutil.File({
+                    path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
+                    contents: new Buffer(data),
+                    cwd: original.file.cwd,
+                    base: original.file.base
+                });
+                declStream.push(file);
+            }
+            else if (filename.substr(-4) === '.map') {
+                sourcemaps[originalName] = data;
+            }
         }
-
         var emit = function (originalName, file) {
             var map = sourcemaps[originalName];
-
             if (map)
                 sourcemapApply(file, map);
-
             jsStream.push(file);
         };
-
         if (this.sortOutput) {
             var done = {};
-
             var sortedEmit = function (originalName, file) {
+                originalName = Project.normalizePath(originalName);
                 if (done[originalName])
                     return;
                 done[originalName] = true;
-
                 var inputFile = _this.currentFiles[originalName];
-
+                var tsFile = _this.program.getSourceFile(originalName);
+                var references = tsFile.referencedFiles.map(function (file) { return file.filename; });
                 for (var j = 0; j < outputJS.length; ++j) {
                     var other = outputJS[j];
                     var otherName = _this.getOriginalName(other.path);
-
-                    if (inputFile.referencedFiles.indexOf(otherName) !== -1) {
+                    if (references.indexOf(otherName) !== -1) {
                         sortedEmit(otherName, other);
                     }
                 }
-
                 emit(originalName, file);
             };
-
             for (var i = 0; i < outputJS.length; ++i) {
                 var file = outputJS[i];
                 var originalName = this.getOriginalName(file.path);
                 sortedEmit(originalName, file);
             }
-        } else {
+        }
+        else {
             for (var i = 0; i < outputJS.length; ++i) {
                 var file = outputJS[i];
                 var originalName = this.getOriginalName(file.path);
+                originalName = Project.normalizePath(originalName);
                 emit(originalName, file);
             }
         }
     };
-
-    Project.prototype.handleReferences = function (references) {
-        var _this = this;
-        references.forEach(function (filename) {
-            filename = _this.normalizePath(filename);
-            if (!(_this.currentFiles[filename] || _this.additionalFiles[filename].addedToCompiler)) {
-                var data = _this.additionalFiles[filename];
-
-                _this.compiler.addFile(filename, data.scriptSnapshot, data.byteOrderMark, _this.version, false, []);
-
-                data.addedToCompiler = true;
-            }
-        });
-    };
-
     Project.prototype.getFileDataFromGulpFile = function (file) {
         var str = file.contents.toString('utf8');
-
-        var data = this.getFileData(this.normalizePath(file.path), str);
+        var data = this.getFileData(Project.normalizePath(file.path), str);
         data.file = file;
-
         return data;
     };
-
     Project.prototype.getFileData = function (filename, content) {
         return {
+            filename: Project.normalizePath(filename),
             content: content,
-            scriptSnapshot: typescript.ScriptSnapshot.fromString(content),
-            byteOrderMark: 1 /* Utf8 */,
-            referencedFiles: [],
-            addedToCompiler: false
+            ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
         };
     };
-
-    Project.prototype.getTextChangeRange = function (oldStr, newStr) {
-        var begin = 0;
-        var end = 0;
-
-        var max = newStr.length > oldStr.length ? newStr : oldStr;
-        var min = newStr.length > oldStr.length ? oldStr : newStr;
-
-        if (min == max)
-            return typescript.TextChangeRange.unchanged;
-
-        for (var i = 0; i < min.length; ++i) {
-            if (min.charAt(i) == max.charAt(i)) {
-                begin = i + 1;
-            } else {
-                break;
-            }
-        }
-
-        for (var i = 0; i + begin < min.length; ++i) {
-            if (min.charAt(min.length - 1 - i) == max.charAt(max.length - 1 - i)) {
-                end = i + 1;
-            } else {
-                break;
-            }
-        }
-
-        return new typescript.TextChangeRange(new typescript.TextSpan(begin, oldStr.length - begin - end), newStr.length - begin - end);
-    };
-
     Project.prototype.removeSourceMapComment = function (content) {
         // By default the TypeScript automaticly inserts a source map comment.
         // This should be removed because gulp-sourcemaps takes care of that.
@@ -351,96 +287,13 @@ var Project = (function () {
         var index = content.lastIndexOf('\n', content.length - 2);
         return content.substring(0, index) + '\n';
     };
-
-    Project.prototype.normalizePath = function (path) {
-        path = this.resolvePath(path);
-
-        // Switch to forward slashes
-        path = typescript.switchToForwardSlashes(path);
-
-        return path;
+    Project.normalizePath = function (path) {
+        return ts.normalizePath(path).toLowerCase();
     };
-
-    // IReferenceResolverHost
-    Project.prototype.getScriptSnapshot = function (filename) {
-        filename = this.normalizePath(filename);
-        if (this.currentFiles[filename]) {
-            return this.currentFiles[filename].scriptSnapshot;
-        } else if (this.additionalFiles[filename]) {
-            return this.additionalFiles[filename].scriptSnapshot;
-        } else if (!this.noExternalResolve) {
-            var data = fs.readFileSync(filename).toString('utf8');
-            this.additionalFiles[filename] = this.getFileData(filename, data);
-            return this.additionalFiles[filename].scriptSnapshot;
-        }
-    };
-    Project.prototype.resolveRelativePath = function (path, directory) {
-        var unQuotedPath = typescript.stripStartAndEndQuotes(path);
-        var normalizedPath;
-
-        if (typescript.isRooted(unQuotedPath) || !directory) {
-            normalizedPath = unQuotedPath;
-        } else {
-            normalizedPath = typescript.IOUtils.combine(directory, unQuotedPath);
-        }
-
-        // get the absolute path
-        normalizedPath = this.resolvePath(normalizedPath);
-
-        // Switch to forward slashes
-        normalizedPath = typescript.switchToForwardSlashes(normalizedPath);
-
-        return normalizedPath;
-    };
-    Project.prototype.fileExists = function (path) {
-        if (this.currentFiles[path] || this.additionalFiles[path]) {
-            return true;
-        } else if (!this.noExternalResolve) {
-            return typescript.IO.fileExists(path);
-        } else {
-            return false;
-        }
-    };
-    Project.prototype.getParentDirectory = function (path) {
-        return typescript.IO.dirName(path);
-    };
-    Project.prototype.directoryExists = function (path) {
-        var newPath = path;
-        if (newPath.substr(newPath.length - 1) != '/') {
-            newPath += '/';
-        }
-
-        for (var filename in this.currentFiles) {
-            if (!Object.prototype.hasOwnProperty.call(this.currentFiles, filename)) {
-                continue;
-            }
-
-            if (filename.length > newPath.length) {
-                if (filename.substring(0, newPath.length) == newPath) {
-                    return true;
-                }
-            }
-        }
-        for (var filename in this.additionalFiles) {
-            if (!Object.prototype.hasOwnProperty.call(this.additionalFiles, filename)) {
-                continue;
-            }
-
-            if (filename.length > newPath.length) {
-                if (filename.substring(0, newPath.length) == newPath) {
-                    return true;
-                }
-            }
-        }
-
-        if (this.noExternalResolve) {
-            return false;
-        } else {
-            return typescript.IO.directoryExists(path);
-        }
-    };
-    Project.prototype.resolvePath = function (path) {
-        return typescript.IO.resolvePath(path);
+    Project.unresolvedFile = {
+        filename: undefined,
+        content: undefined,
+        ts: undefined
     };
     return Project;
 })();
