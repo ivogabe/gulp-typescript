@@ -4,6 +4,7 @@ import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import project = require('./project');
+import _filter = require('./filter');
 import through2 = require('through2');
 
 var PLUGIN_NAME = 'gulp-typescript';
@@ -162,10 +163,13 @@ module compile {
 	}
 	
 	export function filter(project: Project, filters: Filters): NodeJS.ReadWriteStream {
-		return through2.obj((file: gutil.File, encoding, callback: () => void) => {
-			if (project.filterFile(file.path, filters)) {
-				this.push(file);
+		var filterObj = undefined;
+		return through2.obj(function (file: gutil.File, encoding, callback: () => void) {
+			if (!filterObj) { // Make sure we create the filter object when the compilation is complete.
+				filterObj = new _filter.Filter(project, filters);
 			}
+			
+			if (filterObj.match(file.path)) this.push(file);
 			
 			callback();
 		});

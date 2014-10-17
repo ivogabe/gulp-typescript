@@ -130,7 +130,7 @@ export class Project {
 		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
 	
-	private getOriginalName(filename: string): string {
+	getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
 	private getError(info: ts.Diagnostic) {
@@ -379,12 +379,6 @@ export class Project {
 		return content.substring(0, index) + '\n';
 	}
 
-	filterFile(filename: string, filters: main.Filters): boolean {
-		var originalFile = this.getOriginalName(Project.normalizePath(filename));
-		
-		return false; // TODO
-	}
-	
 	static normalizePath(path: string) {
 		return ts.normalizePath(path).toLowerCase();
 	}
