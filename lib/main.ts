@@ -151,9 +151,16 @@ module compile {
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
 	}
+	export interface Filters {
+		referencedFrom: string[];
+	}
 	export import Project = project.Project;
 	export function createProject(settings: Settings): Project {
 		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+	}
+	
+	export function filter(project: Project, filters: Filters) {
+		
 	}
 }
 

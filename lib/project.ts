@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import main = require('main');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
@@ -378,6 +379,12 @@ export class Project {
 		return content.substring(0, index) + '\n';
 	}
 
+	filterFile(filename: string, filters: main.Filters): boolean {
+		var originalFile = this.getOriginalName(Project.normalizePath(filename));
+		
+		return false; // TODO
+	}
+	
 	static normalizePath(path: string) {
 		return ts.normalizePath(path).toLowerCase();
 	}
