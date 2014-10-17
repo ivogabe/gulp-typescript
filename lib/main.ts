@@ -71,9 +71,10 @@ class CompileOutputStream extends stream.Readable {
 }
 
 function compile();
-function compile(proj: project.Project);
-function compile(settings: compile.Settings);
-function compile(param?: any): any {
+function compile(proj: project.Project, filters: compile.Filters);
+function compile(settings: compile.Settings, filters: compile.Filters);
+function compile(param?: any, filters?: compile.Filters): any {
+	// TODO: filters
 	var proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
