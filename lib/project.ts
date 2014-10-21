@@ -379,6 +379,6 @@ export class Project {
 	}
 
 	static normalizePath(path: string) {
-		return ts.normalizePath(path).toLowerCase();
+		return ts.normalizePath(path);
 	}
 }
