@@ -77,17 +77,9 @@ export class Project {
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
 	}
-	
+
 	getCurrentFilenames(): string[] {
-		var result: string[] = [];
-		
-		for (var i in this.currentFiles) {
-			if (this.currentFiles.hasOwnProperty(i)) {
-				result.push(this.currentFiles[i].file.path);
-			}
-		}
-		
-		return result;
+		return Object.keys(this.currentFiles);
 	}
 	/**
 	 * Resets the compiler.
@@ -160,14 +152,14 @@ export class Project {
 	
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
 		var references = file.ts.referencedFiles.map(item => Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
-		
+
 		ts.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
-				
+
 				if (importNode.externalModuleName !== undefined) {
 					var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
-					
+
 					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
 					// We guess what file the user wants. This will be right in most cases.
 					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
@@ -180,16 +172,16 @@ export class Project {
 				}
 			}
 		});
-		
+
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
 				var ref = references[i];
 
 				if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
 					session.tasks++;
-					
+
 					this.additionalFiles[ref] = Project.unresolvedFile;
-					
+
 					fs.readFile(ref, (error, data) => {
 						if (data) { // Typescript will throw an error when a file isn't found.
 							var file = this.getFileData(ref, data.toString('utf8'));
@@ -209,29 +201,29 @@ export class Project {
 			callback();
 			return;
 		}
-		
+
 		var session = {
 			tasks: 0,
 			callback: callback
 		};
-		
+
 		for (var i in this.currentFiles) {
 			if (this.currentFiles.hasOwnProperty(i)) {
 				this.resolve(session, this.currentFiles[i]);
 			}
 		}
-		
+
 		if (session.tasks === 0) {
 			callback();
 		}
 	}
-	
+
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
 		var files: Map<FileData> = {};
-		
+
 		for (var filename in this.currentFiles) {
 			if (this.currentFiles.hasOwnProperty(filename)) {
 				files[filename] = this.currentFiles[filename];
@@ -242,44 +234,44 @@ export class Project {
 				files[filename] = this.additionalFiles[filename];
 			}
 		}
-		
+
 		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
-		
+
 		// Creating a program compiles the sources
 		this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
-		
+
 		var errors = this.program.getDiagnostics();
-        
+
 		if (!errors.length) {
 			// If there are no syntax errors, check types
 			var checker = this.program.getTypeChecker(true);
-			
+
 			var semanticErrors = checker.getDiagnostics();
-			
+
             var emitErrors = checker.emitFiles().errors;
-            
+
             errors = semanticErrors.concat(emitErrors);
         }
-		
+
 		for (var i = 0; i < errors.length; i++) {
 			errorCallback(this.getError(errors[i]));
 		}
-		
+
 		var outputJS: gutil.File[] = [];
 		var sourcemaps: { [ filename: string ]: string } = {};
-		
+
 		for (var filename in this.host.output) {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
-			
+
 			var originalName = this.getOriginalName(filename);
 			var original: FileData = this.currentFiles[originalName];
-			
+
 			if (!original) continue;
-			
+
 			var data: string = this.host.output[filename];
-			
+
 			var fullOriginalName = original.file.path;
-			
+
 			if (filename.substr(-3) === '.js') {
 				var file = new gutil.File({
 					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
@@ -297,13 +289,13 @@ export class Project {
 					cwd: original.file.cwd,
 					base: original.file.base
 				});
-				
+
 				declStream.push(file);
 			} else if (filename.substr(-4) === '.map') {
 				sourcemaps[originalName] = data;
 			}
 		}
-		
+
 		var emit = (originalName: string, file: gutil.File) => {
 			var map = sourcemaps[originalName];
 
@@ -311,20 +303,19 @@ export class Project {
 
 			jsStream.push(file);
 		};
-		
+
 		if (this.sortOutput) {
 			var done: { [ filename: string] : boolean } = {};
 
 			var sortedEmit = (originalName: string, file: gutil.File) => {
 				originalName = Project.normalizePath(originalName);
-				
+
 				if (done[originalName]) return;
 				done[originalName] = true;
 
-				var inputFile = this.currentFiles[originalName];
 				var tsFile = this.program.getSourceFile(originalName);
 				var references = tsFile.referencedFiles.map(file => file.filename);
-				
+
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
 					var otherName = this.getOriginalName(other.path);
@@ -351,16 +342,16 @@ export class Project {
 			}
 		}
 	}
-	
+
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
-		
+
 		var data = this.getFileData(Project.normalizePath(file.path), str);
 		data.file = file;
-		
+
 		return data;
 	}
-	
+
 	private getFileData(filename: string, content: string): FileData {
 		return {
 			filename: Project.normalizePath(filename),
@@ -368,7 +359,7 @@ export class Project {
 			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
 	}
-	
+
 	private removeSourceMapComment(content: string): string {
 		// By default the TypeScript automaticly inserts a source map comment.
 		// This should be removed because gulp-sourcemaps takes care of that.
@@ -379,6 +370,6 @@ export class Project {
 	}
 
 	static normalizePath(path: string) {
-		return ts.normalizePath(path).toLowerCase();
+		return ts.normalizePath(path);
 	}
 }
