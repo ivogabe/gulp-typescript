@@ -163,7 +163,7 @@ module compile {
 	}
 	
 	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {
-		var filterObj = undefined;
+		var filterObj: _filter.Filter = undefined;
 		return through2.obj(function (file: gutil.File, encoding, callback: () => void) {
 			if (!filterObj) { // Make sure we create the filter object when the compilation is complete.
 				filterObj = new _filter.Filter(project, filters);
