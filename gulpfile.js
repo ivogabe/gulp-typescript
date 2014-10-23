@@ -44,13 +44,17 @@ gulp.task('scripts', ['clean'], function() {
 
 gulp.task('test-1', ['scripts', 'clean-test'], function() {
 	var newTS = require('./release-2/main');
+	
+	var project = newTS.createProject({
+		declarationFiles: true,
+		noExternalResolve: true,
+		sortOutput: true
+	});
+	
 	return gulp.src('test/test-1/*')
 		.pipe(sourcemaps.init())
-		.pipe(newTS({
-			declarationFiles: true,
-			noExternalResolve: true,
-			sortOutput: true
-		}))
+		.pipe(newTS(project))
+		.pipe(newTS.filter(project, { referencedFrom: ['test-1.ts'] }))
 		.pipe(concat('concat.js'))
 		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
 		.pipe(gulp.dest('test/output/test-1/js'));
