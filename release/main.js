@@ -14,6 +14,7 @@ var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(proj) {
         _super.call(this, { objectMode: true });
+        this._hasSources = false;
         this.dts = new CompileOutputStream();
         this._project = proj;
         // Backwards compatibility
@@ -34,6 +35,7 @@ var CompileStream = (function (_super) {
         if (file.isStream()) {
             return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
         }
+        this._hasSources = true;
         this._project.addFile(file);
         cb();
     };
@@ -41,6 +43,11 @@ var CompileStream = (function (_super) {
     };
     CompileStream.prototype.compile = function () {
         var _this = this;
+        if (!this._hasSources) {
+            this.js.push(null);
+            this.dts.push(null);
+            return;
+        }
         this._project.resolveAll(function () {
             _this._project.compile(_this.js, _this.dts, function (err) {
                 console.error(err.message);
