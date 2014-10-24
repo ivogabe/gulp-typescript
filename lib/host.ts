@@ -81,4 +81,8 @@ export class Host implements ts.CompilerHost {
 		}
 		return file;
 	}
+	
+	getFileData(filename: string) {
+		return this.files[project.Project.normalizePath(filename)];
+	}
 }

@@ -138,8 +138,8 @@ export class Project {
 			return err;
 		}
 		
-		var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
-		var file = this.currentFiles[filename];
+		var filename = this.getOriginalName(info.file.filename);
+		var file = this.host.getFileData(filename);
 		
 		if (file) {
 			filename = path.relative(file.file.cwd, file.originalFilename);
