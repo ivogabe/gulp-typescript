@@ -50,15 +50,15 @@ export class Host implements ts.CompilerHost {
 	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
 		var text: string;
 		
-		filename = project.Project.normalizePath(filename);
+		var normalizedFilename = project.Project.normalizePath(filename);
 		
-		if (this.files[filename]) {
-			if (this.files[filename] === project.Project.unresolvedFile) {
+		if (this.files[normalizedFilename]) {
+			if (this.files[normalizedFilename] === project.Project.unresolvedFile) {
 				return undefined;
 			} else {
-				return this.files[filename].ts;
+				return this.files[normalizedFilename].ts;
 			}
-		} else if (filename === '__lib.d.ts') {
+		} else if (normalizedFilename === '__lib.d.ts') {
 			text = libDefault;
 		} else {
 			if (this.externalResolve) {
@@ -72,9 +72,9 @@ export class Host implements ts.CompilerHost {
 		
 		if (typeof text !== 'string') return undefined;
 		
-		var file = ts.createSourceFile(filename, text, languageVersion, "0");
-		this.files[filename] = {
-			filename: filename,
+		var file = ts.createSourceFile(normalizedFilename, text, languageVersion, "0");
+		this.files[normalizedFilename] = {
+			filename: normalizedFilename,
 			content: text,
 			ts: file
 		}
