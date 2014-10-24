@@ -4,6 +4,8 @@ import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import project = require('./project');
+import _filter = require('./filter');
+import through2 = require('through2');
 
 var PLUGIN_NAME = 'gulp-typescript';
 
@@ -21,6 +23,7 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private _project: project.Project;
+	private _hasSources: boolean = false;
 	
 	_write(file: gutil.File, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
@@ -32,7 +35,8 @@ class CompileStream extends stream.Duplex {
 		if (file.isStream()) {
 			return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
 		}
-		
+
+		this._hasSources = true;
 		this._project.addFile(file);
 		cb();
 	}
@@ -41,6 +45,11 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private compile() {
+		if (!this._hasSources) {
+			this.js.push(null);
+			this.dts.push(null);
+			return;
+		}
 		this._project.resolveAll(() => {
 			this._project.compile(this.js, this.dts, (err) => { 
 				console.error(err.message);
@@ -70,9 +79,9 @@ class CompileOutputStream extends stream.Readable {
 }
 
 function compile();
-function compile(proj: project.Project);
-function compile(settings: compile.Settings);
-function compile(param?: any): any {
+function compile(proj: project.Project, filters?: compile.FilterSettings);
+function compile(settings: compile.Settings, filters?: compile.FilterSettings);
+function compile(param?: any, filters?: compile.FilterSettings): any {
 	var proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
@@ -81,6 +90,7 @@ function compile(param?: any): any {
 	}
 	
 	proj.reset();
+	proj.filterSettings = filters;
 	
 	var inputStream = new CompileStream(proj);
 	
@@ -151,9 +161,25 @@ module compile {
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
 	}
+	export interface FilterSettings {
+		referencedFrom: string[];
+	}
 	export import Project = project.Project;
 	export function createProject(settings: Settings): Project {
 		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+	}
+	
+	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {
+		var filterObj: _filter.Filter = undefined;
+		return through2.obj(function (file: gutil.File, encoding, callback: () => void) {
+			if (!filterObj) { // Make sure we create the filter object when the compilation is complete.
+				filterObj = new _filter.Filter(project, filters);
+			}
+			
+			if (filterObj.match(file.path)) this.push(file);
+			
+			callback();
+		});
 	}
 }
 

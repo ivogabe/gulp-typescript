@@ -1,4 +1,5 @@
 /// <reference path="a.ts" />
+/// <reference path="implicitReferenced.ts" />
 class ClassZ extends ClassA {
 	bar() {
 

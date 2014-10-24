@@ -1,11 +1,13 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import main = require('main');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import fs = require('fs'); // Only used for readonly access
 import sourcemapApply = require('vinyl-sourcemaps-apply');
 import host = require('./host');
+import filter = require('./filter');
 
 export interface Map<T> {
 	[key: string]: T;
@@ -23,6 +25,8 @@ export class Project {
 		content: undefined,
 		ts: undefined
 	};
+	
+	filterSettings: main.FilterSettings;
 	
 	/**
 	 * Files from the previous compilation.
@@ -78,17 +82,6 @@ export class Project {
 		this.sortOutput = sortOutput;
 	}
 	
-	getCurrentFilenames(): string[] {
-		var result: string[] = [];
-		
-		for (var i in this.currentFiles) {
-			if (this.currentFiles.hasOwnProperty(i)) {
-				result.push(this.currentFiles[i].file.path);
-			}
-		}
-		
-		return result;
-	}
 	/**
 	 * Resets the compiler.
 	 * The compiler needs to be reset for incremental builds.
@@ -129,7 +122,7 @@ export class Project {
 		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
 	
-	private getOriginalName(filename: string): string {
+	getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
 	private getError(info: ts.Diagnostic) {
@@ -153,7 +146,7 @@ export class Project {
 		
 		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
 		
-		err.message = gutil.colors.red(filename + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ') + info.code + ' ' + info.messageText;
+		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
 		
 		return err;
 	}
@@ -232,9 +225,19 @@ export class Project {
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
 		var files: Map<FileData> = {};
 		
+		var _filter: filter.Filter;
+		if (this.filterSettings !== undefined) {
+			_filter = new filter.Filter(this, this.filterSettings);
+		}
+		
+		var rootFilenames: string[] = [];
+		
 		for (var filename in this.currentFiles) {
 			if (this.currentFiles.hasOwnProperty(filename)) {
-				files[filename] = this.currentFiles[filename];
+				if (!_filter || _filter.match(filename)) {
+					files[filename] = this.currentFiles[filename];
+					rootFilenames.push(filename);
+				}
 			}
 		}
 		for (var filename in this.additionalFiles) {
@@ -246,7 +249,7 @@ export class Project {
 		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 		
 		// Creating a program compiles the sources
-		this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
+		this.program = ts.createProgram(rootFilenames, this.options, this.host);
 		
 		var errors = this.program.getDiagnostics();
         

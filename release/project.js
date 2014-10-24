@@ -99,7 +99,7 @@ var Project = (function () {
             filename = info.file.filename;
         }
         var startPos = info.file.getLineAndCharacterFromPosition(info.start);
-        err.message = gutil.colors.red(filename + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ') + info.code + ' ' + info.messageText;
+        err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
         return err;
     };
     Project.prototype.resolve = function (session, file) {
