@@ -22,6 +22,7 @@
   "main": "release/main.js",
   "dependencies": {
     "gulp-util": "~3.0.1",
+    "through2": "^0.6.3",
     "vinyl-sourcemaps-apply": "0.1.4"
   },
   "devDependencies": {
@@ -32,7 +33,7 @@
     "gulp-header": "~1.1.1"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/ivogabe/gulp-typescript.git"
+    "type": "git",
+    "url": "https://github.com/ivogabe/gulp-typescript.git"
   }
 }
