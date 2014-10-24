@@ -37,7 +37,7 @@ export class Host implements ts.CompilerHost {
 		return this.currentDirectory;
 	}
 	getCanonicalFileName(filename: string) {
-		return filename.toLowerCase();
+		return filename;
 	}
 	getDefaultLibFilename() {
 		return '__lib.d.ts';
@@ -51,7 +51,7 @@ export class Host implements ts.CompilerHost {
 		var text: string;
 		
 		filename = project.Project.normalizePath(filename);
-		
+
 		if (this.files[filename]) {
 			if (this.files[filename] === project.Project.unresolvedFile) {
 				return undefined;

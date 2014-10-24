@@ -5,6 +5,7 @@ var path = require('path');
 var fs = require('fs'); // Only used for readonly access
 var sourcemapApply = require('vinyl-sourcemaps-apply');
 var host = require('./host');
+var filter = require('./filter');
 var Project = (function () {
     function Project(options, noExternalResolve, sortOutput) {
         /**
@@ -34,15 +35,6 @@ var Project = (function () {
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
     }
-    Project.prototype.getCurrentFilenames = function () {
-        var result = [];
-        for (var i in this.currentFiles) {
-            if (this.currentFiles.hasOwnProperty(i)) {
-                result.push(this.currentFiles[i].file.path);
-            }
-        }
-        return result;
-    };
     /**
      * Resets the compiler.
      * The compiler needs to be reset for incremental builds.
@@ -167,9 +159,17 @@ var Project = (function () {
     Project.prototype.compile = function (jsStream, declStream, errorCallback) {
         var _this = this;
         var files = {};
+        var _filter;
+        if (this.filterSettings !== undefined) {
+            _filter = new filter.Filter(this, this.filterSettings);
+        }
+        var rootFilenames = [];
         for (var filename in this.currentFiles) {
             if (this.currentFiles.hasOwnProperty(filename)) {
-                files[filename] = this.currentFiles[filename];
+                if (!_filter || _filter.match(filename)) {
+                    files[filename] = this.currentFiles[filename];
+                    rootFilenames.push(filename);
+                }
             }
         }
         for (var filename in this.additionalFiles) {
@@ -179,7 +179,7 @@ var Project = (function () {
         }
         this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
         // Creating a program compiles the sources
-        this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
+        this.program = ts.createProgram(rootFilenames, this.options, this.host);
         var errors = this.program.getDiagnostics();
         if (!errors.length) {
             // If there are no syntax errors, check types
@@ -288,7 +288,7 @@ var Project = (function () {
         return content.substring(0, index) + '\n';
     };
     Project.normalizePath = function (path) {
-        return ts.normalizePath(path).toLowerCase();
+        return ts.normalizePath(path);
     };
     Project.unresolvedFile = {
         filename: undefined,

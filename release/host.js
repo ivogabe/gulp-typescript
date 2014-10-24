@@ -24,7 +24,7 @@ var Host = (function () {
         return this.currentDirectory;
     };
     Host.prototype.getCanonicalFileName = function (filename) {
-        return filename.toLowerCase();
+        return filename;
     };
     Host.prototype.getDefaultLibFilename = function () {
         return '__lib.d.ts';
