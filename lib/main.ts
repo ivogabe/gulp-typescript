@@ -21,6 +21,7 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private _project: project.Project;
+	private _hasSources: boolean = false;
 	
 	_write(file: gutil.File, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
@@ -32,7 +33,8 @@ class CompileStream extends stream.Duplex {
 		if (file.isStream()) {
 			return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
 		}
-		
+
+		this._hasSources = true;
 		this._project.addFile(file);
 		cb();
 	}
@@ -41,6 +43,11 @@ class CompileStream extends stream.Duplex {
 	}
 	
 	private compile() {
+		if (!this._hasSources) {
+			this.js.push(null);
+			this.dts.push(null);
+			return;
+		}
 		this._project.resolveAll(() => {
 			this._project.compile(this.js, this.dts, (err) => { 
 				console.error(err.message);
