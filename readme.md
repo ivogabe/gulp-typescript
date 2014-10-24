@@ -8,6 +8,7 @@ Features
 - Error reporting
 - Different output streams for .js, .d.ts files.
 - Support for sourcemaps using gulp-sourcemaps
+- Compile once, and filter different targets
 - Not just a wrapper around the ```tsc``` command, but a plugin that uses the TypeScript API.
 
 How to install
@@ -84,6 +85,34 @@ Options
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 
+Filters
+-------
+There are two ways to filter files:
+```javascript
+gulp.task('scripts', function() {
+	var tsResult = gulp.src('lib/*.ts')
+					   .pipe(ts(tsProject, filterSettings));
+	
+	...
+});
+```
+And
+```javascript
+gulp.task('scripts', function() {
+	var tsResult = gulp.src('lib/*.ts')
+					   .pipe(ts(tsProject));
+	
+	tsResult.pipe(ts.filter(filterSettings)) ... ;
+});
+```
+The first example doesn't add files (that don't pass the filter) to the compiler, the second one does add them to the compiler,
+but removes them later from the stream.
+You can put as much pipes between compilation and filtering as you want, as long as the filename doesn't change.
+
+At the moment there is only one filter available:
+
+- ```referencedFrom``` (string[]) Only files that are referenced (using ```/// <reference path="..." />```) by the files in this array pass this filter.
+
 Resolving files
 ---------------
 By default, gulp-typescript will try to resolve the files you require and reference. These files are parsed, but not emitted (so you will not see them in the output stream).
@@ -100,7 +129,7 @@ Concatenate files
 ------------
 The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-typescript``` doesn't have that, because you should use the ```gulp-concat``` plugin for that, or - if you want sourcemaps - ```gulp-concat-sourcemaps```.
 
-The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-typescript``` does this when you enable the ```sortOutput``` option.
+The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-typescript``` does this when you enable the ```sortOutput``` option. You can use the ```referencedFrom``` filter to only include files that are referenced from certain files.
 
 Source maps
 ----------
