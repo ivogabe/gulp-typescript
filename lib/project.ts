@@ -15,6 +15,7 @@ export interface Map<T> {
 export interface FileData {
 	file?: gutil.File;
 	filename: string;
+	originalFilename: string;
 	content: string;
 	ts: ts.SourceFile;
 }
@@ -22,6 +23,7 @@ export interface FileData {
 export class Project {
 	static unresolvedFile: FileData = {
 		filename: undefined,
+		originalFilename: undefined,
 		content: undefined,
 		ts: undefined
 	};
@@ -109,6 +111,7 @@ export class Project {
 				fileData = {
 					file: file,
 					filename: oldFileData.content,
+					originalFilename: file.path,
 					content: oldFileData.content,
 					ts: oldFileData.ts
 				};
@@ -139,7 +142,7 @@ export class Project {
 		var file = this.currentFiles[filename];
 		
 		if (file) {
-			filename = path.relative(file.file.cwd, file.file.path);
+			filename = path.relative(file.file.cwd, file.originalFilename);
 		} else {
 			filename = info.file.filename;
 		}
@@ -159,13 +162,13 @@ export class Project {
 				var importNode = <ts.ImportDeclaration> node;
 				
 				if (importNode.externalModuleName !== undefined) {
-					var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+					var ref = ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text);
 					
 					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
 					// We guess what file the user wants. This will be right in most cases.
 					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
 					// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-					if (ref.substr(-3) === '.ts') {
+					if (ref.substr(-3).toLowerCase() === '.ts') {
 						references.push(ref);
 					} else {
 						references.push(ref + '.ts');
@@ -177,16 +180,17 @@ export class Project {
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
 				var ref = references[i];
+				var normalizedRef = Project.normalizePath(ref);
 
-				if (!this.currentFiles.hasOwnProperty(ref) && !this.additionalFiles.hasOwnProperty(ref)) {
+				if (!this.currentFiles.hasOwnProperty(normalizedRef) && !this.additionalFiles.hasOwnProperty(normalizedRef)) {
 					session.tasks++;
 					
-					this.additionalFiles[ref] = Project.unresolvedFile;
+					this.additionalFiles[normalizedRef] = Project.unresolvedFile;
 					
 					fs.readFile(ref, (error, data) => {
 						if (data) { // Typescript will throw an error when a file isn't found.
 							var file = this.getFileData(ref, data.toString('utf8'));
-							this.additionalFiles[ref] = file;
+							this.additionalFiles[normalizedRef] = file;
 							this.resolve(session, file);
 						}
 
@@ -358,7 +362,7 @@ export class Project {
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
 		
-		var data = this.getFileData(Project.normalizePath(file.path), str);
+		var data = this.getFileData(file.path, str);
 		data.file = file;
 		
 		return data;
@@ -367,6 +371,7 @@ export class Project {
 	private getFileData(filename: string, content: string): FileData {
 		return {
 			filename: Project.normalizePath(filename),
+			originalFilename: filename,
 			content: content,
 			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
 		};

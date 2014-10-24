@@ -75,6 +75,7 @@ export class Host implements ts.CompilerHost {
 		var file = ts.createSourceFile(normalizedFilename, text, languageVersion, "0");
 		this.files[normalizedFilename] = {
 			filename: normalizedFilename,
+			originalFilename: filename,
 			content: text,
 			ts: file
 		}
