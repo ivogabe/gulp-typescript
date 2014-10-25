@@ -27,9 +27,9 @@ export class Project {
 		content: undefined,
 		ts: undefined
 	};
-	
+
 	filterSettings: main.FilterSettings;
-	
+
 	/**
 	 * Files from the previous compilation.
 	 * Used to find the differences with the previous compilation, to make the new compilation faster.
@@ -47,7 +47,7 @@ export class Project {
 	 * is added to this Map. The file property of the FileData objects in this Map are not set.
 	 */
 	additionalFiles: Map<FileData> = {};
-	
+
 	/**
 	 * Whether there should not be loaded external files to the project.
 	 * Example:
@@ -65,35 +65,35 @@ export class Project {
 	 * tsc does this when you pass the --out parameter.
 	 */
 	private sortOutput: boolean;
-	
+
 	/**
 	 * The version number of the compilation.
 	 * This number is increased for every compilation in the same gulp session.
 	 * Used for incremental builds.
 	 */
 	version: number = 0;
-	
+
 	options: ts.CompilerOptions;
 	host: host.Host;
 	program: ts.Program;
 
 	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean) {
 		this.options = options;
-		
+
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
 	}
-	
+
 	/**
 	 * Resets the compiler.
 	 * The compiler needs to be reset for incremental builds.
 	 */
 	reset() {
 		this.previousFiles = this.currentFiles;
-		
+
 		this.currentFiles = {};
 		this.additionalFiles = {};
-		
+
 		this.version++;
 	}
 	/**
@@ -102,7 +102,7 @@ export class Project {
 	addFile(file: gutil.File) {
 		var fileData: FileData;
 		var filename = Project.normalizePath(file.path);
-		
+
 		// Incremental compilation
 		var oldFileData = this.previousFiles[filename];
 		if (oldFileData) {
@@ -121,49 +121,49 @@ export class Project {
 		} else {
 			fileData = this.getFileDataFromGulpFile(file);
 		}
-		
+
 		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
-	
+
 	getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
 	private getError(info: ts.Diagnostic) {
 		var err = new Error();
 		err.name = 'TypeScript error';
-		
+
 		if (!info.file) {
 			err.message = info.code + ' ' + info.messageText;
-			
+
 			return err;
 		}
-		
+
 		var filename = this.getOriginalName(info.file.filename);
 		var file = this.host.getFileData(filename);
-		
+
 		if (file) {
 			filename = path.relative(file.file.cwd, file.originalFilename);
 		} else {
 			filename = info.file.filename;
 		}
-		
+
 		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
-		
+
 		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
-		
+
 		return err;
 	}
-	
+
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
 		var references = file.ts.referencedFiles.map(item => Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
-		
+
 		ts.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
-				
+
 				if (importNode.externalModuleName !== undefined) {
 					var ref = ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text);
-					
+
 					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
 					// We guess what file the user wants. This will be right in most cases.
 					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
@@ -176,7 +176,7 @@ export class Project {
 				}
 			}
 		});
-		
+
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
 				var ref = references[i];
@@ -184,9 +184,9 @@ export class Project {
 
 				if (!this.currentFiles.hasOwnProperty(normalizedRef) && !this.additionalFiles.hasOwnProperty(normalizedRef)) {
 					session.tasks++;
-					
+
 					this.additionalFiles[normalizedRef] = Project.unresolvedFile;
-					
+
 					fs.readFile(ref, (error, data) => {
 						if (data) { // Typescript will throw an error when a file isn't found.
 							var file = this.getFileData(ref, data.toString('utf8'));
@@ -206,36 +206,36 @@ export class Project {
 			callback();
 			return;
 		}
-		
+
 		var session = {
 			tasks: 0,
 			callback: callback
 		};
-		
+
 		for (var i in this.currentFiles) {
 			if (this.currentFiles.hasOwnProperty(i)) {
 				this.resolve(session, this.currentFiles[i]);
 			}
 		}
-		
+
 		if (session.tasks === 0) {
 			callback();
 		}
 	}
-	
+
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
 		var files: Map<FileData> = {};
-		
+
 		var _filter: filter.Filter;
 		if (this.filterSettings !== undefined) {
 			_filter = new filter.Filter(this, this.filterSettings);
 		}
-		
+
 		var rootFilenames: string[] = [];
-		
+
 		for (var filename in this.currentFiles) {
 			if (this.currentFiles.hasOwnProperty(filename)) {
 				if (!_filter || _filter.match(filename)) {
@@ -249,44 +249,44 @@ export class Project {
 				files[filename] = this.additionalFiles[filename];
 			}
 		}
-		
+
 		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
-		
+
 		// Creating a program compiles the sources
 		this.program = ts.createProgram(rootFilenames, this.options, this.host);
-		
+
 		var errors = this.program.getDiagnostics();
-        
+
 		if (!errors.length) {
 			// If there are no syntax errors, check types
 			var checker = this.program.getTypeChecker(true);
-			
+
 			var semanticErrors = checker.getDiagnostics();
-			
+
             var emitErrors = checker.emitFiles().errors;
-            
+
             errors = semanticErrors.concat(emitErrors);
         }
-		
+
 		for (var i = 0; i < errors.length; i++) {
 			errorCallback(this.getError(errors[i]));
 		}
-		
+
 		var outputJS: gutil.File[] = [];
 		var sourcemaps: { [ filename: string ]: string } = {};
-		
+
 		for (var filename in this.host.output) {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
-			
+
 			var originalName = this.getOriginalName(filename);
 			var original: FileData = this.currentFiles[originalName];
-			
+
 			if (!original) continue;
-			
+
 			var data: string = this.host.output[filename];
-			
+
 			var fullOriginalName = original.file.path;
-			
+
 			if (filename.substr(-3) === '.js') {
 				var file = new gutil.File({
 					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
@@ -304,13 +304,13 @@ export class Project {
 					cwd: original.file.cwd,
 					base: original.file.base
 				});
-				
+
 				declStream.push(file);
 			} else if (filename.substr(-4) === '.map') {
 				sourcemaps[originalName] = data;
 			}
 		}
-		
+
 		var emit = (originalName: string, file: gutil.File) => {
 			var map = sourcemaps[originalName];
 
@@ -318,20 +318,20 @@ export class Project {
 
 			jsStream.push(file);
 		};
-		
+
 		if (this.sortOutput) {
 			var done: { [ filename: string] : boolean } = {};
 
 			var sortedEmit = (originalName: string, file: gutil.File) => {
 				originalName = Project.normalizePath(originalName);
-				
+
 				if (done[originalName]) return;
 				done[originalName] = true;
 
 				var inputFile = this.currentFiles[originalName];
 				var tsFile = this.program.getSourceFile(originalName);
 				var references = tsFile.referencedFiles.map(file => file.filename);
-				
+
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
 					var otherName = this.getOriginalName(other.path);
@@ -358,16 +358,16 @@ export class Project {
 			}
 		}
 	}
-	
+
 	private getFileDataFromGulpFile(file: gutil.File): FileData {
 		var str = file.contents.toString('utf8');
-		
+
 		var data = this.getFileData(file.path, str);
 		data.file = file;
-		
+
 		return data;
 	}
-	
+
 	private getFileData(filename: string, content: string): FileData {
 		return {
 			filename: Project.normalizePath(filename),
@@ -376,7 +376,7 @@ export class Project {
 			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
 	}
-	
+
 	private removeSourceMapComment(content: string): string {
 		// By default the TypeScript automaticly inserts a source map comment.
 		// This should be removed because gulp-sourcemaps takes care of that.

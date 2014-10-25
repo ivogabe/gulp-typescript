@@ -12,27 +12,27 @@ export class Host implements ts.CompilerHost {
 	private files: project.Map<project.FileData>;
 	private externalResolve: boolean;
 	output: project.Map<string>;
-	
+
 	constructor(currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
 		this.currentDirectory = currentDirectory;
 		this.files = files;
-		
+
 		this.externalResolve = externalResolve;
-		
+
 		this.reset();
 	}
-	
+
 	private reset() {
 		this.output = {};
 	}
-	
+
 	getNewLine() {
 		return '\n';
 	}
 	useCaseSensitiveFileNames() {
 		return false;
 	}
-	
+
 	getCurrentDirectory() {
 		return this.currentDirectory;
 	}
@@ -42,16 +42,16 @@ export class Host implements ts.CompilerHost {
 	getDefaultLibFilename() {
 		return '__lib.d.ts';
 	}
-	
+
 	writeFile(filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
 		this.output[filename] = data;
 	}
-	
+
 	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
 		var text: string;
-		
+
 		var normalizedFilename = project.Project.normalizePath(filename);
-		
+
 		if (this.files[normalizedFilename]) {
 			if (this.files[normalizedFilename] === project.Project.unresolvedFile) {
 				return undefined;
@@ -69,9 +69,9 @@ export class Host implements ts.CompilerHost {
 				}
 			}
 		}
-		
+
 		if (typeof text !== 'string') return undefined;
-		
+
 		var file = ts.createSourceFile(normalizedFilename, text, languageVersion, "0");
 		this.files[normalizedFilename] = {
 			filename: normalizedFilename,
@@ -81,7 +81,7 @@ export class Host implements ts.CompilerHost {
 		}
 		return file;
 	}
-	
+
 	getFileData(filename: string) {
 		return this.files[project.Project.normalizePath(filename)];
 	}
