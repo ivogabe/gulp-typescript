@@ -5,6 +5,7 @@ var path = require('path');
 var fs = require('fs'); // Only used for readonly access
 var sourcemapApply = require('vinyl-sourcemaps-apply');
 var host = require('./host');
+var filter = require('./filter');
 var Project = (function () {
     function Project(options, noExternalResolve, sortOutput) {
         /**
@@ -34,15 +35,6 @@ var Project = (function () {
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
     }
-    Project.prototype.getCurrentFilenames = function () {
-        var result = [];
-        for (var i in this.currentFiles) {
-            if (this.currentFiles.hasOwnProperty(i)) {
-                result.push(this.currentFiles[i].file.path);
-            }
-        }
-        return result;
-    };
     /**
      * Resets the compiler.
      * The compiler needs to be reset for incremental builds.
@@ -67,6 +59,7 @@ var Project = (function () {
                 fileData = {
                     file: file,
                     filename: oldFileData.content,
+                    originalFilename: file.path,
                     content: oldFileData.content,
                     ts: oldFileData.ts
                 };
@@ -90,10 +83,10 @@ var Project = (function () {
             err.message = info.code + ' ' + info.messageText;
             return err;
         }
-        var filename = Project.normalizePath(this.getOriginalName(info.file.filename));
-        var file = this.currentFiles[filename];
+        var filename = this.getOriginalName(info.file.filename);
+        var file = this.host.getFileData(filename);
         if (file) {
-            filename = path.relative(file.file.cwd, file.file.path);
+            filename = path.relative(file.file.cwd, file.originalFilename);
         }
         else {
             filename = info.file.filename;
@@ -109,12 +102,12 @@ var Project = (function () {
             if (node.kind === 174 /* ImportDeclaration */) {
                 var importNode = node;
                 if (importNode.externalModuleName !== undefined) {
-                    var ref = Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text));
+                    var ref = ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text);
                     // Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
                     // We guess what file the user wants. This will be right in most cases.
                     // The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
                     // If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-                    if (ref.substr(-3) === '.ts') {
+                    if (ref.substr(-3).toLowerCase() === '.ts') {
                         references.push(ref);
                     }
                     else {
@@ -126,13 +119,14 @@ var Project = (function () {
         for (var i = 0; i < references.length; ++i) {
             (function (i) {
                 var ref = references[i];
-                if (!_this.currentFiles.hasOwnProperty(ref) && !_this.additionalFiles.hasOwnProperty(ref)) {
+                var normalizedRef = Project.normalizePath(ref);
+                if (!_this.currentFiles.hasOwnProperty(normalizedRef) && !_this.additionalFiles.hasOwnProperty(normalizedRef)) {
                     session.tasks++;
-                    _this.additionalFiles[ref] = Project.unresolvedFile;
+                    _this.additionalFiles[normalizedRef] = Project.unresolvedFile;
                     fs.readFile(ref, function (error, data) {
                         if (data) {
                             var file = _this.getFileData(ref, data.toString('utf8'));
-                            _this.additionalFiles[ref] = file;
+                            _this.additionalFiles[normalizedRef] = file;
                             _this.resolve(session, file);
                         }
                         session.tasks--;
@@ -167,9 +161,17 @@ var Project = (function () {
     Project.prototype.compile = function (jsStream, declStream, errorCallback) {
         var _this = this;
         var files = {};
+        var _filter;
+        if (this.filterSettings !== undefined) {
+            _filter = new filter.Filter(this, this.filterSettings);
+        }
+        var rootFilenames = [];
         for (var filename in this.currentFiles) {
             if (this.currentFiles.hasOwnProperty(filename)) {
-                files[filename] = this.currentFiles[filename];
+                if (!_filter || _filter.match(filename)) {
+                    files[filename] = this.currentFiles[filename];
+                    rootFilenames.push(filename);
+                }
             }
         }
         for (var filename in this.additionalFiles) {
@@ -179,7 +181,7 @@ var Project = (function () {
         }
         this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
         // Creating a program compiles the sources
-        this.program = ts.createProgram(this.getCurrentFilenames(), this.options, this.host);
+        this.program = ts.createProgram(rootFilenames, this.options, this.host);
         var errors = this.program.getDiagnostics();
         if (!errors.length) {
             // If there are no syntax errors, check types
@@ -196,7 +198,7 @@ var Project = (function () {
         for (var filename in this.host.output) {
             if (!this.host.output.hasOwnProperty(filename))
                 continue;
-            var originalName = this.getOriginalName(filename);
+            var originalName = this.getOriginalName(Project.normalizePath(filename));
             var original = this.currentFiles[originalName];
             if (!original)
                 continue;
@@ -268,13 +270,14 @@ var Project = (function () {
     };
     Project.prototype.getFileDataFromGulpFile = function (file) {
         var str = file.contents.toString('utf8');
-        var data = this.getFileData(Project.normalizePath(file.path), str);
+        var data = this.getFileData(file.path, str);
         data.file = file;
         return data;
     };
     Project.prototype.getFileData = function (filename, content) {
         return {
             filename: Project.normalizePath(filename),
+            originalFilename: filename,
             content: content,
             ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
         };
@@ -292,6 +295,7 @@ var Project = (function () {
     };
     Project.unresolvedFile = {
         filename: undefined,
+        originalFilename: undefined,
         content: undefined,
         ts: undefined
     };
