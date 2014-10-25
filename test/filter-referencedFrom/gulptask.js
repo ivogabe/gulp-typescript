@@ -9,11 +9,11 @@ module.exports = function(newTS) {
 		sortOutput: true
 	});
 
-	return gulp.src('test/test-1/**.ts')
+	return gulp.src('test/filter-referencedFrom/**.ts')
 		.pipe(sourcemaps.init())
 		.pipe(newTS(project))
 		.pipe(newTS.filter(project, { referencedFrom: ['test-1.ts'] }))
 		.pipe(concat('concat.js'))
-		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
-		.pipe(gulp.dest('test/output/test-1/js'));
+		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../filter-referencedFrom/' }))
+		.pipe(gulp.dest('test/output/filter-referencedFrom/js'));
 }

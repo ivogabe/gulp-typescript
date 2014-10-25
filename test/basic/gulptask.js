@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 
 module.exports = function(newTS) {
-	var tsResult = gulp.src('test/test-3/*.ts')
+	var tsResult = gulp.src('test/basic/*.ts')
 					   .pipe(newTS({
 						   declarationFiles: true,
 						   module: 'amd',
@@ -10,8 +10,8 @@ module.exports = function(newTS) {
 					   }));
 
 	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
-	tsResult.dts.pipe(gulp.dest('test/output/test-3/dts'));
+	tsResult.dts.pipe(gulp.dest('test/output/basic/dts'));
 	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-3/' }))
-			.pipe(gulp.dest('test/output/test-3/js'));
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../basic/' }))
+			.pipe(gulp.dest('test/output/basic/js'));
 }
