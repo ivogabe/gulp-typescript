@@ -8,7 +8,7 @@ module.exports = function(newTS) {
 						   declarationFiles: true,
 						   module: 'commonjs'
 					   }));
-	
+
 	tsResult.dts.pipe(gulp.dest('test/output/test-2/dts'));
 	return tsResult.js
 			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-2/' }))

@@ -8,7 +8,7 @@ module.exports = function(newTS) {
 						   module: 'amd',
 						   noExternalResolve: true
 					   }));
-	
+
 	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
 	tsResult.dts.pipe(gulp.dest('test/output/test-3/dts'));
 	return tsResult.js

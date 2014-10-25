@@ -42,7 +42,7 @@ gulp.task('clean-release', function(cb) {
 gulp.task('scripts', ['clean'], function() {
 	var tsResult = gulp.src(paths.scripts)
 					   .pipe(ts(tsProject));
-	
+
 	return tsResult.js
 		.pipe(header('var ts = require(\'../typescript/ts\');\n'))
 		.pipe(gulp.dest(paths.releaseBeta));
@@ -51,9 +51,9 @@ gulp.task('scripts', ['clean'], function() {
 function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	var test = require('./test/' + name + '/gulptask.js');
-	
+
 	var error = false;
-	
+
 	test(newTS).on('finish', function() {
 		gulp.src('test/output/' + name + '/**')
 			.pipe(diff('test/baselines/' + name))
@@ -71,13 +71,13 @@ gulp.task('test', function(cb) {
 	if (argv.tests !== undefined) {
 		currentTests = argv.tests.split(',');
 	}
-	
+
 	var pending = currentTests.length;
 	if (pending === 0) {
 		cb();
 		return;
 	}
-	
+
 	for (var i = 0; i < currentTests.length; i++) {
 		runTest(currentTests[i], function() {
 			pending--;

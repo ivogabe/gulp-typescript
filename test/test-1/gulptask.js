@@ -8,7 +8,7 @@ module.exports = function(newTS) {
 		noExternalResolve: true,
 		sortOutput: true
 	});
-	
+
 	return gulp.src('test/test-1/**.ts')
 		.pipe(sourcemaps.init())
 		.pipe(newTS(project))
