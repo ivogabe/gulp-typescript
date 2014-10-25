@@ -278,7 +278,7 @@ export class Project {
 		for (var filename in this.host.output) {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
 
-			var originalName = this.getOriginalName(filename);
+			var originalName = this.getOriginalName(Project.normalizePath(filename));
 			var original: FileData = this.currentFiles[originalName];
 
 			if (!original) continue;
