@@ -52,16 +52,15 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	var test = require('./test/' + name + '/gulptask.js');
 
-	var error = false;
-
 	test(newTS).on('finish', function() {
+		function onError(error) {
+			console.error('Test ' + name + ' failed: ' + error.message);
+		}
 		gulp.src('test/output/' + name + '/**')
 			.pipe(diff('test/baselines/' + name))
+			.on('error', onError)
 			.pipe(diff.reporter({ fail: true }))
-			.on('error', function(error) {
-				console.error('Test ' + name + ' failed: ' + error.message);
-				error = true;
-			})
+			.on('error', onError)
 			.on('finish', callback);
 	});
 }
