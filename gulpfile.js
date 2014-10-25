@@ -65,7 +65,7 @@ function runTest(name, callback) {
 	});
 }
 
-gulp.task('test', function(cb) {
+gulp.task('test', ['clean-test', 'scripts'], function(cb) {
 	var currentTests = tests;
 	if (argv.tests !== undefined) {
 		currentTests = argv.tests.split(',');
