@@ -7,6 +7,7 @@ var gutil = require('gulp-util');
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat-sourcemap');
 var header = require('gulp-header');
+var diff = require('gulp-diff');
 
 var tsProject = ts.createProject({
 	target: 'es5',
@@ -111,8 +112,17 @@ gulp.task('test-4', ['scripts', 'clean-test'], function() { // Test catch errors
 			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-4/' }))
 			.pipe(gulp.dest('test/output/test-4/js'));
 });
-gulp.task('test', ['test-1', 'test-2', 'test-3', 'test-4']);
+gulp.task('test', ['test-1', 'test-2', 'test-3', 'test-4'], function() {
+	return gulp.src('test/output/**')
+		.pipe(diff('test/baselines'))
+		.pipe(diff.reporter({ fail: true }));
+});
 
+gulp.task('test-baselines-accept', function(cb) {
+	rimraf(paths.releaseBeta, function() {
+		gulp.src('test/output/**').pipe(gulp.dest('test/baselines')).on('finish', cb);
+	});
+});
 
 gulp.task('release', function() {
 	return gulp.src(paths.releaseBeta + '/**').pipe(gulp.dest(paths.release));
