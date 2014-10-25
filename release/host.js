@@ -34,16 +34,16 @@ var Host = (function () {
     };
     Host.prototype.getSourceFile = function (filename, languageVersion, onError) {
         var text;
-        var normalizedFilename = project.Project.normalizePath(filename);
-        if (this.files[normalizedFilename]) {
-            if (this.files[normalizedFilename] === project.Project.unresolvedFile) {
+        filename = project.Project.normalizePath(filename);
+        if (this.files[filename]) {
+            if (this.files[filename] === project.Project.unresolvedFile) {
                 return undefined;
             }
             else {
-                return this.files[normalizedFilename].ts;
+                return this.files[filename].ts;
             }
         }
-        else if (normalizedFilename === '__lib.d.ts') {
+        else if (filename === '__lib.d.ts') {
             text = libDefault;
         }
         else {
@@ -58,17 +58,13 @@ var Host = (function () {
         }
         if (typeof text !== 'string')
             return undefined;
-        var file = ts.createSourceFile(normalizedFilename, text, languageVersion, "0");
-        this.files[normalizedFilename] = {
-            filename: normalizedFilename,
-            originalFilename: filename,
+        var file = ts.createSourceFile(filename, text, languageVersion, "0");
+        this.files[filename] = {
+            filename: filename,
             content: text,
             ts: file
         };
         return file;
-    };
-    Host.prototype.getFileData = function (filename) {
-        return this.files[project.Project.normalizePath(filename)];
     };
     return Host;
 })();

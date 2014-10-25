@@ -9,8 +9,6 @@ var __extends = this.__extends || function (d, b) {
 var gutil = require('gulp-util');
 var stream = require('stream');
 var project = require('./project');
-var _filter = require('./filter');
-var through2 = require('through2');
 var PLUGIN_NAME = 'gulp-typescript';
 var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
@@ -74,7 +72,7 @@ var CompileOutputStream = (function (_super) {
     };
     return CompileOutputStream;
 })(stream.Readable);
-function compile(param, filters) {
+function compile(param) {
     var proj;
     if (param instanceof project.Project) {
         proj = param;
@@ -83,7 +81,6 @@ function compile(param, filters) {
         proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
     }
     proj.reset();
-    proj.filterSettings = filters;
     var inputStream = new CompileStream(proj);
     return inputStream;
 }
@@ -131,17 +128,5 @@ var compile;
         return new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
     }
     compile.createProject = createProject;
-    function filter(project, filters) {
-        var filterObj = undefined;
-        return through2.obj(function (file, encoding, callback) {
-            if (!filterObj) {
-                filterObj = new _filter.Filter(project, filters);
-            }
-            if (filterObj.match(file.path))
-                this.push(file);
-            callback();
-        });
-    }
-    compile.filter = filter;
 })(compile || (compile = {}));
 module.exports = compile;
