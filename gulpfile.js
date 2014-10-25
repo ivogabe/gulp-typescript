@@ -1,8 +1,9 @@
 var gulp = require('gulp');
 var rimraf = require('rimraf');
+var fs = require('fs');
+var path = require('path');
 var ts = require('./release/main');
-
-var gutil = require('gulp-util');
+var argv = require('yargs').argv;
 
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat-sourcemap');
@@ -20,6 +21,10 @@ var paths = {
 	releaseBeta: 'release-2',
 	release: 'release'
 };
+
+var tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
+	return dir !== 'baselines' && dir !== 'output' && dir.substr(0, 1) !== '.';
+});
 
 gulp.task('clean', function(cb) {
 	rimraf(paths.releaseBeta, cb);
@@ -43,79 +48,42 @@ gulp.task('scripts', ['clean'], function() {
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
-gulp.task('test-1', ['scripts', 'clean-test'], function() {
+function runTest(name, callback) {
 	var newTS = require('./release-2/main');
+	var test = require('./test/' + name + '/gulptask.js');
 	
-	var project = newTS.createProject({
-		declarationFiles: true,
-		noExternalResolve: true,
-		sortOutput: true
+	var error = false;
+	
+	test(newTS).on('finish', function() {
+		gulp.src('test/output/' + name + '/**')
+			.pipe(diff('test/baselines/' + name))
+			.pipe(diff.reporter({ fail: true }))
+			.on('error', function(error) {
+				console.error('Test ' + name + ' failed: ' + error.message);
+				error = true;
+			})
+			.on('finish', callback);
 	});
+}
+
+gulp.task('test', function(cb) {
+	var currentTests = tests;
+	if (argv.tests !== undefined) {
+		currentTests = argv.tests.split(',');
+	}
 	
-	return gulp.src('test/test-1/*')
-		.pipe(sourcemaps.init())
-		.pipe(newTS(project))
-		.pipe(newTS.filter(project, { referencedFrom: ['test-1.ts'] }))
-		.pipe(concat('concat.js'))
-		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-1/' }))
-		.pipe(gulp.dest('test/output/test-1/js'));
-});
-gulp.task('test-2', ['scripts', 'clean-test'], function() { // Test external resolve.
-	var newTS = require('./release-2/main');
-	var tsResult = gulp.src('test/test-2/test-2.ts')
-					   .pipe(sourcemaps.init())
-					   .pipe(newTS({
-						   declarationFiles: true,
-						   module: 'commonjs'
-					   }));
+	var pending = currentTests.length;
+	if (pending === 0) {
+		cb();
+		return;
+	}
 	
-	// tsResult.map.pipe(gulp.dest('test/output/test-2/map'));
-	tsResult.dts.pipe(gulp.dest('test/output/test-2/dts'));
-	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-2/' }))
-			.pipe(gulp.dest('test/output/test-2/js'));
-});
-gulp.task('test-3', ['scripts', 'clean-test'], function() { // Test external resolve.
-	var newTS = require('./release-2/main');
-	var tsResult = gulp.src('test/test-3/*.ts')
-					   .pipe(newTS({
-						   declarationFiles: true,
-						   module: 'amd',
-						   noExternalResolve: true
-					   }));
-	
-	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
-	tsResult.dts.pipe(gulp.dest('test/output/test-3/dts'));
-	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-3/' }))
-			.pipe(gulp.dest('test/output/test-3/js'));
-});
-gulp.task('test-4', ['scripts', 'clean-test'], function() { // Test catch errors.
-	var newTS = require('./release-2/main');
-	var errors = 0;
-	var tsResult = gulp.src('test/test-4/*.ts')
-					   .pipe(newTS());
-	
-	tsResult.on('error', function(err) {
-		errors++;
-		console.log('[test-4] Caught error:', err.message, 'This error was intentional');
-	});
-	
-	tsResult.js.on('end', function() {
-		if (errors !== 1) {
-			console.log('[test-4] ' + gutil.colors.red('Expected 1 error, got ' + errors + '.'));
-		}
-	});
-	
-	tsResult.dts.pipe(gulp.dest('test/output/test-4/dts'));
-	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../test-4/' }))
-			.pipe(gulp.dest('test/output/test-4/js'));
-});
-gulp.task('test', ['test-1', 'test-2', 'test-3', 'test-4'], function() {
-	return gulp.src('test/output/**')
-		.pipe(diff('test/baselines'))
-		.pipe(diff.reporter({ fail: true }));
+	for (var i = 0; i < currentTests.length; i++) {
+		runTest(currentTests[i], function() {
+			pending--;
+			if (pending === 0) cb();
+		});
+	}
 });
 
 gulp.task('test-baselines-accept', function(cb) {
