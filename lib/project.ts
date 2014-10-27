@@ -19,6 +19,11 @@ export interface FileData {
 	content: string;
 	ts: ts.SourceFile;
 }
+interface OutputFile {
+	filename: string;
+	content: string;
+	sourcemap?: string;
+}
 
 export class Project {
 	static unresolvedFile: FileData = {
@@ -47,6 +52,10 @@ export class Project {
 	 * is added to this Map. The file property of the FileData objects in this Map are not set.
 	 */
 	additionalFiles: Map<FileData> = {};
+
+	private isFileChanged: boolean = false;
+	private previousOutputJS: OutputFile[];
+	private previousOutputDts: OutputFile[];
 
 	/**
 	 * Whether there should not be loaded external files to the project.
@@ -91,6 +100,8 @@ export class Project {
 	reset() {
 		this.previousFiles = this.currentFiles;
 
+		this.isFileChanged = false;
+
 		this.currentFiles = {};
 		this.additionalFiles = {};
 
@@ -117,9 +128,11 @@ export class Project {
 				};
 			} else {
 				fileData = this.getFileDataFromGulpFile(file);
+				this.isFileChanged = true;
 			}
 		} else {
 			fileData = this.getFileDataFromGulpFile(file);
+			this.isFileChanged = true;
 		}
 
 		this.currentFiles[Project.normalizePath(file.path)] = fileData;
@@ -152,6 +165,60 @@ export class Project {
 		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
 
 		return err;
+	}
+
+	lazyCompile(jsStream: stream.Readable, declStream: stream.Readable): boolean {
+		if (this.isFileChanged === false
+			&& Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length
+			&& this.previousOutputJS !== undefined
+			&& this.previousOutputDts !== undefined) {
+			// Emit files from previous build, since they are the same.
+
+			// JavaScript files
+			for (var i = 0; i < this.previousOutputJS.length; i++) {
+				var file = this.previousOutputJS[i];
+
+				var originalName = this.getOriginalName(Project.normalizePath(file.filename));
+				var original: FileData = this.currentFiles[originalName];
+
+				if (!original) continue;
+
+				var gFile = new gutil.File({
+					path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.js',
+					contents: new Buffer(file.content),
+					cwd: original.file.cwd,
+					base: original.file.base
+				});
+
+				if (original.file.sourceMap) {
+					gFile.sourceMap = original.file.sourceMap;
+					sourcemapApply(gFile, file.sourcemap);
+				}
+
+				jsStream.push(gFile);
+			}
+
+			// Definitions files
+			for (var i = 0; i < this.previousOutputDts.length; i++) {
+				var file = this.previousOutputDts[i];
+
+				var originalName = this.getOriginalName(Project.normalizePath(file.filename));
+				var original: FileData = this.currentFiles[originalName];
+
+				if (!original) continue;
+
+				declStream.push(new gutil.File({
+					path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.d.ts',
+					contents: new Buffer(file.content),
+					cwd: original.file.cwd,
+					base: original.file.base
+				}));
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
@@ -275,6 +342,14 @@ export class Project {
 		var outputJS: gutil.File[] = [];
 		var sourcemaps: { [ filename: string ]: string } = {};
 
+		if (errors.length) {
+			this.previousOutputJS = undefined;
+			this.previousOutputDts = undefined;
+		} else {
+			this.previousOutputJS = [];
+			this.previousOutputDts = [];
+		}
+
 		for (var filename in this.host.output) {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
 
@@ -305,6 +380,13 @@ export class Project {
 					base: original.file.base
 				});
 
+				if (this.previousOutputDts !== undefined) {
+					this.previousOutputDts.push({
+						filename: file.path,
+						content: data
+					});
+				}
+
 				declStream.push(file);
 			} else if (filename.substr(-4) === '.map') {
 				sourcemaps[originalName] = data;
@@ -315,6 +397,14 @@ export class Project {
 			var map = sourcemaps[originalName];
 
 			if (map) sourcemapApply(file, map);
+
+			if (this.previousOutputJS !== undefined) {
+				this.previousOutputJS.push({
+					filename: file.path,
+					content: file.contents.toString(),
+					sourcemap: map
+				});
+			}
 
 			jsStream.push(file);
 		};
