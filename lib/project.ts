@@ -360,7 +360,7 @@ export class Project {
 
 			var data: string = this.host.output[filename];
 
-			var fullOriginalName = original.file.path;
+			var fullOriginalName = original.originalFilename;
 
 			if (filename.substr(-3) === '.js') {
 				var file = new gutil.File({
