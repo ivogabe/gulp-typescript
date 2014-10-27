@@ -5,9 +5,13 @@ import project = require('./project');
 import fs = require('fs');
 import path = require('path');
 
-var libDefault = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
-
 export class Host implements ts.CompilerHost {
+	static libDefault: ts.SourceFile;
+	static initLibDefault() {
+		var content = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
+		this.libDefault = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5
+	}
+
 	private currentDirectory: string;
 	private files: project.Map<project.FileData>;
 	private externalResolve: boolean;
@@ -59,7 +63,7 @@ export class Host implements ts.CompilerHost {
 				return this.files[normalizedFilename].ts;
 			}
 		} else if (normalizedFilename === '__lib.d.ts') {
-			text = libDefault;
+			return Host.libDefault;
 		} else {
 			if (this.externalResolve) {
 				try {
@@ -86,3 +90,4 @@ export class Host implements ts.CompilerHost {
 		return this.files[project.Project.normalizePath(filename)];
 	}
 }
+Host.initLibDefault();
