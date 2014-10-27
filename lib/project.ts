@@ -155,7 +155,7 @@ export class Project {
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)));
+		var references = file.ts.referencedFiles.map(item => ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename));
 
 		ts.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -240,7 +240,7 @@ export class Project {
 			if (this.currentFiles.hasOwnProperty(filename)) {
 				if (!_filter || _filter.match(filename)) {
 					files[filename] = this.currentFiles[filename];
-					rootFilenames.push(filename);
+					rootFilenames.push(files[filename].originalFilename);
 				}
 			}
 		}
