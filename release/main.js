@@ -50,14 +50,21 @@ var CompileStream = (function (_super) {
             this.dts.push(null);
             return;
         }
-        this._project.resolveAll(function () {
-            _this._project.compile(_this.js, _this.dts, function (err) {
-                console.error(err.message);
-                _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+        // Try to re-use the output of the previous build. If that fails, start normal compilation.
+        if (this._project.lazyCompile(this.js, this.dts)) {
+            this.js.push(null);
+            this.dts.push(null);
+        }
+        else {
+            this._project.resolveAll(function () {
+                _this._project.compile(_this.js, _this.dts, function (err) {
+                    console.error(err.message);
+                    _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
+                });
+                _this.js.push(null);
+                _this.dts.push(null);
             });
-            _this.js.push(null);
-            _this.dts.push(null);
-        });
+        }
     };
     CompileStream.prototype.end = function (chunk, encoding, callback) {
         this._write(chunk, encoding, callback);

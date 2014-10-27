@@ -25,6 +25,7 @@ var Project = (function () {
          * is added to this Map. The file property of the FileData objects in this Map are not set.
          */
         this.additionalFiles = {};
+        this.isFileChanged = false;
         /**
          * The version number of the compilation.
          * This number is increased for every compilation in the same gulp session.
@@ -41,6 +42,7 @@ var Project = (function () {
      */
     Project.prototype.reset = function () {
         this.previousFiles = this.currentFiles;
+        this.isFileChanged = false;
         this.currentFiles = {};
         this.additionalFiles = {};
         this.version++;
@@ -66,10 +68,12 @@ var Project = (function () {
             }
             else {
                 fileData = this.getFileDataFromGulpFile(file);
+                this.isFileChanged = true;
             }
         }
         else {
             fileData = this.getFileDataFromGulpFile(file);
+            this.isFileChanged = true;
         }
         this.currentFiles[Project.normalizePath(file.path)] = fileData;
     };
@@ -95,9 +99,46 @@ var Project = (function () {
         err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
         return err;
     };
+    Project.prototype.lazyCompile = function (jsStream, declStream) {
+        if (this.isFileChanged === false && Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length && this.previousOutputJS !== undefined && this.previousOutputDts !== undefined) {
+            for (var i = 0; i < this.previousOutputJS.length; i++) {
+                var file = this.previousOutputJS[i];
+                var originalName = this.getOriginalName(Project.normalizePath(file.filename));
+                var original = this.currentFiles[originalName];
+                if (!original)
+                    continue;
+                var gFile = new gutil.File({
+                    path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.js',
+                    contents: new Buffer(file.content),
+                    cwd: original.file.cwd,
+                    base: original.file.base
+                });
+                if (original.file.sourceMap) {
+                    gFile.sourceMap = original.file.sourceMap;
+                    sourcemapApply(gFile, file.sourcemap);
+                }
+                jsStream.push(gFile);
+            }
+            for (var i = 0; i < this.previousOutputDts.length; i++) {
+                var file = this.previousOutputDts[i];
+                var originalName = this.getOriginalName(Project.normalizePath(file.filename));
+                var original = this.currentFiles[originalName];
+                if (!original)
+                    continue;
+                declStream.push(new gutil.File({
+                    path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.d.ts',
+                    contents: new Buffer(file.content),
+                    cwd: original.file.cwd,
+                    base: original.file.base
+                }));
+            }
+            return true;
+        }
+        return false;
+    };
     Project.prototype.resolve = function (session, file) {
         var _this = this;
-        var references = file.ts.referencedFiles.map(function (item) { return Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename)); });
+        var references = file.ts.referencedFiles.map(function (item) { return ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename); });
         ts.forEachChild(file.ts, function (node) {
             if (node.kind === 174 /* ImportDeclaration */) {
                 var importNode = node;
@@ -170,7 +211,7 @@ var Project = (function () {
             if (this.currentFiles.hasOwnProperty(filename)) {
                 if (!_filter || _filter.match(filename)) {
                     files[filename] = this.currentFiles[filename];
-                    rootFilenames.push(filename);
+                    rootFilenames.push(files[filename].originalFilename);
                 }
             }
         }
@@ -195,6 +236,14 @@ var Project = (function () {
         }
         var outputJS = [];
         var sourcemaps = {};
+        if (errors.length) {
+            this.previousOutputJS = undefined;
+            this.previousOutputDts = undefined;
+        }
+        else {
+            this.previousOutputJS = [];
+            this.previousOutputDts = [];
+        }
         for (var filename in this.host.output) {
             if (!this.host.output.hasOwnProperty(filename))
                 continue;
@@ -222,6 +271,12 @@ var Project = (function () {
                     cwd: original.file.cwd,
                     base: original.file.base
                 });
+                if (this.previousOutputDts !== undefined) {
+                    this.previousOutputDts.push({
+                        filename: file.path,
+                        content: data
+                    });
+                }
                 declStream.push(file);
             }
             else if (filename.substr(-4) === '.map') {
@@ -232,6 +287,13 @@ var Project = (function () {
             var map = sourcemaps[originalName];
             if (map)
                 sourcemapApply(file, map);
+            if (_this.previousOutputJS !== undefined) {
+                _this.previousOutputJS.push({
+                    filename: file.path,
+                    content: file.contents.toString(),
+                    sourcemap: map
+                });
+            }
             jsStream.push(file);
         };
         if (this.sortOutput) {

@@ -3,7 +3,6 @@ var ts = require('../typescript/ts');
 var project = require('./project');
 var fs = require('fs');
 var path = require('path');
-var libDefault = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
 var Host = (function () {
     function Host(currentDirectory, files, externalResolve) {
         this.currentDirectory = currentDirectory;
@@ -11,6 +10,10 @@ var Host = (function () {
         this.externalResolve = externalResolve;
         this.reset();
     }
+    Host.initLibDefault = function () {
+        var content = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
+        this.libDefault = ts.createSourceFile('__lib.d.ts', content, 0 /* ES3 */, "0"); // Will also work for ES5
+    };
     Host.prototype.reset = function () {
         this.output = {};
     };
@@ -24,7 +27,7 @@ var Host = (function () {
         return this.currentDirectory;
     };
     Host.prototype.getCanonicalFileName = function (filename) {
-        return filename.toLowerCase();
+        return project.Project.normalizePath(filename);
     };
     Host.prototype.getDefaultLibFilename = function () {
         return '__lib.d.ts';
@@ -44,7 +47,7 @@ var Host = (function () {
             }
         }
         else if (normalizedFilename === '__lib.d.ts') {
-            text = libDefault;
+            return Host.libDefault;
         }
         else {
             if (this.externalResolve) {
@@ -58,7 +61,7 @@ var Host = (function () {
         }
         if (typeof text !== 'string')
             return undefined;
-        var file = ts.createSourceFile(normalizedFilename, text, languageVersion, "0");
+        var file = ts.createSourceFile(filename, text, languageVersion, "0");
         this.files[normalizedFilename] = {
             filename: normalizedFilename,
             originalFilename: filename,
@@ -73,3 +76,4 @@ var Host = (function () {
     return Host;
 })();
 exports.Host = Host;
+Host.initLibDefault();
