@@ -50,17 +50,21 @@ class CompileStream extends stream.Duplex {
 			this.dts.push(null);
 			return;
 		}
-		this._project.resolveAll(() => {
-			// Try to re-use the output of the previous build. If that fails, start normal compilation.
-			if (!this._project.lazyCompile(this.js, this.dts)) {
+
+		// Try to re-use the output of the previous build. If that fails, start normal compilation.
+		if (this._project.lazyCompile(this.js, this.dts)) {
+			this.js.push(null);
+			this.dts.push(null);
+		} else {
+			this._project.resolveAll(() => {
 				this._project.compile(this.js, this.dts, (err) => {
 					console.error(err.message);
 					this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
 				});
-			}
-			this.js.push(null);
-			this.dts.push(null);
-		});
+				this.js.push(null);
+				this.dts.push(null);
+			});
+		}
 	}
 
 	end(chunk?, encoding?, callback?) {
