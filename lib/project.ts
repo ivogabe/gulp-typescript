@@ -155,7 +155,11 @@ export class Project {
 		var file = this.host.getFileData(filename);
 
 		if (file) {
-			filename = path.relative(file.file.cwd, file.originalFilename);
+			if (file.file) {
+				filename = path.relative(file.file.cwd, file.originalFilename);
+			} else {
+				filename = file.originalFilename;
+			}
 		} else {
 			filename = info.file.filename;
 		}
