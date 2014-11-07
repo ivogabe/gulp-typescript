@@ -4,7 +4,7 @@ var sourcemaps = require('gulp-sourcemaps');
 module.exports = function(newTS) {
 	var errors = 0;
 	var tsResult = gulp.src('test/errorReporting/*.ts')
-					   .pipe(newTS());
+					   .pipe(newTS(undefined, undefined, newTS.reporter.nullReporter()));
 
 	tsResult.on('error', function(err) {
 		errors++;
