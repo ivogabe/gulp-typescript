@@ -5,15 +5,17 @@ import path = require('path');
 import stream = require('stream');
 import project = require('./project');
 import _filter = require('./filter');
+import _reporter = require('./reporter');
 import through2 = require('through2');
 
 var PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
-	constructor(proj: project.Project) {
+	constructor(proj: project.Project, theReporter: _reporter.Reporter = _reporter.defaultReporter()) {
 		super({objectMode: true});
 
 		this._project = proj;
+		this.reporter = theReporter;
 
 		// Backwards compatibility
 		this.js = this;
@@ -21,6 +23,8 @@ class CompileStream extends stream.Duplex {
 		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
 		this.on('error', () => {});
 	}
+
+	private reporter: _reporter.Reporter;
 
 	private _project: project.Project;
 	private _hasSources: boolean = false;
@@ -58,7 +62,13 @@ class CompileStream extends stream.Duplex {
 		} else {
 			this._project.resolveAll(() => {
 				this._project.compile(this.js, this.dts, (err) => {
-					console.error(err.message);
+					if (this.reporter.error) this.reporter.error(err);
+					if (err.tsFile) {
+						if (this.reporter.fileError) this.reporter.fileError(err);
+					} else {
+						if (this.reporter.globalError) this.reporter.globalError(err);
+					}
+
 					this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
 				});
 				this.js.push(null);
@@ -86,9 +96,9 @@ class CompileOutputStream extends stream.Readable {
 }
 
 function compile();
-function compile(proj: project.Project, filters?: compile.FilterSettings);
-function compile(settings: compile.Settings, filters?: compile.FilterSettings);
-function compile(param?: any, filters?: compile.FilterSettings): any {
+function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
+function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
+function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): any {
 	var proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
@@ -99,7 +109,7 @@ function compile(param?: any, filters?: compile.FilterSettings): any {
 	proj.reset();
 	proj.filterSettings = filters;
 
-	var inputStream = new CompileStream(proj);
+	var inputStream = new CompileStream(proj, theReporter);
 
 	return inputStream;
 }
@@ -172,6 +182,7 @@ module compile {
 		referencedFrom: string[];
 	}
 	export import Project = project.Project;
+	export import reporter = _reporter;
 	export function createProject(settings: Settings): Project {
 		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
 	}

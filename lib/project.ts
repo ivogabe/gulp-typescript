@@ -8,6 +8,7 @@ import fs = require('fs'); // Only used for readonly access
 import sourcemapApply = require('vinyl-sourcemaps-apply');
 import host = require('./host');
 import filter = require('./filter');
+import reporter = require('./reporter');
 
 export interface Map<T> {
 	[key: string]: T;
@@ -141,9 +142,10 @@ export class Project {
 	getOriginalName(filename: string): string {
 		return filename.replace(/(\.d\.ts|\.js|\.js.map)$/, '.ts')
 	}
-	private getError(info: ts.Diagnostic) {
-		var err = new Error();
+	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
+		var err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
+		err.diagnostic = info;
 
 		if (!info.file) {
 			err.message = info.code + ' ' + info.messageText;
@@ -155,16 +157,33 @@ export class Project {
 		var file = this.host.getFileData(filename);
 
 		if (file) {
+			err.tsFile = file.ts;
+			err.fullFilename = file.originalFilename;
 			if (file.file) {
 				filename = path.relative(file.file.cwd, file.originalFilename);
+				err.relativeFilename = filename;
+				err.file = file.file;
 			} else {
 				filename = file.originalFilename;
 			}
 		} else {
+			err.fullFilename = file.originalFilename;
 			filename = info.file.filename;
 		}
 
 		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
+		var endPos = info.file.getLineAndCharacterFromPosition(info.start + info.length - 1);
+
+		err.startPosition = {
+			position: info.start,
+			line: startPos.line,
+			character: startPos.character
+		};
+		err.endPosition = {
+			position: info.start + info.length - 1,
+			line: endPos.line,
+			character: endPos.character
+		};
 
 		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
 
@@ -297,7 +316,7 @@ export class Project {
 	/**
 	 * Compiles the input files
 	 */
-	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: Error) => void) {
+	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: reporter.TypeScriptError) => void) {
 		var files: Map<FileData> = {};
 
 		var _filter: filter.Filter;
