@@ -155,6 +155,19 @@ gulp.task('scripts', function() {
 ```
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
 
+Reporters
+---------
+You can specify a custom reporter as the 3rd argument of the main function:
+```javascript
+ts(optionsOrProject, filters, reporter);
+```
+You can set options, project or filter to `undefined` if you don't want to set them. Available reporters are:
+- voidReporter (`ts.reporter.voidReporter()`) - Don't report errors
+- defaultReporter (`ts.reporter.defaultReporter()`) - Report basic errors to the console
+
+If you want to build a custom reporter, you can see in `lib/reporter.ts` which functions a reporter should have.
+Note that for every error `error()` is called, and if that error has a `tsFile`, then `fileError` is called, otherwise `globalError` is called.
+
 How to build
 ------------
 First you have to install gulp using ```npm install gulp -g```, if you haven't done already. Then you must install the npm dependencies, using ```npm install```.
