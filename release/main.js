@@ -10,15 +10,18 @@ var gutil = require('gulp-util');
 var stream = require('stream');
 var project = require('./project');
 var _filter = require('./filter');
+var _reporter = require('./reporter');
 var through2 = require('through2');
 var PLUGIN_NAME = 'gulp-typescript';
 var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
-    function CompileStream(proj) {
+    function CompileStream(proj, theReporter) {
+        if (theReporter === void 0) { theReporter = _reporter.defaultReporter(); }
         _super.call(this, { objectMode: true });
         this._hasSources = false;
         this.dts = new CompileOutputStream();
         this._project = proj;
+        this.reporter = theReporter;
         // Backwards compatibility
         this.js = this;
         // Prevent "Unhandled stream error in pipe" when compilation error occurs.
@@ -58,7 +61,8 @@ var CompileStream = (function (_super) {
         else {
             this._project.resolveAll(function () {
                 _this._project.compile(_this.js, _this.dts, function (err) {
-                    console.error(err.message);
+                    if (_this.reporter.error)
+                        _this.reporter.error(err);
                     _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
                 });
                 _this.js.push(null);
@@ -81,7 +85,7 @@ var CompileOutputStream = (function (_super) {
     };
     return CompileOutputStream;
 })(stream.Readable);
-function compile(param, filters) {
+function compile(param, filters, theReporter) {
     var proj;
     if (param instanceof project.Project) {
         proj = param;
@@ -91,7 +95,7 @@ function compile(param, filters) {
     }
     proj.reset();
     proj.filterSettings = filters;
-    var inputStream = new CompileStream(proj);
+    var inputStream = new CompileStream(proj, theReporter);
     return inputStream;
 }
 var langMap = {
@@ -134,6 +138,7 @@ function getCompilerOptions(settings) {
 var compile;
 (function (compile) {
     compile.Project = project.Project;
+    compile.reporter = _reporter;
     function createProject(settings) {
         return new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
     }

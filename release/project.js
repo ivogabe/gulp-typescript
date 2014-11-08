@@ -83,6 +83,7 @@ var Project = (function () {
     Project.prototype.getError = function (info) {
         var err = new Error();
         err.name = 'TypeScript error';
+        err.diagnostic = info;
         if (!info.file) {
             err.message = info.code + ' ' + info.messageText;
             return err;
@@ -90,12 +91,33 @@ var Project = (function () {
         var filename = this.getOriginalName(info.file.filename);
         var file = this.host.getFileData(filename);
         if (file) {
-            filename = path.relative(file.file.cwd, file.originalFilename);
+            err.tsFile = file.ts;
+            err.fullFilename = file.originalFilename;
+            if (file.file) {
+                filename = path.relative(file.file.cwd, file.originalFilename);
+                err.relativeFilename = filename;
+                err.file = file.file;
+            }
+            else {
+                filename = file.originalFilename;
+            }
         }
         else {
+            err.fullFilename = file.originalFilename;
             filename = info.file.filename;
         }
         var startPos = info.file.getLineAndCharacterFromPosition(info.start);
+        var endPos = info.file.getLineAndCharacterFromPosition(info.start + info.length - 1);
+        err.startPosition = {
+            position: info.start,
+            line: startPos.line,
+            character: startPos.character
+        };
+        err.endPosition = {
+            position: info.start + info.length - 1,
+            line: endPos.line,
+            character: endPos.character
+        };
         err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
         return err;
     };
@@ -252,7 +274,7 @@ var Project = (function () {
             if (!original)
                 continue;
             var data = this.host.output[filename];
-            var fullOriginalName = original.file.path;
+            var fullOriginalName = original.originalFilename;
             if (filename.substr(-3) === '.js') {
                 var file = new gutil.File({
                     path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
