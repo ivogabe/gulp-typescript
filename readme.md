@@ -165,8 +165,7 @@ You can set options, project or filter to `undefined` if you don't want to set t
 - voidReporter (`ts.reporter.voidReporter()`) - Don't report errors
 - defaultReporter (`ts.reporter.defaultReporter()`) - Report basic errors to the console
 
-If you want to build a custom reporter, you can see in `lib/reporter.ts` which functions a reporter should have.
-Note that for every error `error()` is called, and if that error has a `tsFile`, then `fileError` is called, otherwise `globalError` is called.
+If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in that file is an interface which a reporter should implement.
 
 How to build
 ------------

@@ -63,11 +63,6 @@ class CompileStream extends stream.Duplex {
 			this._project.resolveAll(() => {
 				this._project.compile(this.js, this.dts, (err) => {
 					if (this.reporter.error) this.reporter.error(err);
-					if (err.tsFile) {
-						if (this.reporter.fileError) this.reporter.fileError(err);
-					} else {
-						if (this.reporter.globalError) this.reporter.globalError(err);
-					}
 
 					this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
 				});

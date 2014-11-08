@@ -24,8 +24,6 @@ export interface TypeScriptError extends Error {
 
 export interface Reporter {
 	error?: (error: TypeScriptError) => void;
-	fileError?: (error: TypeScriptError) => void;
-	globalError?: (error: TypeScriptError) => void;
 }
 
 export function nullReporter(): Reporter {
