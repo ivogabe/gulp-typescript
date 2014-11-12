@@ -167,8 +167,8 @@ export class Project {
 				filename = file.originalFilename;
 			}
 		} else {
-			err.fullFilename = file.originalFilename;
 			filename = info.file.filename;
+			err.fullFilename = filename;
 		}
 
 		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
