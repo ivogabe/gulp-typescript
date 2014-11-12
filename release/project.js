@@ -103,8 +103,8 @@ var Project = (function () {
             }
         }
         else {
-            err.fullFilename = file.originalFilename;
             filename = info.file.filename;
+            err.fullFilename = filename;
         }
         var startPos = info.file.getLineAndCharacterFromPosition(info.start);
         var endPos = info.file.getLineAndCharacterFromPosition(info.start + info.length - 1);
@@ -162,7 +162,7 @@ var Project = (function () {
         var _this = this;
         var references = file.ts.referencedFiles.map(function (item) { return ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename); });
         ts.forEachChild(file.ts, function (node) {
-            if (node.kind === 174 /* ImportDeclaration */) {
+            if (node.kind === 179 /* ImportDeclaration */) {
                 var importNode = node;
                 if (importNode.externalModuleName !== undefined) {
                     var ref = ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text);
