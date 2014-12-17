@@ -127,7 +127,7 @@ Files that are resolved when ```noExternalResolve``` is off, won't be pushed to 
 
 Concatenate files
 ------------
-The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-typescript``` doesn't have that, because you should use the ```gulp-concat``` plugin for that, or - if you want sourcemaps - ```gulp-concat-sourcemaps```.
+The ```tsc``` command has the ability to concatenate using the ```--out``` parameter. ```gulp-typescript``` doesn't have that, because you should use the ```gulp-concat``` plugin for that.
 
 The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-typescript``` does this when you enable the ```sortOutput``` option. You can use the ```referencedFrom``` filter to only include files that are referenced from certain files.
 
@@ -136,7 +136,7 @@ Source maps
 Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
 ```javascript
 var ts = require('gulp-typescript');
-var concat = require('gulp-concat-sourcemap');
+var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('scripts', function() {
