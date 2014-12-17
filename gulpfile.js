@@ -6,7 +6,7 @@ var ts = require('./release/main');
 var argv = require('yargs').argv;
 
 var sourcemaps = require('gulp-sourcemaps');
-var concat = require('gulp-concat-sourcemap');
+var concat = require('gulp-concat');
 var header = require('gulp-header');
 var diff = require('gulp-diff');
 
