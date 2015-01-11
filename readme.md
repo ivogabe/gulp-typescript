@@ -162,7 +162,7 @@ You can specify a custom reporter as the 3rd argument of the main function:
 ts(optionsOrProject, filters, reporter);
 ```
 You can set options, project or filter to `undefined` if you don't want to set them. Available reporters are:
-- voidReporter (`ts.reporter.voidReporter()`) - Don't report errors
+- nullReporter (`ts.reporter.nullReporter()`) - Don't report errors
 - defaultReporter (`ts.reporter.defaultReporter()`) - Report basic errors to the console
 - fullReporter (`ts.reporter.fullReporter(showFullFilename?: boolean)`) - Show full error messages, with source.
 
