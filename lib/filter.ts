@@ -37,8 +37,9 @@ export class Filter {
 			var file = this.getFile(filenames[i]);
 			if (file === undefined) {
 				console.log('gulp-typescript: Could not find file ' + filenames[i]);
+			} else {
+				files.push(file);
 			}
-			files.push(file);
 		}
 		return files;
 	}
