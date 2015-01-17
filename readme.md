@@ -78,6 +78,7 @@ Options
 - ```removeComments``` (boolean) - Do not emit comments to output.
 - ```noImplicitAny``` (boolean) - Warn on expressions and declarations with an implied 'any' type.
 - ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
+- ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), or 'ES5'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'
 - ```sourceRoot``` (string) - Specifies the location where debugger should locate TypeScript files instead of source locations.
