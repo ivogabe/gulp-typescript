@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import ts = require('typescript');
 import main = require('main');
 import gutil = require('gulp-util');
 import path = require('path');
@@ -245,24 +246,32 @@ export class Project {
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => ts.combinePaths(ts.getDirectoryPath(file.ts.filename), item.filename));
+		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(file.ts.filename), item.filename));
 
 		ts.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
 
-				if (importNode.externalModuleName !== undefined) {
-					var ref = ts.combinePaths(ts.getDirectoryPath(file.ts.filename), importNode.externalModuleName.text);
+				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== ts.SyntaxKind.ExternalModuleReference) {
+					return;
+				}
+				var reference = <ts.ExternalModuleReference> importNode.moduleReference;
+				if (reference.expression === undefined || reference.expression.kind !== ts.SyntaxKind.StringLiteral) {
+					return;
+				}
+				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {
+					return;
+				}
+				var ref = path.join(path.dirname(file.ts.filename), (<ts.StringLiteralExpression> reference).text);
 
-					// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
-					// We guess what file the user wants. This will be right in most cases.
-					// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
-					// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-					if (ref.substr(-3).toLowerCase() === '.ts') {
-						references.push(ref);
-					} else {
-						references.push(ref + '.ts');
-					}
+				// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
+				// We guess what file the user wants. This will be right in most cases.
+				// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
+				// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
+				if (ref.substr(-3).toLowerCase() === '.ts') {
+					references.push(ref);
+				} else {
+					references.push(ref + '.ts');
 				}
 			}
 		});
@@ -353,7 +362,7 @@ export class Project {
 
 			var semanticErrors = checker.getDiagnostics();
 
-            var emitErrors = checker.emitFiles().errors;
+            var emitErrors = checker.emitFiles().diagnostics;
 
             errors = semanticErrors.concat(emitErrors);
         }
@@ -499,7 +508,7 @@ export class Project {
 		return content.substring(0, index) + '\n';
 	}
 
-	static normalizePath(path: string) {
-		return ts.normalizePath(path).toLowerCase();
+	static normalizePath(pathString: string) {
+		return path.normalize(pathString).toLowerCase();
 	}
 }
