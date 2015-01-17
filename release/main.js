@@ -1,4 +1,3 @@
-var ts = require('../typescript/ts');
 ///<reference path='../definitions/ref.d.ts'/>
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -6,6 +5,7 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+var ts = require('typescript');
 var gutil = require('gulp-util');
 var stream = require('stream');
 var project = require('./project');

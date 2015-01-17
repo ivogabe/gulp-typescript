@@ -1,4 +1,3 @@
-var ts = require('../typescript/ts');
 ///<reference path='../definitions/ref.d.ts'/>
 var gutil = require('gulp-util');
 function nullReporter() {

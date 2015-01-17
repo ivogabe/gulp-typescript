@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import ts = require('typescript');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
@@ -111,7 +112,8 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 
 var langMap: project.Map<ts.ScriptTarget> = {
 	'es3': ts.ScriptTarget.ES3,
-	'es5': ts.ScriptTarget.ES5
+	'es5': ts.ScriptTarget.ES5,
+	'es6': ts.ScriptTarget.ES6
 }
 var moduleMap: project.Map<ts.ModuleKind> = {
 	'commonjs': ts.ModuleKind.CommonJS,
@@ -130,6 +132,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	}
 	if (settings.noLib !== undefined) {
 		tsSettings.noLib = settings.noLib;
+	}
+	if (settings.noEmitOnError !== undefined) {
+		tsSettings.noEmitOnError = settings.noEmitOnError;
 	}
 
 	if (settings.target !== undefined) {
@@ -162,6 +167,7 @@ module compile {
 		//allowAutomaticSemicolonInsertion?: boolean;
 		noImplicitAny?: boolean;
 		noLib?: boolean;
+		noEmitOnError?: boolean
 		target?: string;
 		module?: string;
 		sourceRoot?: string;

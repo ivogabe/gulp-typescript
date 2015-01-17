@@ -1,4 +1,4 @@
-var ts = require('../typescript/ts');
+var path = require('path');
 var project = require('./project');
 var Filter = (function () {
     function Filter(_project, filters) {
@@ -15,7 +15,7 @@ var Filter = (function () {
                 _this.referencedFromAll.push(file.filename);
                 for (var i = 0; i < file.ts.referencedFiles.length; i++) {
                     var ref = file.ts.referencedFiles[i].filename;
-                    ref = project.Project.normalizePath(ts.combinePaths(ts.getDirectoryPath(file.ts.filename), ref));
+                    ref = project.Project.normalizePath(path.join(path.dirname(file.ts.filename), ref));
                     var refFile = _this.project.currentFiles[ref];
                     if (refFile)
                         addReference(refFile);
@@ -33,7 +33,9 @@ var Filter = (function () {
             if (file === undefined) {
                 console.log('gulp-typescript: Could not find file ' + filenames[i]);
             }
-            files.push(file);
+            else {
+                files.push(file);
+            }
         }
         return files;
     };

@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import ts = require('typescript');
 import gutil = require('gulp-util');
 
 export interface TypeScriptError extends Error {

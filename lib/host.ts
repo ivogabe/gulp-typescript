@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import ts = require('typescript');
 import gutil = require('gulp-util');
 import project = require('./project');
 import fs = require('fs');
