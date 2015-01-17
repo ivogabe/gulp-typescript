@@ -4,9 +4,10 @@ var sourcemaps = require('gulp-sourcemaps');
 module.exports = function(newTS) {
 	var tsResult = gulp.src('test/basic/*.ts')
 					   .pipe(newTS({
-						   declarationFiles: true,
-						   module: 'amd',
-						   noExternalResolve: true
+							declarationFiles: true,
+							module: 'amd',
+							noExternalResolve: true,
+							sourceRoot: ''
 					   }));
 
 	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));

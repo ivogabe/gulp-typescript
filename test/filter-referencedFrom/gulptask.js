@@ -6,7 +6,8 @@ module.exports = function(newTS) {
 	var project = newTS.createProject({
 		declarationFiles: true,
 		noExternalResolve: true,
-		sortOutput: true
+		sortOutput: true,
+		sourceRoot: ''
 	});
 
 	return gulp.src('test/filter-referencedFrom/**.ts')
