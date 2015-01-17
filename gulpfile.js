@@ -44,7 +44,6 @@ gulp.task('scripts', ['clean'], function() {
 					   .pipe(ts(tsProject));
 
 	return tsResult.js
-		.pipe(header('var ts = require(\'../typescript/ts\');\n'))
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
