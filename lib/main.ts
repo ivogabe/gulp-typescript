@@ -133,6 +133,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	if (settings.noLib !== undefined) {
 		tsSettings.noLib = settings.noLib;
 	}
+	if (settings.noEmitOnError !== undefined) {
+		tsSettings.noEmitOnError = settings.noEmitOnError;
+	}
 
 	if (settings.target !== undefined) {
 		tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
@@ -164,6 +167,7 @@ module compile {
 		//allowAutomaticSemicolonInsertion?: boolean;
 		noImplicitAny?: boolean;
 		noLib?: boolean;
+		noEmitOnError?: boolean
 		target?: string;
 		module?: string;
 		sourceRoot?: string;
