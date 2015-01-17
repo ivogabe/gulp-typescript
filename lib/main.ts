@@ -112,7 +112,8 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 
 var langMap: project.Map<ts.ScriptTarget> = {
 	'es3': ts.ScriptTarget.ES3,
-	'es5': ts.ScriptTarget.ES5
+	'es5': ts.ScriptTarget.ES5,
+	'es6': ts.ScriptTarget.ES6
 }
 var moduleMap: project.Map<ts.ModuleKind> = {
 	'commonjs': ts.ModuleKind.CommonJS,
