@@ -100,7 +100,8 @@ function compile(param, filters, theReporter) {
 }
 var langMap = {
     'es3': 0 /* ES3 */,
-    'es5': 1 /* ES5 */
+    'es5': 1 /* ES5 */,
+    'es6': 2 /* ES6 */
 };
 var moduleMap = {
     'commonjs': 1 /* CommonJS */,
@@ -116,6 +117,9 @@ function getCompilerOptions(settings) {
     }
     if (settings.noLib !== undefined) {
         tsSettings.noLib = settings.noLib;
+    }
+    if (settings.noEmitOnError !== undefined) {
+        tsSettings.noEmitOnError = settings.noEmitOnError;
     }
     if (settings.target !== undefined) {
         tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
