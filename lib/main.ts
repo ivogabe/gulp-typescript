@@ -117,7 +117,8 @@ var langMap: project.Map<ts.ScriptTarget> = {
 }
 var moduleMap: project.Map<ts.ModuleKind> = {
 	'commonjs': ts.ModuleKind.CommonJS,
-	'amd': ts.ModuleKind.AMD
+	'amd': ts.ModuleKind.AMD,
+	'none': ts.ModuleKind.None
 }
 
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
@@ -145,6 +146,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	}
 	if (settings.module !== undefined) {
 		tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
+	}
+	if (tsSettings.module === undefined) {
+		tsSettings.module = ts.ModuleKind.None;
 	}
 
 	if (settings.sourceRoot === undefined) {
