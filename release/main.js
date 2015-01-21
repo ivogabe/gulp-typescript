@@ -124,6 +124,9 @@ function getCompilerOptions(settings) {
     if (settings.target !== undefined) {
         tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
     }
+    if (tsSettings.target === undefined) {
+        tsSettings.target = 0 /* ES3 */;
+    }
     if (settings.module !== undefined) {
         tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
     }

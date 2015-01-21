@@ -140,6 +140,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	if (settings.target !== undefined) {
 		tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
 	}
+	if (tsSettings.target === undefined) {
+		tsSettings.target = ts.ScriptTarget.ES3;
+	}
 	if (settings.module !== undefined) {
 		tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
 	}
