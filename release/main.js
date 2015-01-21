@@ -105,7 +105,8 @@ var langMap = {
 };
 var moduleMap = {
     'commonjs': 1 /* CommonJS */,
-    'amd': 2 /* AMD */
+    'amd': 2 /* AMD */,
+    'none': 0 /* None */
 };
 function getCompilerOptions(settings) {
     var tsSettings = {};
@@ -125,10 +126,17 @@ function getCompilerOptions(settings) {
         tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
     }
     if (tsSettings.target === undefined) {
+        // TS 1.4 has a bug that the target needs to be set.
+        // This block can be removed when a version that solves this bug is published.
+        // The bug is already fixed in the master of TypeScript
         tsSettings.target = 0 /* ES3 */;
     }
     if (settings.module !== undefined) {
         tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
+    }
+    if (tsSettings.module === undefined) {
+        // Same bug in TS 1.4 as previous comment.
+        tsSettings.module = 0 /* None */;
     }
     if (settings.sourceRoot === undefined) {
         tsSettings.sourceRoot = process.cwd();

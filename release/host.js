@@ -11,8 +11,8 @@ var Host = (function () {
         this.reset();
     }
     Host.initLibDefault = function () {
-        var content = fs.readFileSync(path.join(__dirname, '../typescript/lib.d.ts')).toString('utf8');
-        this.libDefault = ts.createSourceFile('__lib.d.ts', content, 0 /* ES3 */, "0"); // Will also work for ES5
+        var content = fs.readFileSync(path.join(__dirname, '../node_modules/typescript/bin/lib.d.ts')).toString('utf8');
+        this.libDefault = ts.createSourceFile('__lib.d.ts', content, 0 /* ES3 */, "0"); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
         this.output = {};
