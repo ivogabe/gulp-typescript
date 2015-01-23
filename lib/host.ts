@@ -9,7 +9,7 @@ import path = require('path');
 export class Host implements ts.CompilerHost {
 	static libDefault: ts.SourceFile;
 	static initLibDefault() {
-		var content = fs.readFileSync(path.join(__dirname, '../node_modules/typescript/bin/lib.d.ts')).toString('utf8');
+		var content = fs.readFileSync(path.resolve(path.dirname(require.resolve('typescript')) + '/lib.d.ts')).toString('utf8');
 		this.libDefault = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
 	}
 
