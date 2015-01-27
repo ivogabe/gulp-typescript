@@ -22,7 +22,7 @@ Easy usage
 ```javascript
 var ts = require('gulp-typescript');
 [...]
-var t sResult = [...].pipe(ts(options));
+var tsResult = [...].pipe(ts(options));
 tsResult.dts.pipe(...)
 tsResult.js.pipe(...)
 ```
