@@ -19,6 +19,32 @@
     "name": "Ivo Gabe de Wolff",
     "url": "http://ivogabe.com/"
   },
+  "contributors": [
+    {
+      "name": "Jesper Jonsson",
+      "email": "jesper.m.jonsson@gmail.com"
+    },
+    {
+      "name": "Shogo Iwano",
+      "email": "shiwano@gmail.com"
+    },
+    {
+      "name": "Martin Poelstra",
+      "email": "m.poelstra@spiritit.com"
+    },
+    {
+      "name": "Jakub Olek",
+      "email": "bukaj.kelo+github@gmail.com"
+    },
+    {
+      "name": "Ilan Frumer",
+      "email": "IlanFrumer@gmail.com"
+    },
+    {
+      "name": "James Whitney",
+      "email": "james@whitney.io"
+    }
+  ],
   "main": "release/main.js",
   "dependencies": {
     "gulp-util": "~3.0.2",
