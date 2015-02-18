@@ -57,12 +57,13 @@ var tsProject = ts.createProject({
 });
 
 gulp.task('scripts', function() {
-    var tsResult = gulp.src('lib/*.ts')
-                       .pipe(ts(tsProject));
+	var tsResult = gulp.src('lib/*.ts')
+					.pipe(ts(tsProject));
     
-    return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done. 
-        tsResult.dts.pipe(gulp.dest('release/definitions')),
-        tsResult.js.pipe(gulp.dest('release/js'))]);
+	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done. 
+		tsResult.dts.pipe(gulp.dest('release/definitions')),
+		tsResult.js.pipe(gulp.dest('release/js'))
+	]);
 });
 gulp.task('watch', ['scripts'], function() {
     gulp.watch('lib/*.ts', ['scripts']);
