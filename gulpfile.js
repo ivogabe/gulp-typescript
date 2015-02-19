@@ -51,7 +51,8 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	var libs = [
 		['default', undefined],
-		// ['jsx', require('jsx-typescript')] TODO: Add jsx-typescript here. It currently throws an error when adding it.
+		['ts-next', require('typescript-dev')],
+		['jsx', require('jsx-typescript')] // TODO: Add jsx-typescript here. It currently throws an error when adding it.
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
