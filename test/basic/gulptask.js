@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 
-module.exports = function(newTS, lib, output) {
+module.exports = function(newTS, lib, output, reporter) {
 	var tsResult = gulp.src('test/basic/*.ts')
 					   .pipe(newTS({
 							declarationFiles: true,
@@ -9,7 +9,7 @@ module.exports = function(newTS, lib, output) {
 							noExternalResolve: true,
 							sourceRoot: '',
 						    typescript: lib
-					   }));
+					   }, undefined, reporter));
 
 	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));

@@ -59,9 +59,12 @@ function runTest(name, callback) {
 		var lib = libs[i];
 		var output = 'test/output/' + name + '/' + lib[0] + '/';
 		var errors = [];
-		test(newTS, lib[1], output).on('error', function(err) {
-			errors.push(err);
-		}).on('finish', function() {
+		var reporter = {
+			error: function(err) {
+				errors.push(err);
+			}
+		};
+		test(newTS, lib[1], output, reporter).on('finish', function() {
 			fs.writeFileSync(output + 'errors.txt', errors);
 			function onError(error) {
 				console.error('Test ' + name + ' failed: ' + error.message);
