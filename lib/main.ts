@@ -99,7 +99,7 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
-		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
+		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false, (param && param.typescript) || undefined);
 	}
 
 	proj.reset();
@@ -198,7 +198,7 @@ module compile {
 	export import Project = project.Project;
 	export import reporter = _reporter;
 	export function createProject(settings: Settings): Project {
-		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 	}
 
 	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {

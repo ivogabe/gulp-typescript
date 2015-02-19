@@ -7,24 +7,42 @@ import fs = require('fs');
 import path = require('path');
 
 export class Host implements ts.CompilerHost {
-	static libDefault: ts.SourceFile;
-	static initLibDefault() {
-		var content = fs.readFileSync(path.resolve(path.dirname(require.resolve('typescript')) + '/lib.d.ts')).toString('utf8');
-		this.libDefault = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
+	static libDefault: project.Map<ts.SourceFile> = {};
+	static getLibDefault(typescript: typeof ts) {
+		var filename: string;
+		for (var i in require.cache) {
+			if (!Object.prototype.hasOwnProperty.call(require.cache, i)) continue;
+
+			if (require.cache[i].exports === typescript) {
+				filename = i;
+			}
+		}
+
+		if (filename === undefined) return undefined; // Not found
+		if (this.libDefault[filename]) return this.libDefault[filename]; // Already loaded
+
+		var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
+		return this.libDefault[filename] = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
 	}
+
+	typescript: typeof ts;
 
 	private currentDirectory: string;
 	private files: project.Map<project.FileData>;
 	private externalResolve: boolean;
 	output: project.Map<string>;
 
-	constructor(currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
+	constructor(typescript: typeof ts, currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
+		this.typescript = typescript;
+
 		this.currentDirectory = currentDirectory;
 		this.files = files;
 
 		this.externalResolve = externalResolve;
 
 		this.reset();
+
+
 	}
 
 	private reset() {
@@ -64,7 +82,7 @@ export class Host implements ts.CompilerHost {
 				return this.files[normalizedFilename].ts;
 			}
 		} else if (normalizedFilename === '__lib.d.ts') {
-			return Host.libDefault;
+			return Host.getLibDefault(this.typescript);
 		} else {
 			if (this.externalResolve) {
 				try {
@@ -91,4 +109,3 @@ export class Host implements ts.CompilerHost {
 		return this.files[project.Project.normalizePath(filename)];
 	}
 }
-Host.initLibDefault();

@@ -95,6 +95,7 @@ export class Project {
 	program: ts.Program;
 
 	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+		this.typescript = typescript;
 		this.options = options;
 
 		this.noExternalResolve = noExternalResolve;
@@ -355,7 +356,7 @@ export class Project {
 			}
 		}
 
-		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
+		this.host = new host.Host(this.typescript, this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 
 		// Creating a program compiles the sources
 		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
