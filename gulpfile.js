@@ -49,19 +49,31 @@ gulp.task('scripts', ['clean'], function() {
 
 function runTest(name, callback) {
 	var newTS = require('./release-2/main');
+	var libs = [
+		['default', undefined],
+		// ['jsx', require('jsx-typescript')] TODO: Add jsx-typescript here. It currently throws an error when adding it.
+	];
 	var test = require('./test/' + name + '/gulptask.js');
 
-	test(newTS).on('finish', function() {
-		function onError(error) {
-			console.error('Test ' + name + ' failed: ' + error.message);
-		}
-		gulp.src('test/output/' + name + '/**')
-			.pipe(diff('test/baselines/' + name))
-			.on('error', onError)
-			.pipe(diff.reporter({ fail: true }))
-			.on('error', onError)
-			.on('finish', callback);
-	});
+	for (var i = 0; i < libs.length; i++) {
+		var lib = libs[i];
+		var output = 'test/output/' + name + '/' + lib[0] + '/';
+		var errors = [];
+		test(newTS, lib[1], output).on('error', function(err) {
+			errors.push(err);
+		}).on('finish', function() {
+			fs.writeFileSync(output + 'errors.txt', errors);
+			function onError(error) {
+				console.error('Test ' + name + ' failed: ' + error.message);
+			}
+			gulp.src('test/output/' + name + '/**')
+				.pipe(diff('test/baselines/' + name))
+				.on('error', onError)
+				.pipe(diff.reporter({ fail: true }))
+				.on('error', onError)
+				.on('finish', callback);
+		});
+	}
 }
 
 gulp.task('test', ['clean-test', 'scripts'], function(cb) {

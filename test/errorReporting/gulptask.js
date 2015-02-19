@@ -1,10 +1,10 @@
 var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 
-module.exports = function(newTS) {
+module.exports = function(newTS, lib, output) {
 	var errors = 0;
 	var tsResult = gulp.src('test/errorReporting/*.ts')
-					   .pipe(newTS(undefined, undefined, newTS.reporter.nullReporter()));
+					   .pipe(newTS({ typescript: lib }, undefined, newTS.reporter.nullReporter()));
 
 	tsResult.on('error', function(err) {
 		errors++;
@@ -17,8 +17,8 @@ module.exports = function(newTS) {
 		}
 	});
 
-	tsResult.dts.pipe(gulp.dest('test/output/errorReporting/dts'));
+	tsResult.dts.pipe(gulp.dest(output + 'dts'));
 	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../errorReporting/' }))
-			.pipe(gulp.dest('test/output/errorReporting/js'));
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../../errorReporting/' }))
+			.pipe(gulp.dest(output + 'js'));
 }

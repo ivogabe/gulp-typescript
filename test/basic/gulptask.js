@@ -1,18 +1,19 @@
 var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 
-module.exports = function(newTS) {
+module.exports = function(newTS, lib, output) {
 	var tsResult = gulp.src('test/basic/*.ts')
 					   .pipe(newTS({
 							declarationFiles: true,
 							module: 'amd',
 							noExternalResolve: true,
-							sourceRoot: ''
+							sourceRoot: '',
+						    typescript: lib
 					   }));
 
 	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
-	tsResult.dts.pipe(gulp.dest('test/output/basic/dts'));
+	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../basic/' }))
-			.pipe(gulp.dest('test/output/basic/js'));
+			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../../basic/' }))
+			.pipe(gulp.dest(output + '/js'));
 }

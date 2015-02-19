@@ -2,12 +2,13 @@ var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat');
 
-module.exports = function(newTS) {
+module.exports = function(newTS, lib, output) {
 	var project = newTS.createProject({
 		declarationFiles: true,
 		noExternalResolve: true,
 		sortOutput: true,
-		sourceRoot: ''
+		sourceRoot: '',
+		typescript: lib
 	});
 
 	return gulp.src('test/filter-referencedFrom/**.ts')
@@ -15,6 +16,6 @@ module.exports = function(newTS) {
 		.pipe(newTS(project))
 		.pipe(newTS.filter(project, { referencedFrom: ['test-1.ts'] }))
 		.pipe(concat('concat.js'))
-		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../filter-referencedFrom/' }))
-		.pipe(gulp.dest('test/output/filter-referencedFrom/js'));
+		.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../../filter-referencedFrom/' }))
+		.pipe(gulp.dest(output + 'js'));
 }
