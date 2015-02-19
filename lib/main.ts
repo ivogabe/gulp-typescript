@@ -189,6 +189,8 @@ module compile {
 
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
+
+		typescript?: typeof ts;
 	}
 	export interface FilterSettings {
 		referencedFrom: string[];

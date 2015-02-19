@@ -35,6 +35,12 @@ export class Project {
 		ts: undefined
 	};
 
+	/**
+	 * The TypeScript library that is used for this project.
+	 * Can also be jsx-typescript for example.
+	 */
+	typescript: typeof ts;
+
 	filterSettings: main.FilterSettings;
 
 	/**
@@ -88,7 +94,7 @@ export class Project {
 	host: host.Host;
 	program: ts.Program;
 
-	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean) {
+	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.options = options;
 
 		this.noExternalResolve = noExternalResolve;
@@ -248,7 +254,7 @@ export class Project {
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
 		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(file.ts.filename), item.filename));
 
-		ts.forEachChild(file.ts, (node) => {
+		this.typescript.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
 
@@ -352,7 +358,7 @@ export class Project {
 		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 
 		// Creating a program compiles the sources
-		this.program = ts.createProgram(rootFilenames, this.options, this.host);
+		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
 
 		var errors = this.program.getDiagnostics();
 
@@ -495,7 +501,7 @@ export class Project {
 			filename: Project.normalizePath(filename),
 			originalFilename: filename,
 			content: content,
-			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
+			ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
 	}
 
