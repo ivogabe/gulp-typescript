@@ -124,6 +124,9 @@ var moduleMap: project.Map<ts.ModuleKind> = {
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	var tsSettings: ts.CompilerOptions = {};
 
+	if (settings.preserveConstEnums !== undefined) {
+		tsSettings.preserveConstEnums = settings.preserveConstEnums;
+	}
 	if (settings.removeComments !== undefined) {
 		tsSettings.removeComments = settings.removeComments;
 	}
@@ -172,7 +175,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 
 module compile {
 	export interface Settings {
-		//propagateEnumConstants?: boolean;
+		preserveConstEnums?: boolean;
 		removeComments?: boolean;
 
 		//allowAutomaticSemicolonInsertion?: boolean;
