@@ -65,6 +65,9 @@ export class Host implements ts.CompilerHost {
 	getDefaultLibFilename() {
 		return '__lib.d.ts';
 	}
+	getDefaultLibFileName() {
+		return '__lib.d.ts';
+	}
 
 	writeFile(filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
 		this.output[filename] = data;

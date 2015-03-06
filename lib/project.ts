@@ -35,6 +35,11 @@ export class Project {
 		ts: undefined
 	};
 
+	static getFileName(thing: { filename: string} | { fileName: string }): string {
+		if (<any> thing.filename) return <any> thing.filename;
+		return <any> thing.fileName;
+	}
+
 	/**
 	 * The TypeScript library that is used for this project.
 	 * Can also be jsx-typescript for example.
@@ -161,7 +166,7 @@ export class Project {
 			return err;
 		}
 
-		var filename = this.getOriginalName(info.file.filename);
+		var filename = this.getOriginalName(Project.getFileName(info.file));
 		var file = this.host.getFileData(filename);
 
 		if (file) {
@@ -175,7 +180,7 @@ export class Project {
 				filename = file.originalFilename;
 			}
 		} else {
-			filename = info.file.filename;
+			filename = Project.getFileName(info.file);
 			err.fullFilename = filename;
 		}
 
@@ -253,7 +258,7 @@ export class Project {
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(file.ts.filename), item.filename));
+		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)));
 
 		this.typescript.forEachChild(file.ts, (node) => {
 			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -269,7 +274,7 @@ export class Project {
 				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {
 					return;
 				}
-				var ref = path.join(path.dirname(file.ts.filename), (<ts.StringLiteralExpression> reference).text);
+				var ref = path.join(path.dirname(Project.getFileName(file.ts)), (<ts.StringLiteralExpression> reference).text);
 
 				// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
 				// We guess what file the user wants. This will be right in most cases.
@@ -361,7 +366,14 @@ export class Project {
 		// Creating a program compiles the sources
 		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
 
-		var errors = this.program.getDiagnostics();
+		if (this.program.getDiagnostics) {
+			var errors = this.program.getDiagnostics();
+		} else {
+			// Program#getDiagnostics has been removed in 1.5
+			var errors = this.program.getGlobalDiagnostics().concat(
+				this.program.getSyntacticDiagnostics());
+		}
+
 
 		if (!errors.length) {
 			// If there are no syntax errors, check types
@@ -459,7 +471,7 @@ export class Project {
 
 				var inputFile = this.currentFiles[originalName];
 				var tsFile = this.program.getSourceFile(originalName);
-				var references = tsFile.referencedFiles.map(file => file.filename);
+				var references = tsFile.referencedFiles.map(file => Project.getFileName(file));
 
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
