@@ -322,14 +322,14 @@ export class Project {
 		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)));
 
 		this.typescript.forEachChild(file.ts, (node) => {
-			if (node.kind === this.typescript.SyntaxKind.ImportDeclaration) {
+			if (node.kind === (<any> this.typescript.SyntaxKind).ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
 
-				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== this.typescript.SyntaxKind.ExternalModuleReference) {
+				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== (<any> this.typescript.SyntaxKind).ExternalModuleReference) {
 					return;
 				}
 				var reference = <ts.ExternalModuleReference> importNode.moduleReference;
-				if (reference.expression === undefined || reference.expression.kind !== this.typescript.SyntaxKind.StringLiteral) {
+				if (reference.expression === undefined || reference.expression.kind !== (<any> this.typescript.SyntaxKind).StringLiteral) {
 					return;
 				}
 				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {

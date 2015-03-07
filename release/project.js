@@ -203,13 +203,13 @@ var Project = (function () {
         var _this = this;
         var references = file.ts.referencedFiles.map(function (item) { return path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)); });
         this.typescript.forEachChild(file.ts, function (node) {
-            if (node.kind === 191 /* ImportDeclaration */) {
+            if (node.kind === _this.typescript.SyntaxKind.ImportDeclaration) {
                 var importNode = node;
-                if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== 193 /* ExternalModuleReference */) {
+                if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== _this.typescript.SyntaxKind.ExternalModuleReference) {
                     return;
                 }
                 var reference = importNode.moduleReference;
-                if (reference.expression === undefined || reference.expression.kind !== 7 /* StringLiteral */) {
+                if (reference.expression === undefined || reference.expression.kind !== _this.typescript.SyntaxKind.StringLiteral) {
                     return;
                 }
                 if (typeof reference.text !== 'string') {
