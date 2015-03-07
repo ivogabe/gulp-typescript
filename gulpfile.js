@@ -30,15 +30,12 @@ var tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
 
 gulp.task('clean', function(cb) {
 	rimraf(paths.releaseBeta, cb);
-	// gulp.src([paths.releaseBeta + '/*'], { read: false }).pipe(clean());
 });
 gulp.task('clean-test', function(cb) {
 	rimraf('test/output', cb);
-	// gulp.src(['test/output/*'], { read: false }).pipe(clean());
 });
 gulp.task('clean-release', function(cb) {
 	rimraf(paths.release, cb);
-	// gulp.src([paths.release + '/*'], { read: false }).pipe(clean());
 });
 
 gulp.task('scripts', ['clean'], function() {
