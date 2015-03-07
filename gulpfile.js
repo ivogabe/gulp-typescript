@@ -57,8 +57,16 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
+// Check against jsx-typescript
+gulp.task('typecheck-jsx', function() {
+	return gulp.src(paths.scripts.concat([
+		'!defintions/typescript.d.ts',
+		path.resolve(require.resolve('jsx-typescript'), './typescript.d.ts')
+	])).pipe(ts(tsOptions));
+});
+
 // Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
-gulp.task('typecheck', ['typecheck-dev']);
+gulp.task('typecheck', ['typecheck-dev', 'typecheck-jsx']);
 
 function runTest(name, callback) {
 	var newTS = require('./release-2/main');
