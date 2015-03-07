@@ -124,34 +124,36 @@ var moduleMap: project.Map<ts.ModuleKind> = {
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	var tsSettings: ts.CompilerOptions = {};
 
-	if (settings.preserveConstEnums !== undefined) {
-		tsSettings.preserveConstEnums = settings.preserveConstEnums;
-	}
-	if (settings.removeComments !== undefined) {
-		tsSettings.removeComments = settings.removeComments;
+	for (var key in settings) {
+		if (!Object.hasOwnProperty.call(settings, key)) continue;
+		if (key === 'out' ||
+			key === 'noExternalResolve' ||
+			key === 'declarationFiles' ||
+			key === 'sortOutput' ||
+			key === 'typescript' ||
+			key === 'target' || // Target, module & sourceRoot are added below
+			key === 'module' ||
+			key === 'sourceRoot') continue;
+
+		tsSettings[key] = settings[key];
 	}
 
-	if (settings.noImplicitAny !== undefined) {
-		tsSettings.noImplicitAny = settings.noImplicitAny;
+	if (typeof settings.target === 'string') {
+		tsSettings.target = langMap[(<string> settings.target).toLowerCase()];
+	} else if (typeof settings.target === 'number') {
+		tsSettings.target = <number> settings.target;
 	}
-	if (settings.noLib !== undefined) {
-		tsSettings.noLib = settings.noLib;
-	}
-	if (settings.noEmitOnError !== undefined) {
-		tsSettings.noEmitOnError = settings.noEmitOnError;
+	if (typeof settings.module === 'string') {
+		tsSettings.module = moduleMap[(<string> settings.module).toLowerCase()];
+	} else if (typeof settings.module === 'number') {
+		tsSettings.module = <number> settings.module;
 	}
 
-	if (settings.target !== undefined) {
-		tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
-	}
 	if (tsSettings.target === undefined) {
 		// TS 1.4 has a bug that the target needs to be set.
 		// This block can be removed when a version that solves this bug is published.
 		// The bug is already fixed in the master of TypeScript
 		tsSettings.target = ts.ScriptTarget.ES3;
-	}
-	if (settings.module !== undefined) {
-		tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
 	}
 	if (tsSettings.module === undefined) {
 		// Same bug in TS 1.4 as previous comment.
@@ -175,20 +177,27 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 
 module compile {
 	export interface Settings {
-		preserveConstEnums?: boolean;
-		removeComments?: boolean;
+		allowNonTsExtensions?: boolean;
+        charset?: string;
+        codepage?: number;
+        declaration?: boolean; // alias of declarationFiles
+        locale?: string;
+        mapRoot?: string;
+        noEmitOnError?: boolean;
+        noImplicitAny?: boolean;
+        noLib?: boolean;
+        noLibCheck?: boolean;
+        noResolve?: boolean;
+        outDir?: string;
+        preserveConstEnums?: boolean;
+        removeComments?: boolean;
+        sourceRoot?: string;
+        suppressImplicitAnyIndexErrors?: boolean;
 
-		//allowAutomaticSemicolonInsertion?: boolean;
-		noImplicitAny?: boolean;
-		noLib?: boolean;
-		noEmitOnError?: boolean
-		target?: string;
-		module?: string;
-		sourceRoot?: string;
+		target: string | ts.ScriptTarget;
+		module: string | ts.ModuleKind;
 
 		declarationFiles?: boolean;
-
-		//useCaseSensitiveFileResolution?: boolean;
 
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
