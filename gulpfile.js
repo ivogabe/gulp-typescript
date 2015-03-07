@@ -28,6 +28,7 @@ var tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
 	return dir !== 'baselines' && dir !== 'output' && dir.substr(0, 1) !== '.';
 });
 
+// Clean
 gulp.task('clean', function(cb) {
 	rimraf(paths.releaseBeta, cb);
 });
@@ -38,6 +39,7 @@ gulp.task('clean-release', function(cb) {
 	rimraf(paths.release, cb);
 });
 
+// Compile sources
 gulp.task('scripts', ['clean'], function() {
 	var tsResult = gulp.src(paths.scripts)
 					   .pipe(ts(tsProject));
@@ -46,7 +48,11 @@ gulp.task('scripts', ['clean'], function() {
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
-// Check against the master of TypeScript
+// Type checking against multiple versions of TypeScript:
+// - master of TypeScript (typescript-dev)
+// - jsx-typescript (a fork of TypeScript with JSX support)
+// Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
+
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
 		'!defintions/typescript.d.ts',
@@ -54,7 +60,6 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
-// Check against jsx-typescript
 gulp.task('typecheck-jsx', function() {
 	return gulp.src(paths.scripts.concat([
 		'!defintions/typescript.d.ts',
@@ -62,11 +67,14 @@ gulp.task('typecheck-jsx', function() {
 	])).pipe(ts(tsOptions));
 });
 
-// Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
 gulp.task('typecheck', ['typecheck-dev', 'typecheck-jsx']);
 
+// Tests
+
+// helper function for running a test.
 function runTest(name, callback) {
 	var newTS = require('./release-2/main');
+	// We run every test on multiple typescript versions: current release on NPM and the master from GitHub (typescript-dev).
 	var libs = [
 		['default', undefined],
 		['ts-next', require('typescript-dev')],
@@ -103,6 +111,9 @@ function runTest(name, callback) {
 }
 
 gulp.task('test', ['clean-test', 'scripts'], function(cb) {
+	// Use `gulp test --tests [...]` to run specific test(s).
+	// Example: `gulp test --tests basic,errorReporting`
+
 	fs.mkdirSync('test/output/');
 
 	var currentTests = tests;
@@ -124,6 +135,7 @@ gulp.task('test', ['clean-test', 'scripts'], function(cb) {
 	}
 });
 
+// Accept new baselines
 gulp.task('test-baselines-accept', function(cb) {
 	rimraf(paths.releaseBeta, function() {
 		gulp.src('test/output/**').pipe(gulp.dest('test/baselines')).on('finish', cb);
