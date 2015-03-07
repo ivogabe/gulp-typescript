@@ -179,20 +179,20 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 module compile {
 	export interface Settings {
 		allowNonTsExtensions?: boolean;
-        charset?: string;
-        codepage?: number;
-        declaration?: boolean; // alias of declarationFiles
-        locale?: string;
-        mapRoot?: string;
-        noEmitOnError?: boolean;
-        noImplicitAny?: boolean;
-        noLib?: boolean;
-        noLibCheck?: boolean;
-        noResolve?: boolean;
-        preserveConstEnums?: boolean;
-        removeComments?: boolean;
-        sourceRoot?: string;
-        suppressImplicitAnyIndexErrors?: boolean;
+		charset?: string;
+		codepage?: number;
+		declaration?: boolean; // alias of declarationFiles
+		locale?: string;
+		mapRoot?: string;
+		noEmitOnError?: boolean;
+		noImplicitAny?: boolean;
+		noLib?: boolean;
+		noLibCheck?: boolean;
+		noResolve?: boolean;
+		preserveConstEnums?: boolean;
+		removeComments?: boolean;
+		sourceRoot?: string;
+		suppressImplicitAnyIndexErrors?: boolean;
 
 		target: string | ts.ScriptTarget;
 		module: string | ts.ModuleKind;
