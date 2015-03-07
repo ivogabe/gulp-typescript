@@ -127,6 +127,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	for (var key in settings) {
 		if (!Object.hasOwnProperty.call(settings, key)) continue;
 		if (key === 'out' ||
+			key === 'outDir' ||
 			key === 'noExternalResolve' ||
 			key === 'declarationFiles' ||
 			key === 'sortOutput' ||
@@ -188,7 +189,6 @@ module compile {
         noLib?: boolean;
         noLibCheck?: boolean;
         noResolve?: boolean;
-        outDir?: string;
         preserveConstEnums?: boolean;
         removeComments?: boolean;
         sourceRoot?: string;
