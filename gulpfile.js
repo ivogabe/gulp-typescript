@@ -133,4 +133,4 @@ gulp.task('watch', ['scripts'], function() {
 	gulp.watch(paths.scripts, ['scripts']);
 });
 
-gulp.task('default', ['scripts']);
+gulp.task('default', ['scripts', 'typecheck', 'test']);
