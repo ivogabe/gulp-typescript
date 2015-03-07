@@ -58,12 +58,12 @@ var tsProject = ts.createProject({
 
 gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
-					   .pipe(ts(tsProject));
-	
-	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done.
+					.pipe(ts(tsProject));
+
+	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done. 
 		tsResult.dts.pipe(gulp.dest('release/definitions')),
-		tsResult.js.pipe(gulp.dest('release/js')])
-	);
+		tsResult.js.pipe(gulp.dest('release/js'))
+	]);
 });
 gulp.task('watch', ['scripts'], function() {
     gulp.watch('lib/*.ts', ['scripts']);
@@ -85,6 +85,26 @@ Options
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
+- ```typescript``` (object) - Use a different version / fork of TypeScript (see below). You probably won't need this option, unless you know what you're doing!
+
+TypeScript version
+------------------
+You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
+```javascript
+{
+	"devDependencies": {
+		"gulp-typescript": "*",
+		"typescript": "Microsoft/TypeScript"
+	}
+}
+```
+
+It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
+```javascript
+[...].pipe(ts({
+	typescript: require('my-fork-of-typescript')
+}));
+```
 
 Filters
 -------

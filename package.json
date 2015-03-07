@@ -52,6 +52,9 @@
     "typescript": ">=1.4.1 <2.0.0",
     "vinyl-sourcemaps-apply": "0.1.4"
   },
+  "peerDependencies": {
+    "typescript": ">=1.4.1 <2.0.0"
+  },
   "devDependencies": {
     "gulp": "~3.8.10",
     "rimraf": "~2.2.8",

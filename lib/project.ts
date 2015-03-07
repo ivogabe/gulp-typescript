@@ -196,7 +196,7 @@ export class Project {
 				// Unchanged, we can use the (ts) file from previous build.
 				fileData = {
 					file: file,
-					filename: oldFileData.content,
+					filename: oldFileData.filename,
 					originalFilename: file.path,
 					content: oldFileData.content,
 					ts: oldFileData.ts
