@@ -1,0 +1,1 @@
+TypeScript error: [31mtest/errorReporting/test-4.ts(1,1): [39m2304 Cannot find name 'asdf'.

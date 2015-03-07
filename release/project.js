@@ -7,7 +7,8 @@ var sourcemapApply = require('vinyl-sourcemaps-apply');
 var host = require('./host');
 var filter = require('./filter');
 var Project = (function () {
-    function Project(options, noExternalResolve, sortOutput) {
+    function Project(options, noExternalResolve, sortOutput, typescript) {
+        if (typescript === void 0) { typescript = ts; }
         /**
          * Files from the previous compilation.
          * Used to find the differences with the previous compilation, to make the new compilation faster.
@@ -32,10 +33,50 @@ var Project = (function () {
          * Used for incremental builds.
          */
         this.version = 0;
+        this.typescript = typescript;
         this.options = options;
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
     }
+    Project.getFileName = function (thing) {
+        if (thing.filename)
+            return thing.filename;
+        return thing.fileName;
+    };
+    Project.getDiagnosticsAndEmit = function (program) {
+        if (program.getDiagnostics) {
+            var errors = program.getDiagnostics();
+            if (!errors.length) {
+                // If there are no syntax errors, check types
+                var checker = program.getTypeChecker(true);
+                var semanticErrors = checker.getDiagnostics();
+                var emitErrors = checker.emitFiles().diagnostics;
+                errors = semanticErrors.concat(emitErrors);
+            }
+            return errors;
+        }
+        else {
+            var errors = program.getSyntacticDiagnostics();
+            if (errors.length === 0)
+                errors = program.getGlobalDiagnostics();
+            if (errors.length === 0)
+                errors = program.getSemanticDiagnostics();
+            var emitOutput = program.emit();
+            return errors.concat(emitOutput.diagnostics);
+        }
+    };
+    Project.getLineAndCharacterOfPosition = function (typescript, file, position) {
+        if (file.getLineAndCharacterOfPosition) {
+            var lineAndCharacter = file.getLineAndCharacterOfPosition(position);
+            return {
+                line: lineAndCharacter.line + 1,
+                character: lineAndCharacter.character + 1
+            };
+        }
+        else {
+            return file.getLineAndCharacterFromPosition(position);
+        }
+    };
     /**
      * Resets the compiler.
      * The compiler needs to be reset for incremental builds.
@@ -88,7 +129,7 @@ var Project = (function () {
             err.message = info.code + ' ' + info.messageText;
             return err;
         }
-        var filename = this.getOriginalName(info.file.filename);
+        var filename = this.getOriginalName(Project.getFileName(info.file));
         var file = this.host.getFileData(filename);
         if (file) {
             err.tsFile = file.ts;
@@ -103,11 +144,11 @@ var Project = (function () {
             }
         }
         else {
-            filename = info.file.filename;
+            filename = Project.getFileName(info.file);
             err.fullFilename = filename;
         }
-        var startPos = info.file.getLineAndCharacterFromPosition(info.start);
-        var endPos = info.file.getLineAndCharacterFromPosition(info.start + info.length - 1);
+        var startPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
+        var endPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
         err.startPosition = {
             position: info.start,
             line: startPos.line,
@@ -160,21 +201,21 @@ var Project = (function () {
     };
     Project.prototype.resolve = function (session, file) {
         var _this = this;
-        var references = file.ts.referencedFiles.map(function (item) { return path.join(path.dirname(file.ts.filename), item.filename); });
-        ts.forEachChild(file.ts, function (node) {
-            if (node.kind === 191 /* ImportDeclaration */) {
+        var references = file.ts.referencedFiles.map(function (item) { return path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)); });
+        this.typescript.forEachChild(file.ts, function (node) {
+            if (node.kind === _this.typescript.SyntaxKind.ImportDeclaration) {
                 var importNode = node;
-                if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== 193 /* ExternalModuleReference */) {
+                if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== _this.typescript.SyntaxKind.ExternalModuleReference) {
                     return;
                 }
                 var reference = importNode.moduleReference;
-                if (reference.expression === undefined || reference.expression.kind !== 7 /* StringLiteral */) {
+                if (reference.expression === undefined || reference.expression.kind !== _this.typescript.SyntaxKind.StringLiteral) {
                     return;
                 }
                 if (typeof reference.text !== 'string') {
                     return;
                 }
-                var ref = path.join(path.dirname(file.ts.filename), reference.text);
+                var ref = path.join(path.dirname(Project.getFileName(file.ts)), reference.text);
                 // Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
                 // We guess what file the user wants. This will be right in most cases.
                 // The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
@@ -250,17 +291,10 @@ var Project = (function () {
                 files[filename] = this.additionalFiles[filename];
             }
         }
-        this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
+        this.host = new host.Host(this.typescript, this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
         // Creating a program compiles the sources
-        this.program = ts.createProgram(rootFilenames, this.options, this.host);
-        var errors = this.program.getDiagnostics();
-        if (!errors.length) {
-            // If there are no syntax errors, check types
-            var checker = this.program.getTypeChecker(true);
-            var semanticErrors = checker.getDiagnostics();
-            var emitErrors = checker.emitFiles().diagnostics;
-            errors = semanticErrors.concat(emitErrors);
-        }
+        this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
+        var errors = Project.getDiagnosticsAndEmit(this.program);
         for (var i = 0; i < errors.length; i++) {
             errorCallback(this.getError(errors[i]));
         }
@@ -335,7 +369,7 @@ var Project = (function () {
                 done[originalName] = true;
                 var inputFile = _this.currentFiles[originalName];
                 var tsFile = _this.program.getSourceFile(originalName);
-                var references = tsFile.referencedFiles.map(function (file) { return file.filename; });
+                var references = tsFile.referencedFiles.map(function (file) { return Project.getFileName(file); });
                 for (var j = 0; j < outputJS.length; ++j) {
                     var other = outputJS[j];
                     var otherName = _this.getOriginalName(other.path);
@@ -371,7 +405,7 @@ var Project = (function () {
             filename: Project.normalizePath(filename),
             originalFilename: filename,
             content: content,
-            ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
+            ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
         };
     };
     Project.prototype.removeSourceMapComment = function (content) {

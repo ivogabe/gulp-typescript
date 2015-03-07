@@ -27,6 +27,31 @@ interface OutputFile {
 	sourcemap?: string;
 }
 
+/*
+ * TS1.4 had a simple getDiagnostics method, in 1.5 that method doens't exist,
+ * but instead there are now 4 methods which (combined) return all diagnostics.
+ */
+interface Program14 {
+	getDiagnostics(): ts.Diagnostic[];
+	getTypeChecker(fullTypeCheckMode: boolean): ts.TypeChecker;
+}
+interface Program15 {
+	getSyntacticDiagnostics(): ts.Diagnostic[];
+	getGlobalDiagnostics(): ts.Diagnostic[];
+	getSemanticDiagnostics(): ts.Diagnostic[];
+	getDeclarationDiagnostics(): ts.Diagnostic[];
+	emit(): { diagnostics: ts.Diagnostic[]; };
+}
+/*
+ * In TS 14 the method getLineAndCharacterFromPosition has been renamed from ...From... to ...Of...
+ */
+interface TSFile14 {
+	getLineAndCharacterFromPosition(pos: number): ts.LineAndCharacter;
+}
+interface TSFile15 {
+	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
+}
+
 export class Project {
 	static unresolvedFile: FileData = {
 		filename: undefined,
@@ -34,6 +59,53 @@ export class Project {
 		content: undefined,
 		ts: undefined
 	};
+
+	static getFileName(thing: { filename: string} | { fileName: string }): string {
+		if ((<any> thing).filename) return (<any> thing).filename;
+		return (<any> thing).fileName;
+	}
+	private static getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagnostic[] {
+		if ((<Program14> program).getDiagnostics) {
+			var errors = (<Program14> program).getDiagnostics();
+
+			if (!errors.length) {
+				// If there are no syntax errors, check types
+				var checker = (<Program14> program).getTypeChecker(true);
+
+				var semanticErrors = checker.getDiagnostics();
+
+				var emitErrors = checker.emitFiles().diagnostics;
+
+				errors = semanticErrors.concat(emitErrors);
+			}
+
+			return errors;
+		} else {
+			var errors = (<Program15> program).getSyntacticDiagnostics();
+			if (errors.length === 0) errors = (<Program15> program).getGlobalDiagnostics();
+			if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
+
+			var emitOutput = (<Program15> program).emit();
+            return errors.concat(emitOutput.diagnostics);
+		}
+	}
+	private static getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFile14 | TSFile15, position: number) {
+		if ((<TSFile15> file).getLineAndCharacterOfPosition) { // TS 1.5
+			var lineAndCharacter = (<TSFile15> file).getLineAndCharacterOfPosition(position);
+			return {
+				line: lineAndCharacter.line + 1,
+				character: lineAndCharacter.character + 1
+			}
+		} else { // TS 1.4
+			return (<TSFile14> file).getLineAndCharacterFromPosition(position);
+		}
+	}
+
+	/**
+	 * The TypeScript library that is used for this project.
+	 * Can also be jsx-typescript for example.
+	 */
+	typescript: typeof ts;
 
 	filterSettings: main.FilterSettings;
 
@@ -88,7 +160,8 @@ export class Project {
 	host: host.Host;
 	program: ts.Program;
 
-	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean) {
+	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+		this.typescript = typescript;
 		this.options = options;
 
 		this.noExternalResolve = noExternalResolve;
@@ -154,7 +227,7 @@ export class Project {
 			return err;
 		}
 
-		var filename = this.getOriginalName(info.file.filename);
+		var filename = this.getOriginalName(Project.getFileName(info.file));
 		var file = this.host.getFileData(filename);
 
 		if (file) {
@@ -168,12 +241,12 @@ export class Project {
 				filename = file.originalFilename;
 			}
 		} else {
-			filename = info.file.filename;
+			filename = Project.getFileName(info.file);
 			err.fullFilename = filename;
 		}
 
-		var startPos = info.file.getLineAndCharacterFromPosition(info.start);
-		var endPos = info.file.getLineAndCharacterFromPosition(info.start + info.length - 1);
+		var startPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
+		var endPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
 
 		err.startPosition = {
 			position: info.start,
@@ -246,23 +319,23 @@ export class Project {
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(file.ts.filename), item.filename));
+		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)));
 
-		ts.forEachChild(file.ts, (node) => {
-			if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+		this.typescript.forEachChild(file.ts, (node) => {
+			if (node.kind === (<any> this.typescript.SyntaxKind).ImportDeclaration) {
 				var importNode = <ts.ImportDeclaration> node;
 
-				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== ts.SyntaxKind.ExternalModuleReference) {
+				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== (<any> this.typescript.SyntaxKind).ExternalModuleReference) {
 					return;
 				}
 				var reference = <ts.ExternalModuleReference> importNode.moduleReference;
-				if (reference.expression === undefined || reference.expression.kind !== ts.SyntaxKind.StringLiteral) {
+				if (reference.expression === undefined || reference.expression.kind !== (<any> this.typescript.SyntaxKind).StringLiteral) {
 					return;
 				}
 				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {
 					return;
 				}
-				var ref = path.join(path.dirname(file.ts.filename), (<ts.StringLiteralExpression> reference).text);
+				var ref = path.join(path.dirname(Project.getFileName(file.ts)), (<ts.StringLiteralExpression> reference).text);
 
 				// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
 				// We guess what file the user wants. This will be right in most cases.
@@ -349,23 +422,12 @@ export class Project {
 			}
 		}
 
-		this.host = new host.Host(this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
+		this.host = new host.Host(this.typescript, this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
 
 		// Creating a program compiles the sources
-		this.program = ts.createProgram(rootFilenames, this.options, this.host);
+		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
 
-		var errors = this.program.getDiagnostics();
-
-		if (!errors.length) {
-			// If there are no syntax errors, check types
-			var checker = this.program.getTypeChecker(true);
-
-			var semanticErrors = checker.getDiagnostics();
-
-            var emitErrors = checker.emitFiles().diagnostics;
-
-            errors = semanticErrors.concat(emitErrors);
-        }
+		var errors = Project.getDiagnosticsAndEmit(this.program);
 
 		for (var i = 0; i < errors.length; i++) {
 			errorCallback(this.getError(errors[i]));
@@ -452,7 +514,7 @@ export class Project {
 
 				var inputFile = this.currentFiles[originalName];
 				var tsFile = this.program.getSourceFile(originalName);
-				var references = tsFile.referencedFiles.map(file => file.filename);
+				var references = tsFile.referencedFiles.map(file => Project.getFileName(file));
 
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
@@ -495,7 +557,7 @@ export class Project {
 			filename: Project.normalizePath(filename),
 			originalFilename: filename,
 			content: content,
-			ts: ts.createSourceFile(filename, content, this.options.target, this.version + '')
+			ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
 		};
 	}
 

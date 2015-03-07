@@ -99,7 +99,7 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
-		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
+		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false, (param && param.typescript) || undefined);
 	}
 
 	proj.reset();
@@ -124,6 +124,9 @@ var moduleMap: project.Map<ts.ModuleKind> = {
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	var tsSettings: ts.CompilerOptions = {};
 
+	if (settings.preserveConstEnums !== undefined) {
+		tsSettings.preserveConstEnums = settings.preserveConstEnums;
+	}
 	if (settings.removeComments !== undefined) {
 		tsSettings.removeComments = settings.removeComments;
 	}
@@ -172,7 +175,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 
 module compile {
 	export interface Settings {
-		//propagateEnumConstants?: boolean;
+		preserveConstEnums?: boolean;
 		removeComments?: boolean;
 
 		//allowAutomaticSemicolonInsertion?: boolean;
@@ -189,6 +192,8 @@ module compile {
 
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
+
+		typescript?: typeof ts;
 	}
 	export interface FilterSettings {
 		referencedFrom: string[];
@@ -196,7 +201,7 @@ module compile {
 	export import Project = project.Project;
 	export import reporter = _reporter;
 	export function createProject(settings: Settings): Project {
-		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 	}
 
 	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {

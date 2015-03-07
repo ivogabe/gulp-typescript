@@ -7,18 +7,37 @@ import fs = require('fs');
 import path = require('path');
 
 export class Host implements ts.CompilerHost {
-	static libDefault: ts.SourceFile;
-	static initLibDefault() {
-		var content = fs.readFileSync(path.resolve(path.dirname(require.resolve('typescript')) + '/lib.d.ts')).toString('utf8');
-		this.libDefault = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
+	static libDefault: project.Map<ts.SourceFile> = {};
+	static getLibDefault(typescript: typeof ts) {
+		var filename: string;
+		for (var i in require.cache) {
+			if (!Object.prototype.hasOwnProperty.call(require.cache, i)) continue;
+
+			if (require.cache[i].exports === typescript) {
+				filename = i;
+			}
+		}
+		if (filename === undefined) {
+			return undefined; // Not found
+		}
+		if (this.libDefault[filename]) {
+			return this.libDefault[filename]; // Already loaded
+		}
+
+		var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
+		return this.libDefault[filename] = typescript.createSourceFile('__lib.d.ts', content, typescript.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
 	}
+
+	typescript: typeof ts;
 
 	private currentDirectory: string;
 	private files: project.Map<project.FileData>;
 	private externalResolve: boolean;
 	output: project.Map<string>;
 
-	constructor(currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
+	constructor(typescript: typeof ts, currentDirectory: string, files: project.Map<project.FileData>, externalResolve: boolean) {
+		this.typescript = typescript;
+
 		this.currentDirectory = currentDirectory;
 		this.files = files;
 
@@ -38,7 +57,7 @@ export class Host implements ts.CompilerHost {
 		return false;
 	}
 
-	getCurrentDirectory() {
+	getCurrentDirectory = () => {
 		return this.currentDirectory;
 	}
 	getCanonicalFileName(filename: string) {
@@ -47,12 +66,15 @@ export class Host implements ts.CompilerHost {
 	getDefaultLibFilename() {
 		return '__lib.d.ts';
 	}
+	getDefaultLibFileName() {
+		return '__lib.d.ts';
+	}
 
-	writeFile(filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
+	writeFile = (filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
 		this.output[filename] = data;
 	}
 
-	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
+	getSourceFile = (filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
 		var text: string;
 
 		var normalizedFilename = project.Project.normalizePath(filename);
@@ -64,7 +86,7 @@ export class Host implements ts.CompilerHost {
 				return this.files[normalizedFilename].ts;
 			}
 		} else if (normalizedFilename === '__lib.d.ts') {
-			return Host.libDefault;
+			return Host.getLibDefault(this.typescript);
 		} else {
 			if (this.externalResolve) {
 				try {
@@ -77,7 +99,8 @@ export class Host implements ts.CompilerHost {
 
 		if (typeof text !== 'string') return undefined;
 
-		var file = ts.createSourceFile(filename, text, languageVersion, "0");
+		var file = this.typescript.createSourceFile(filename, text, languageVersion, "0");
+
 		this.files[normalizedFilename] = {
 			filename: normalizedFilename,
 			originalFilename: filename,
@@ -91,4 +114,3 @@ export class Host implements ts.CompilerHost {
 		return this.files[project.Project.normalizePath(filename)];
 	}
 }
-Host.initLibDefault();
