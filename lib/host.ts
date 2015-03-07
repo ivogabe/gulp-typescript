@@ -17,12 +17,15 @@ export class Host implements ts.CompilerHost {
 				filename = i;
 			}
 		}
-
-		if (filename === undefined) return undefined; // Not found
-		if (this.libDefault[filename]) return this.libDefault[filename]; // Already loaded
+		if (filename === undefined) {
+			return undefined; // Not found
+		}
+		if (this.libDefault[filename]) {
+			return this.libDefault[filename]; // Already loaded
+		}
 
 		var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
-		return this.libDefault[filename] = ts.createSourceFile('__lib.d.ts', content, ts.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
+		return this.libDefault[filename] = typescript.createSourceFile('__lib.d.ts', content, typescript.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
 	}
 
 	typescript: typeof ts;
@@ -41,8 +44,6 @@ export class Host implements ts.CompilerHost {
 		this.externalResolve = externalResolve;
 
 		this.reset();
-
-
 	}
 
 	private reset() {
@@ -56,7 +57,7 @@ export class Host implements ts.CompilerHost {
 		return false;
 	}
 
-	getCurrentDirectory() {
+	getCurrentDirectory = () => {
 		return this.currentDirectory;
 	}
 	getCanonicalFileName(filename: string) {
@@ -69,11 +70,11 @@ export class Host implements ts.CompilerHost {
 		return '__lib.d.ts';
 	}
 
-	writeFile(filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
+	writeFile = (filename: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
 		this.output[filename] = data;
 	}
 
-	getSourceFile(filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
+	getSourceFile = (filename: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
 		var text: string;
 
 		var normalizedFilename = project.Project.normalizePath(filename);
@@ -98,7 +99,8 @@ export class Host implements ts.CompilerHost {
 
 		if (typeof text !== 'string') return undefined;
 
-		var file = ts.createSourceFile(filename, text, languageVersion, "0");
+		var file = this.typescript.createSourceFile(filename, text, languageVersion, "0");
+
 		this.files[normalizedFilename] = {
 			filename: normalizedFilename,
 			originalFilename: filename,
