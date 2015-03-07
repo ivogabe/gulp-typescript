@@ -14,8 +14,8 @@ var Filter = (function () {
                     return;
                 _this.referencedFromAll.push(file.filename);
                 for (var i = 0; i < file.ts.referencedFiles.length; i++) {
-                    var ref = file.ts.referencedFiles[i].filename;
-                    ref = project.Project.normalizePath(path.join(path.dirname(file.ts.filename), ref));
+                    var ref = project.Project.getFileName(file.ts.referencedFiles[i]);
+                    ref = project.Project.normalizePath(path.join(path.dirname(project.Project.getFileName(file.ts)), ref));
                     var refFile = _this.project.currentFiles[ref];
                     if (refFile)
                         addReference(refFile);

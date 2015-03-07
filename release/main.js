@@ -91,7 +91,7 @@ function compile(param, filters, theReporter) {
         proj = param;
     }
     else {
-        proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false);
+        proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false, (param && param.typescript) || undefined);
     }
     proj.reset();
     proj.filterSettings = filters;
@@ -110,6 +110,9 @@ var moduleMap = {
 };
 function getCompilerOptions(settings) {
     var tsSettings = {};
+    if (settings.preserveConstEnums !== undefined) {
+        tsSettings.preserveConstEnums = settings.preserveConstEnums;
+    }
     if (settings.removeComments !== undefined) {
         tsSettings.removeComments = settings.removeComments;
     }
@@ -155,7 +158,7 @@ var compile;
     compile.Project = project.Project;
     compile.reporter = _reporter;
     function createProject(settings) {
-        return new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false);
+        return new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
     }
     compile.createProject = createProject;
     function filter(project, filters) {
