@@ -89,8 +89,7 @@ Options
 
 TypeScript version
 ------------------
-You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. Make sure the directory `node_modules/gulp-typescript/node_modules/typescript` doesn't exist! If it does, remove it.
-You can use this in your `package.json` to get the master from GitHub:
+You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
 ```javascript
 {
 	"devDependencies": {
