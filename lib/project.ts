@@ -126,6 +126,10 @@ export class Project {
 	 * is added to this Map. The file property of the FileData objects in this Map are not set.
 	 */
 	additionalFiles: Map<FileData> = {};
+	/**
+	 *
+	 */
+	firstFile: FileData = undefined;
 
 	private isFileChanged: boolean = false;
 	private previousOutputJS: OutputFile[];
@@ -174,6 +178,7 @@ export class Project {
 	 */
 	reset() {
 		this.previousFiles = this.currentFiles;
+		this.firstFile = undefined;
 
 		this.isFileChanged = false;
 
@@ -210,6 +215,7 @@ export class Project {
 			this.isFileChanged = true;
 		}
 
+		if (!this.firstFile) this.firstFile = fileData;
 		this.currentFiles[Project.normalizePath(file.path)] = fileData;
 	}
 
@@ -448,17 +454,29 @@ export class Project {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
 
 			var originalName = this.getOriginalName(Project.normalizePath(filename));
-			var original: FileData = this.currentFiles[originalName];
+			var original: FileData;
+			if (this.options.out) {
+				original = this.firstFile;
+				if (!original) continue;
 
-			if (!original) continue;
+				var fullOriginalName = path.join(original.file.base, this.options.out);
+			} else {
+				original = this.currentFiles[originalName];
+				if (!original) continue;
+
+				var fullOriginalName = original.originalFilename;
+			}
+
+			var lastDot = fullOriginalName.lastIndexOf('.');
+			if (lastDot === -1) lastDot = fullOriginalName.length;
+			var fullOriginalNameWithoutExtension = fullOriginalName.substring(0, lastDot);
 
 			var data: string = this.host.output[filename];
 
-			var fullOriginalName = original.originalFilename;
 
 			if (filename.substr(-3) === '.js') {
 				var file = new gutil.File({
-					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
+					path: fullOriginalNameWithoutExtension + '.js',
 					contents: new Buffer(this.removeSourceMapComment(data)),
 					cwd: original.file.cwd,
 					base: original.file.base
@@ -468,7 +486,7 @@ export class Project {
 				outputJS.push(file);
 			} else if (filename.substr(-5) === '.d.ts') {
 				var file = new gutil.File({
-					path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
+					path: fullOriginalNameWithoutExtension + '.d.ts',
 					contents: new Buffer(data),
 					cwd: original.file.cwd,
 					base: original.file.base
