@@ -145,7 +145,7 @@ Advantage of ```noExternalResolve```: faster compilation.
 Disadvantage of ```noExternalResolve```: won't work when you forgot some input files.
 Advice: turn it on, and make sure you list all the input files.
 
-Files that are resolved when ```noExternalResolve``` is off, won't be pushed to the output stream.
+Files that are resolved when ```noExternalResolve``` is off, won't be pushed to the output stream, unless you are using the `out` option.
 
 Concatenate files
 ------------
