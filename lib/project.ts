@@ -259,7 +259,7 @@ export class Project {
 			character: endPos.character
 		};
 
-		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
+		err.message = gutil.colors.red(err.fullFilename + '(' + startPos.line + ',' + startPos.character + '): ') + "error TS" + info.code + ' ' + info.messageText;
 
 		return err;
 	}
