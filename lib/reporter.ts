@@ -13,13 +13,13 @@ export interface TypeScriptError extends Error {
 
 	startPosition?: {
 		position: number;
-        line: number;
-        character: number;
+		line: number;
+		character: number;
     };
 	endPosition?: {
 		position: number;
-        line: number;
-        character: number;
+		line: number;
+		character: number;
     };
 }
 
