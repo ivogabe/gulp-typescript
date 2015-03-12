@@ -110,32 +110,30 @@ var moduleMap = {
 };
 function getCompilerOptions(settings) {
     var tsSettings = {};
-    if (settings.preserveConstEnums !== undefined) {
-        tsSettings.preserveConstEnums = settings.preserveConstEnums;
+    for (var key in settings) {
+        if (!Object.hasOwnProperty.call(settings, key))
+            continue;
+        if (key === 'outDir' || key === 'noExternalResolve' || key === 'declarationFiles' || key === 'sortOutput' || key === 'typescript' || key === 'target' || key === 'module' || key === 'sourceRoot')
+            continue;
+        tsSettings[key] = settings[key];
     }
-    if (settings.removeComments !== undefined) {
-        tsSettings.removeComments = settings.removeComments;
+    if (typeof settings.target === 'string') {
+        tsSettings.target = langMap[settings.target.toLowerCase()];
     }
-    if (settings.noImplicitAny !== undefined) {
-        tsSettings.noImplicitAny = settings.noImplicitAny;
+    else if (typeof settings.target === 'number') {
+        tsSettings.target = settings.target;
     }
-    if (settings.noLib !== undefined) {
-        tsSettings.noLib = settings.noLib;
+    if (typeof settings.module === 'string') {
+        tsSettings.module = moduleMap[settings.module.toLowerCase()];
     }
-    if (settings.noEmitOnError !== undefined) {
-        tsSettings.noEmitOnError = settings.noEmitOnError;
-    }
-    if (settings.target !== undefined) {
-        tsSettings.target = langMap[(settings.target || 'es3').toLowerCase()];
+    else if (typeof settings.module === 'number') {
+        tsSettings.module = settings.module;
     }
     if (tsSettings.target === undefined) {
         // TS 1.4 has a bug that the target needs to be set.
         // This block can be removed when a version that solves this bug is published.
         // The bug is already fixed in the master of TypeScript
         tsSettings.target = 0 /* ES3 */;
-    }
-    if (settings.module !== undefined) {
-        tsSettings.module = moduleMap[(settings.module || 'none').toLowerCase()];
     }
     if (tsSettings.module === undefined) {
         // Same bug in TS 1.4 as previous comment.
