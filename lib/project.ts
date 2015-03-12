@@ -521,7 +521,6 @@ export class Project {
 				var oldFiles: string[];
 				if (this.options.out !== undefined) {
 					oldFiles = Object.keys(this.currentFiles);
-					console.log('A');
 				} else {
 					oldFiles = [originalName];
 				}
