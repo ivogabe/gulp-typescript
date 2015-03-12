@@ -3,6 +3,7 @@ var sourcemaps = require('gulp-sourcemaps');
 
 module.exports = function(newTS, lib, output, reporter) {
 	var tsResult = gulp.src('test/out/*.ts')
+					   .pipe(sourcemaps.init())
 					   .pipe(newTS({
 							declarationFiles: true,
 							sourceRoot: '',
