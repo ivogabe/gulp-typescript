@@ -24,7 +24,7 @@ export interface FileData {
 interface OutputFile {
 	filename: string;
 	content: string;
-	sourcemap?: string;
+	sourcemap?: Object;
 }
 
 /*
@@ -293,10 +293,7 @@ export class Project {
 					base: original.file.base
 				});
 
-				if (original.file.sourceMap) {
-					gFile.sourceMap = original.file.sourceMap;
-					// sourcemapApply(gFile, file.sourcemap);
-				}
+				gFile.sourceMap = file.sourcemap;
 
 				jsStream.push(gFile);
 			}
@@ -531,15 +528,13 @@ export class Project {
 					generator.applySourceMap(new sourceMap.SourceMapConsumer(oldFile.file.sourceMap));
 				}
 				file.sourceMap = JSON.parse(generator.toString());
-				// if (original.file.sourceMap) file.sourceMap = original.file.sourceMap;
-				// sourcemapApply(file, map);
 			} else console.log(originalName, sourcemaps);
 
 			if (this.previousOutputJS !== undefined) {
 				this.previousOutputJS.push({
 					filename: file.path,
 					content: file.contents.toString(),
-					sourcemap: map
+					sourcemap: file.sourceMap
 				});
 			}
 
