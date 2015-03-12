@@ -86,7 +86,7 @@ export class Project {
 			if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
 
 			var emitOutput = (<Program15> program).emit();
-            return errors.concat(emitOutput.diagnostics);
+			return errors.concat(emitOutput.diagnostics);
 		}
 	}
 	private static getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFile14 | TSFile15, position: number) {
