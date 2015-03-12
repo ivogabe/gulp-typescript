@@ -183,9 +183,7 @@ var Project = (function () {
                     cwd: original.file.cwd,
                     base: original.file.base
                 });
-                if (original.file.sourceMap) {
-                    gFile.sourceMap = original.file.sourceMap;
-                }
+                gFile.sourceMap = file.sourcemap;
                 jsStream.push(gFile);
             }
             for (var i = 0; i < this.previousOutputDts.length; i++) {
@@ -399,7 +397,7 @@ var Project = (function () {
                 _this.previousOutputJS.push({
                     filename: file.path,
                     content: file.contents.toString(),
-                    sourcemap: map
+                    sourcemap: file.sourceMap
                 });
             }
             jsStream.push(file);
