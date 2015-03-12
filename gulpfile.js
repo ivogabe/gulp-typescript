@@ -99,7 +99,7 @@ function runTest(name, callback) {
 				function onError(error) {
 					console.error('Test ' + name + ' failed: ' + error.message);
 				}
-				gulp.src('test/output/' + name + '/**')
+				gulp.src(output)
 					.pipe(diff('test/baselines/' + name))
 					.on('error', onError)
 					.pipe(diff.reporter({ fail: true }))
