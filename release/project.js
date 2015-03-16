@@ -1,9 +1,9 @@
 ///<reference path='../definitions/ref.d.ts'/>
 var ts = require('typescript');
 var gutil = require('gulp-util');
+var sourceMap = require('source-map');
 var path = require('path');
 var fs = require('fs'); // Only used for readonly access
-var sourcemapApply = require('vinyl-sourcemaps-apply');
 var host = require('./host');
 var filter = require('./filter');
 var Project = (function () {
@@ -26,6 +26,10 @@ var Project = (function () {
          * is added to this Map. The file property of the FileData objects in this Map are not set.
          */
         this.additionalFiles = {};
+        /**
+         *
+         */
+        this.firstFile = undefined;
         this.isFileChanged = false;
         /**
          * The version number of the compilation.
@@ -83,6 +87,7 @@ var Project = (function () {
      */
     Project.prototype.reset = function () {
         this.previousFiles = this.currentFiles;
+        this.firstFile = undefined;
         this.isFileChanged = false;
         this.currentFiles = {};
         this.additionalFiles = {};
@@ -116,6 +121,8 @@ var Project = (function () {
             fileData = this.getFileDataFromGulpFile(file);
             this.isFileChanged = true;
         }
+        if (!this.firstFile)
+            this.firstFile = fileData;
         this.currentFiles[Project.normalizePath(file.path)] = fileData;
     };
     Project.prototype.getOriginalName = function (filename) {
@@ -176,10 +183,7 @@ var Project = (function () {
                     cwd: original.file.cwd,
                     base: original.file.base
                 });
-                if (original.file.sourceMap) {
-                    gFile.sourceMap = original.file.sourceMap;
-                    sourcemapApply(gFile, file.sourcemap);
-                }
+                gFile.sourceMap = file.sourcemap;
                 jsStream.push(gFile);
             }
             for (var i = 0; i < this.previousOutputDts.length; i++) {
@@ -312,25 +316,36 @@ var Project = (function () {
             if (!this.host.output.hasOwnProperty(filename))
                 continue;
             var originalName = this.getOriginalName(Project.normalizePath(filename));
-            var original = this.currentFiles[originalName];
-            if (!original)
-                continue;
+            var original;
+            if (this.options.out !== undefined) {
+                original = this.firstFile;
+                if (!original)
+                    continue;
+                var fullOriginalName = path.join(original.file.base, this.options.out);
+            }
+            else {
+                original = this.currentFiles[originalName];
+                if (!original)
+                    continue;
+                var fullOriginalName = original.originalFilename;
+            }
+            var lastDot = fullOriginalName.lastIndexOf('.');
+            if (lastDot === -1)
+                lastDot = fullOriginalName.length;
+            var fullOriginalNameWithoutExtension = fullOriginalName.substring(0, lastDot);
             var data = this.host.output[filename];
-            var fullOriginalName = original.originalFilename;
             if (filename.substr(-3) === '.js') {
                 var file = new gutil.File({
-                    path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.js',
+                    path: fullOriginalNameWithoutExtension + '.js',
                     contents: new Buffer(this.removeSourceMapComment(data)),
                     cwd: original.file.cwd,
                     base: original.file.base
                 });
-                if (original.file.sourceMap)
-                    file.sourceMap = original.file.sourceMap;
                 outputJS.push(file);
             }
             else if (filename.substr(-5) === '.d.ts') {
                 var file = new gutil.File({
-                    path: fullOriginalName.substr(0, fullOriginalName.length - 3) + '.d.ts',
+                    path: fullOriginalNameWithoutExtension + '.d.ts',
                     contents: new Buffer(data),
                     cwd: original.file.cwd,
                     base: original.file.base
@@ -344,18 +359,45 @@ var Project = (function () {
                 declStream.push(file);
             }
             else if (filename.substr(-4) === '.map') {
-                sourcemaps[originalName] = data;
+                if (this.options.out !== undefined) {
+                    sourcemaps[''] = data;
+                }
+                else {
+                    sourcemaps[originalName] = data;
+                }
             }
         }
         var emit = function (originalName, file) {
-            var map = sourcemaps[originalName];
-            if (map)
-                sourcemapApply(file, map);
+            var map = sourcemaps[_this.options.out !== undefined ? '' : originalName];
+            if (map) {
+                var parsedMap = JSON.parse(map);
+                parsedMap.file = parsedMap.file.replace(/\\/g, '/');
+                parsedMap.sources = parsedMap.sources.map(function (filePath) {
+                    return filePath.replace(/\\/g, '/');
+                });
+                var oldFiles;
+                if (_this.options.out !== undefined) {
+                    oldFiles = Object.keys(_this.currentFiles);
+                }
+                else {
+                    oldFiles = [originalName];
+                }
+                var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(parsedMap));
+                for (var i = 0; i < oldFiles.length; i++) {
+                    var oldFile = _this.currentFiles[oldFiles[i]];
+                    if (!oldFile || !oldFile.file || !oldFile.file.sourceMap)
+                        continue;
+                    generator.applySourceMap(new sourceMap.SourceMapConsumer(oldFile.file.sourceMap));
+                }
+                file.sourceMap = JSON.parse(generator.toString());
+            }
+            else
+                console.log(originalName, sourcemaps);
             if (_this.previousOutputJS !== undefined) {
                 _this.previousOutputJS.push({
                     filename: file.path,
                     content: file.contents.toString(),
-                    sourcemap: map
+                    sourcemap: file.sourceMap
                 });
             }
             jsStream.push(file);
