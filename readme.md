@@ -39,8 +39,8 @@ gulp.task('scripts', function() {
 	
 	return merge([
 		tsResult.dts.pipe(gulp.dest('release/definitions')),
-		tsResult.js.pipe(gulp.dest('release/js')])
-	);
+		tsResult.js.pipe(gulp.dest('release/js'))
+	]);
 });
 ```
 
