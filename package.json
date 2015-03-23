@@ -43,6 +43,10 @@
     {
       "name": "James Whitney",
       "email": "james@whitney.io"
+    },
+    {
+      "name": "Jaroslaw Zalucki",
+      "email": "mad.jaro@gmail.com"
     }
   ],
   "main": "release/main.js",
