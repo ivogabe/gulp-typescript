@@ -37,6 +37,17 @@ export function defaultReporter(): Reporter {
 		}
 	};
 }
+export function longReporter(): Reporter {
+	return {
+		error: (error: TypeScriptError) => {
+			if (error.tsFile) {
+				console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.red(error.fullFilename + '(' + error.startPosition.line + ',' + error.startPosition.character + '): ') + 'error TS' + error.diagnostic.code + ' ' + error.diagnostic.messageText);
+			} else {
+				console.error(error.message);
+			}
+		}
+	}
+}
 export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
 		error: (error: TypeScriptError) => {

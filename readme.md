@@ -188,6 +188,7 @@ ts(optionsOrProject, filters, reporter);
 You can set options, project or filter to `undefined` if you don't want to set them. Available reporters are:
 - nullReporter (`ts.reporter.nullReporter()`) - Don't report errors
 - defaultReporter (`ts.reporter.defaultReporter()`) - Report basic errors to the console
+- longReporter (`ts.reporter.longReporter()`) - Extended version of default reporter, intelliJ link functionality + file watcher error highlighting should work using this one
 - fullReporter (`ts.reporter.fullReporter(showFullFilename?: boolean)`) - Show full error messages, with source.
 
 If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in that file is an interface which a reporter should implement.
