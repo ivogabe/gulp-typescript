@@ -14,7 +14,8 @@ var tsOptions = {
 	target: 'es5',
 	module: 'commonjs',
 	noExternalResolve: true,
-	preserveConstEnums: true
+	preserveConstEnums: true,
+	typescript: require('typescript-dev')
 };
 var tsProject = ts.createProject(tsOptions);
 
@@ -52,18 +53,17 @@ gulp.task('scripts', ['clean'], function() {
 // - master of TypeScript (typescript-dev)
 // - jsx-typescript (a fork of TypeScript with JSX support)
 // Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
-
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
-		'!defintions/typescript.d.ts',
-		path.resolve(require.resolve('typescript-dev'), './typescript.d.ts')
+		'!definitions/typescript.d.ts',
+		path.join(path.dirname(require.resolve('typescript-dev')), 'typescript.d.ts')
 	])).pipe(ts(tsOptions));
 });
 
 gulp.task('typecheck-jsx', function() {
 	return gulp.src(paths.scripts.concat([
-		'!defintions/typescript.d.ts',
-		path.resolve(require.resolve('jsx-typescript'), './typescript.d.ts')
+		'!definitions/typescript.d.ts',
+		path.join(path.dirname(require.resolve('jsx-typescript')), './typescript.d.ts')
 	])).pipe(ts(tsOptions));
 });
 
