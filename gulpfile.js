@@ -95,7 +95,7 @@ function runTest(name, callback) {
 			};
 			fs.mkdirSync(output);
 			test(newTS, lib[1], output, reporter).on('finish', function() {
-				fs.writeFileSync(output + 'errors.txt', errors);
+				fs.writeFileSync(output + 'errors.txt', errors.join('\n'));
 				function onError(error) {
 					console.error('Test ' + name + ' failed: ' + error.message);
 				}
