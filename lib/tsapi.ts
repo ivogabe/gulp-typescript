@@ -6,6 +6,7 @@ export interface TypeScript14 {
 export interface TypeScript15 {
 	createSourceFile(fileName: string, content: string, target: ts.ScriptTarget, isOpen: boolean);
 	findConfigFile(searchPath: string): string;
+	flattenDiagnosticMessageText(messageText: string | DiagnosticMessageChain15, newLine: string): string;
 }
 
 /*
@@ -27,6 +28,12 @@ export interface Program15 {
 export interface TypeChecker14 {
 	getDiagnostics(sourceFile?: ts.SourceFile): ts.Diagnostic[];
 	emitFiles(): { diagnostics: ts.Diagnostic[] };
+}
+export interface DiagnosticMessageChain15 {
+	messageText: string;
+	category: ts.DiagnosticCategory;
+	code: number;
+	next?: DiagnosticMessageChain15;
 }
 
 /*
@@ -79,10 +86,17 @@ export function getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFil
 		return (<TSFile14> file).getLineAndCharacterFromPosition(position);
 	}
 }
-export function createSourceFile(typescript: TypeScript14 | TypeScript15, fileName: string, content: string, target: ts.ScriptTarget) {
+export function createSourceFile(typescript: TypeScript14 | TypeScript15, fileName: string, content: string, target: ts.ScriptTarget, version = '0') {
 	if ((<TypeScript15> typescript).findConfigFile) {
-		return (<TypeScript15> typescript).createSourceFile(fileName, content, target, false);
+		return (<TypeScript15> typescript).createSourceFile(fileName, content, target, true);
 	} else {
-		return (<TypeScript14> typescript).createSourceFile(fileName, content, target, "0");
+		return (<TypeScript14> typescript).createSourceFile(fileName, content, target, version);
+	}
+}
+export function flattenDiagnosticMessageText(typescript: TypeScript14 | TypeScript15, messageText: string | DiagnosticMessageChain15): string {
+	if (typeof messageText === 'string') {
+		return messageText;
+	} else {
+		return (<TypeScript15> typescript).flattenDiagnosticMessageText(messageText, "\n");
 	}
 }

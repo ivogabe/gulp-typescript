@@ -165,7 +165,7 @@ export class Project {
 		err.diagnostic = info;
 
 		if (!info.file) {
-			err.message = info.code + ' ' + info.messageText;
+			err.message = info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
 
 			return err;
 		}
@@ -202,7 +202,9 @@ export class Project {
 			character: endPos.character
 		};
 
-		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
+		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ')
+			+ info.code + ' '
+			+ tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
 
 		return err;
 	}

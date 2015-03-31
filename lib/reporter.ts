@@ -1,6 +1,7 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
 import ts = require('typescript');
+import tsApi = require('./tsapi');
 import gutil = require('gulp-util');
 
 export interface TypeScriptError extends Error {
@@ -24,7 +25,7 @@ export interface TypeScriptError extends Error {
 }
 
 export interface Reporter {
-	error?: (error: TypeScriptError) => void;
+	error?: (error: TypeScriptError, typescript: typeof ts) => void;
 }
 
 export function nullReporter(): Reporter {
@@ -39,10 +40,10 @@ export function defaultReporter(): Reporter {
 }
 export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
-		error: (error: TypeScriptError) => {
+		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.error('[' + gutil.colors.gray('gulp-typescript') + '] '
 				+ gutil.colors.bgRed(error.diagnostic.code + '')
-				+ ' ' + gutil.colors.red(error.diagnostic.messageText)
+				+ ' ' + gutil.colors.red(tsApi.flattenDiagnosticMessageText(ts, error.diagnostic.messageText))
 			);
 
 			if (error.tsFile) {
