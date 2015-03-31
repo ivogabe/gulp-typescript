@@ -51,7 +51,7 @@ gulp.task('scripts', ['clean'], function() {
 
 // Type checking against multiple versions of TypeScript:
 // - master of TypeScript (typescript-dev)
-// - jsx-typescript (a fork of TypeScript with JSX support)
+// - jsx-typescript (a fork of TypeScript with JSX support, currently disabled, see below)
 // Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
@@ -60,14 +60,15 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
-gulp.task('typecheck-jsx', function() {
+// Disabled typechecking for jsx since jsx is currently based on an older, unsupported version of the typescript api
+/* gulp.task('typecheck-jsx', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		path.join(path.dirname(require.resolve('jsx-typescript')), './typescript.d.ts')
 	])).pipe(ts(tsOptions));
-});
+}); */
 
-gulp.task('typecheck', ['typecheck-dev', 'typecheck-jsx']);
+gulp.task('typecheck', ['typecheck-dev']);
 
 // Tests
 
