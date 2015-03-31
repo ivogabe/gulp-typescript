@@ -263,34 +263,6 @@ export class Project {
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
 		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item)));
 
-		this.typescript.forEachChild(file.ts, (node) => {
-			if (node.kind === (<any> this.typescript.SyntaxKind).ImportDeclaration) {
-				var importNode = <ts.ImportDeclaration> node;
-
-				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== (<any> this.typescript.SyntaxKind).ExternalModuleReference) {
-					return;
-				}
-				var reference = <ts.ExternalModuleReference> importNode.moduleReference;
-				if (reference.expression === undefined || reference.expression.kind !== (<any> this.typescript.SyntaxKind).StringLiteral) {
-					return;
-				}
-				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {
-					return;
-				}
-				var ref = path.join(path.dirname(tsApi.getFileName(file.ts)), (<ts.StringLiteralExpression> reference).text);
-
-				// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
-				// We guess what file the user wants. This will be right in most cases.
-				// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
-				// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-				if (ref.substr(-3).toLowerCase() === '.ts') {
-					references.push(ref);
-				} else {
-					references.push(ref + '.ts');
-				}
-			}
-		});
-
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
 				var ref = references[i];
