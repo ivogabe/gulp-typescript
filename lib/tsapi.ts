@@ -14,7 +14,7 @@ export interface TypeScript15 {
  */
 export interface Program14 {
 	getDiagnostics(): ts.Diagnostic[];
-	getTypeChecker(fullTypeCheckMode: boolean): ts.TypeChecker;
+	getTypeChecker(fullTypeCheckMode: boolean): TypeChecker14;
 }
 export interface Program15 {
 	getSyntacticDiagnostics(): ts.Diagnostic[];
@@ -23,6 +23,12 @@ export interface Program15 {
 	getDeclarationDiagnostics(): ts.Diagnostic[];
 	emit(): { diagnostics: ts.Diagnostic[]; };
 }
+
+export interface TypeChecker14 {
+	getDiagnostics(sourceFile?: ts.SourceFile): ts.Diagnostic[];
+	emitFiles(): { diagnostics: ts.Diagnostic[] };
+}
+
 /*
  * In TS 14 the method getLineAndCharacterFromPosition has been renamed from ...From... to ...Of...
  */
