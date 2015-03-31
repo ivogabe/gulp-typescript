@@ -1,14 +1,22 @@
 import ts = require('typescript');
 
+export interface TypeScript14 {
+	createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string);
+}
+export interface TypeScript15 {
+	createSourceFile(fileName: string, content: string, target: ts.ScriptTarget, isOpen: boolean);
+	findConfigFile(searchPath: string): string;
+}
+
 /*
  * TS1.4 had a simple getDiagnostics method, in 1.5 that method doens't exist,
  * but instead there are now 4 methods which (combined) return all diagnostics.
  */
-interface Program14 {
+export interface Program14 {
 	getDiagnostics(): ts.Diagnostic[];
 	getTypeChecker(fullTypeCheckMode: boolean): ts.TypeChecker;
 }
-interface Program15 {
+export interface Program15 {
 	getSyntacticDiagnostics(): ts.Diagnostic[];
 	getGlobalDiagnostics(): ts.Diagnostic[];
 	getSemanticDiagnostics(): ts.Diagnostic[];
@@ -18,10 +26,10 @@ interface Program15 {
 /*
  * In TS 14 the method getLineAndCharacterFromPosition has been renamed from ...From... to ...Of...
  */
-interface TSFile14 {
+export interface TSFile14 {
 	getLineAndCharacterFromPosition(pos: number): ts.LineAndCharacter;
 }
-interface TSFile15 {
+export interface TSFile15 {
 	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
 }
 
@@ -63,5 +71,12 @@ export function getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFil
 		}
 	} else { // TS 1.4
 		return (<TSFile14> file).getLineAndCharacterFromPosition(position);
+	}
+}
+export function createSourceFile(typescript: TypeScript14 | TypeScript15, fileName: string, content: string, target: ts.ScriptTarget) {
+	if ((<TypeScript15> typescript).findConfigFile) {
+		return (<TypeScript15> typescript).createSourceFile(fileName, content, target, false);
+	} else {
+		return (<TypeScript14> typescript).createSourceFile(fileName, content, target, "0");
 	}
 }

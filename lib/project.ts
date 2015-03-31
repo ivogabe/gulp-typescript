@@ -532,7 +532,7 @@ export class Project {
 			filename: Project.normalizePath(filename),
 			originalFilename: filename,
 			content: content,
-			ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
+			ts: tsApi.createSourceFile(this.typescript, filename, content, this.options.target, this.version + '')
 		};
 	}
 
