@@ -1,4 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
+var ts = require('typescript');
+var tsApi = require('./tsapi');
 var gutil = require('gulp-util');
 function nullReporter() {
     return {};
@@ -15,8 +17,8 @@ exports.defaultReporter = defaultReporter;
 function fullReporter(fullFilename) {
     if (fullFilename === void 0) { fullFilename = false; }
     return {
-        error: function (error) {
-            console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.bgRed(error.diagnostic.code + '') + ' ' + gutil.colors.red(error.diagnostic.messageText));
+        error: function (error, typescript) {
+            console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.bgRed(error.diagnostic.code + '') + ' ' + gutil.colors.red(tsApi.flattenDiagnosticMessageText(ts, error.diagnostic.messageText)));
             if (error.tsFile) {
                 console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
                 var lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
