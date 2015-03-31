@@ -17,7 +17,9 @@ var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(proj, theReporter) {
         if (theReporter === void 0) { theReporter = _reporter.defaultReporter(); }
-        _super.call(this, { objectMode: true });
+        _super.call(this, {
+            objectMode: true
+        });
         this._hasSources = false;
         this.dts = new CompileOutputStream();
         this._project = proj;
@@ -62,7 +64,7 @@ var CompileStream = (function (_super) {
             this._project.resolveAll(function () {
                 _this._project.compile(_this.js, _this.dts, function (err) {
                     if (_this.reporter.error)
-                        _this.reporter.error(err);
+                        _this.reporter.error(err, _this._project.typescript);
                     _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
                 });
                 _this.js.push(null);
@@ -79,7 +81,9 @@ var CompileStream = (function (_super) {
 var CompileOutputStream = (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
-        _super.call(this, { objectMode: true });
+        _super.call(this, {
+            objectMode: true
+        });
     }
     CompileOutputStream.prototype._read = function () {
     };

@@ -14,7 +14,8 @@ var tsOptions = {
 	target: 'es5',
 	module: 'commonjs',
 	noExternalResolve: true,
-	preserveConstEnums: true
+	preserveConstEnums: true,
+	typescript: require('typescript-dev')
 };
 var tsProject = ts.createProject(tsOptions);
 
@@ -50,24 +51,24 @@ gulp.task('scripts', ['clean'], function() {
 
 // Type checking against multiple versions of TypeScript:
 // - master of TypeScript (typescript-dev)
-// - jsx-typescript (a fork of TypeScript with JSX support)
+// - jsx-typescript (a fork of TypeScript with JSX support, currently disabled, see below)
 // Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
-
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
-		'!defintions/typescript.d.ts',
-		path.resolve(require.resolve('typescript-dev'), './typescript.d.ts')
+		'!definitions/typescript.d.ts',
+		path.join(path.dirname(require.resolve('typescript-dev')), 'typescript.d.ts')
 	])).pipe(ts(tsOptions));
 });
 
-gulp.task('typecheck-jsx', function() {
+// Disabled typechecking for jsx since jsx is currently based on an older, unsupported version of the typescript api
+/* gulp.task('typecheck-jsx', function() {
 	return gulp.src(paths.scripts.concat([
-		'!defintions/typescript.d.ts',
-		path.resolve(require.resolve('jsx-typescript'), './typescript.d.ts')
+		'!definitions/typescript.d.ts',
+		path.join(path.dirname(require.resolve('jsx-typescript')), './typescript.d.ts')
 	])).pipe(ts(tsOptions));
-});
+}); */
 
-gulp.task('typecheck', ['typecheck-dev', 'typecheck-jsx']);
+gulp.task('typecheck', ['typecheck-dev']);
 
 // Tests
 
@@ -95,7 +96,7 @@ function runTest(name, callback) {
 			};
 			fs.mkdirSync(output);
 			test(newTS, lib[1], output, reporter).on('finish', function() {
-				fs.writeFileSync(output + 'errors.txt', errors);
+				fs.writeFileSync(output + 'errors.txt', errors.join('\n'));
 				function onError(error) {
 					console.error('Test ' + name + ' failed: ' + error.message);
 				}

@@ -1,5 +1,6 @@
 ///<reference path='../definitions/ref.d.ts'/>
 var ts = require('typescript');
+var tsApi = require('./tsapi');
 var gutil = require('gulp-util');
 var sourceMap = require('source-map');
 var path = require('path');
@@ -42,45 +43,6 @@ var Project = (function () {
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
     }
-    Project.getFileName = function (thing) {
-        if (thing.filename)
-            return thing.filename;
-        return thing.fileName;
-    };
-    Project.getDiagnosticsAndEmit = function (program) {
-        if (program.getDiagnostics) {
-            var errors = program.getDiagnostics();
-            if (!errors.length) {
-                // If there are no syntax errors, check types
-                var checker = program.getTypeChecker(true);
-                var semanticErrors = checker.getDiagnostics();
-                var emitErrors = checker.emitFiles().diagnostics;
-                errors = semanticErrors.concat(emitErrors);
-            }
-            return errors;
-        }
-        else {
-            var errors = program.getSyntacticDiagnostics();
-            if (errors.length === 0)
-                errors = program.getGlobalDiagnostics();
-            if (errors.length === 0)
-                errors = program.getSemanticDiagnostics();
-            var emitOutput = program.emit();
-            return errors.concat(emitOutput.diagnostics);
-        }
-    };
-    Project.getLineAndCharacterOfPosition = function (typescript, file, position) {
-        if (file.getLineAndCharacterOfPosition) {
-            var lineAndCharacter = file.getLineAndCharacterOfPosition(position);
-            return {
-                line: lineAndCharacter.line + 1,
-                character: lineAndCharacter.character + 1
-            };
-        }
-        else {
-            return file.getLineAndCharacterFromPosition(position);
-        }
-    };
     /**
      * Resets the compiler.
      * The compiler needs to be reset for incremental builds.
@@ -133,10 +95,10 @@ var Project = (function () {
         err.name = 'TypeScript error';
         err.diagnostic = info;
         if (!info.file) {
-            err.message = info.code + ' ' + info.messageText;
+            err.message = info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
             return err;
         }
-        var filename = this.getOriginalName(Project.getFileName(info.file));
+        var filename = this.getOriginalName(tsApi.getFileName(info.file));
         var file = this.host.getFileData(filename);
         if (file) {
             err.tsFile = file.ts;
@@ -151,11 +113,11 @@ var Project = (function () {
             }
         }
         else {
-            filename = Project.getFileName(info.file);
+            filename = tsApi.getFileName(info.file);
             err.fullFilename = filename;
         }
-        var startPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
-        var endPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
+        var startPos = tsApi.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
+        var endPos = tsApi.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
         err.startPosition = {
             position: info.start,
             line: startPos.line,
@@ -166,11 +128,13 @@ var Project = (function () {
             line: endPos.line,
             character: endPos.character
         };
-        err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
+        err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
         return err;
     };
     Project.prototype.lazyCompile = function (jsStream, declStream) {
         if (this.isFileChanged === false && Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length && this.previousOutputJS !== undefined && this.previousOutputDts !== undefined) {
+            // Emit files from previous build, since they are the same.
+            // JavaScript files
             for (var i = 0; i < this.previousOutputJS.length; i++) {
                 var file = this.previousOutputJS[i];
                 var originalName = this.getOriginalName(Project.normalizePath(file.filename));
@@ -186,6 +150,7 @@ var Project = (function () {
                 gFile.sourceMap = file.sourcemap;
                 jsStream.push(gFile);
             }
+            // Definitions files
             for (var i = 0; i < this.previousOutputDts.length; i++) {
                 var file = this.previousOutputDts[i];
                 var originalName = this.getOriginalName(Project.normalizePath(file.filename));
@@ -205,7 +170,9 @@ var Project = (function () {
     };
     Project.prototype.resolve = function (session, file) {
         var _this = this;
-        var references = file.ts.referencedFiles.map(function (item) { return path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)); });
+        var references = file.ts.referencedFiles.map(function (item) {
+            return path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item));
+        });
         this.typescript.forEachChild(file.ts, function (node) {
             if (node.kind === _this.typescript.SyntaxKind.ImportDeclaration) {
                 var importNode = node;
@@ -219,7 +186,7 @@ var Project = (function () {
                 if (typeof reference.text !== 'string') {
                     return;
                 }
-                var ref = path.join(path.dirname(Project.getFileName(file.ts)), reference.text);
+                var ref = path.join(path.dirname(tsApi.getFileName(file.ts)), reference.text);
                 // Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
                 // We guess what file the user wants. This will be right in most cases.
                 // The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
@@ -298,7 +265,7 @@ var Project = (function () {
         this.host = new host.Host(this.typescript, this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
         // Creating a program compiles the sources
         this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
-        var errors = Project.getDiagnosticsAndEmit(this.program);
+        var errors = tsApi.getDiagnosticsAndEmit(this.program);
         for (var i = 0; i < errors.length; i++) {
             errorCallback(this.getError(errors[i]));
         }
@@ -380,7 +347,9 @@ var Project = (function () {
                     oldFiles = Object.keys(_this.currentFiles);
                 }
                 else {
-                    oldFiles = [originalName];
+                    oldFiles = [
+                        originalName
+                    ];
                 }
                 var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(parsedMap));
                 for (var i = 0; i < oldFiles.length; i++) {
@@ -411,7 +380,9 @@ var Project = (function () {
                 done[originalName] = true;
                 var inputFile = _this.currentFiles[originalName];
                 var tsFile = _this.program.getSourceFile(originalName);
-                var references = tsFile.referencedFiles.map(function (file) { return Project.getFileName(file); });
+                var references = tsFile.referencedFiles.map(function (file) {
+                    return tsApi.getFileName(file);
+                });
                 for (var j = 0; j < outputJS.length; ++j) {
                     var other = outputJS[j];
                     var otherName = _this.getOriginalName(other.path);
@@ -447,7 +418,7 @@ var Project = (function () {
             filename: Project.normalizePath(filename),
             originalFilename: filename,
             content: content,
-            ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
+            ts: tsApi.createSourceFile(this.typescript, filename, content, this.options.target, this.version + '')
         };
     };
     Project.prototype.removeSourceMapComment = function (content) {

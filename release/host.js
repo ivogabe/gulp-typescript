@@ -1,4 +1,5 @@
 ///<reference path='../definitions/ref.d.ts'/>
+var tsApi = require('./tsapi');
 var project = require('./project');
 var fs = require('fs');
 var path = require('path');
@@ -37,7 +38,7 @@ var Host = (function () {
             }
             if (typeof text !== 'string')
                 return undefined;
-            var file = _this.typescript.createSourceFile(filename, text, languageVersion, "0");
+            var file = tsApi.createSourceFile(_this.typescript, filename, text, languageVersion);
             _this.files[normalizedFilename] = {
                 filename: normalizedFilename,
                 originalFilename: filename,
@@ -68,7 +69,7 @@ var Host = (function () {
             return this.libDefault[filename]; // Already loaded
         }
         var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
-        return this.libDefault[filename] = typescript.createSourceFile('__lib.d.ts', content, 0 /* ES3 */, "0"); // Will also work for ES5 & 6
+        return this.libDefault[filename] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, 0 /* ES3 */); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
         this.output = {};

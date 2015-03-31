@@ -1,6 +1,7 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
 import ts = require('typescript');
+import tsApi = require('./tsapi');
 import main = require('./main');
 import gutil = require('gulp-util');
 import sourceMap = require('source-map');
@@ -27,30 +28,7 @@ interface OutputFile {
 	sourcemap?: Object;
 }
 
-/*
- * TS1.4 had a simple getDiagnostics method, in 1.5 that method doens't exist,
- * but instead there are now 4 methods which (combined) return all diagnostics.
- */
-interface Program14 {
-	getDiagnostics(): ts.Diagnostic[];
-	getTypeChecker(fullTypeCheckMode: boolean): ts.TypeChecker;
-}
-interface Program15 {
-	getSyntacticDiagnostics(): ts.Diagnostic[];
-	getGlobalDiagnostics(): ts.Diagnostic[];
-	getSemanticDiagnostics(): ts.Diagnostic[];
-	getDeclarationDiagnostics(): ts.Diagnostic[];
-	emit(): { diagnostics: ts.Diagnostic[]; };
-}
-/*
- * In TS 14 the method getLineAndCharacterFromPosition has been renamed from ...From... to ...Of...
- */
-interface TSFile14 {
-	getLineAndCharacterFromPosition(pos: number): ts.LineAndCharacter;
-}
-interface TSFile15 {
-	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
-}
+
 
 export class Project {
 	static unresolvedFile: FileData = {
@@ -59,47 +37,6 @@ export class Project {
 		content: undefined,
 		ts: undefined
 	};
-
-	static getFileName(thing: { filename: string} | { fileName: string }): string {
-		if ((<any> thing).filename) return (<any> thing).filename;
-		return (<any> thing).fileName;
-	}
-	private static getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagnostic[] {
-		if ((<Program14> program).getDiagnostics) {
-			var errors = (<Program14> program).getDiagnostics();
-
-			if (!errors.length) {
-				// If there are no syntax errors, check types
-				var checker = (<Program14> program).getTypeChecker(true);
-
-				var semanticErrors = checker.getDiagnostics();
-
-				var emitErrors = checker.emitFiles().diagnostics;
-
-				errors = semanticErrors.concat(emitErrors);
-			}
-
-			return errors;
-		} else {
-			var errors = (<Program15> program).getSyntacticDiagnostics();
-			if (errors.length === 0) errors = (<Program15> program).getGlobalDiagnostics();
-			if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
-
-			var emitOutput = (<Program15> program).emit();
-			return errors.concat(emitOutput.diagnostics);
-		}
-	}
-	private static getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFile14 | TSFile15, position: number) {
-		if ((<TSFile15> file).getLineAndCharacterOfPosition) { // TS 1.5
-			var lineAndCharacter = (<TSFile15> file).getLineAndCharacterOfPosition(position);
-			return {
-				line: lineAndCharacter.line + 1,
-				character: lineAndCharacter.character + 1
-			}
-		} else { // TS 1.4
-			return (<TSFile14> file).getLineAndCharacterFromPosition(position);
-		}
-	}
 
 	/**
 	 * The TypeScript library that is used for this project.
@@ -228,12 +165,12 @@ export class Project {
 		err.diagnostic = info;
 
 		if (!info.file) {
-			err.message = info.code + ' ' + info.messageText;
+			err.message = info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
 
 			return err;
 		}
 
-		var filename = this.getOriginalName(Project.getFileName(info.file));
+		var filename = this.getOriginalName(tsApi.getFileName(info.file));
 		var file = this.host.getFileData(filename);
 
 		if (file) {
@@ -247,12 +184,12 @@ export class Project {
 				filename = file.originalFilename;
 			}
 		} else {
-			filename = Project.getFileName(info.file);
+			filename = tsApi.getFileName(info.file);
 			err.fullFilename = filename;
 		}
 
-		var startPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
-		var endPos = Project.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
+		var startPos = tsApi.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
+		var endPos = tsApi.getLineAndCharacterOfPosition(this.typescript, info.file, info.start + info.length);
 
 		err.startPosition = {
 			position: info.start,
@@ -265,7 +202,9 @@ export class Project {
 			character: endPos.character
 		};
 
-		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + info.messageText;
+		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ')
+			+ info.code + ' '
+			+ tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
 
 		return err;
 	}
@@ -322,35 +261,7 @@ export class Project {
 	}
 
 	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(Project.getFileName(file.ts)), Project.getFileName(item)));
-
-		this.typescript.forEachChild(file.ts, (node) => {
-			if (node.kind === (<any> this.typescript.SyntaxKind).ImportDeclaration) {
-				var importNode = <ts.ImportDeclaration> node;
-
-				if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== (<any> this.typescript.SyntaxKind).ExternalModuleReference) {
-					return;
-				}
-				var reference = <ts.ExternalModuleReference> importNode.moduleReference;
-				if (reference.expression === undefined || reference.expression.kind !== (<any> this.typescript.SyntaxKind).StringLiteral) {
-					return;
-				}
-				if (typeof (<ts.StringLiteralExpression> reference).text !== 'string') {
-					return;
-				}
-				var ref = path.join(path.dirname(Project.getFileName(file.ts)), (<ts.StringLiteralExpression> reference).text);
-
-				// Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
-				// We guess what file the user wants. This will be right in most cases.
-				// The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
-				// If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-				if (ref.substr(-3).toLowerCase() === '.ts') {
-					references.push(ref);
-				} else {
-					references.push(ref + '.ts');
-				}
-			}
-		});
+		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item)));
 
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
@@ -430,7 +341,7 @@ export class Project {
 		// Creating a program compiles the sources
 		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
 
-		var errors = Project.getDiagnosticsAndEmit(this.program);
+		var errors = tsApi.getDiagnosticsAndEmit(this.program);
 
 		for (var i = 0; i < errors.length; i++) {
 			errorCallback(this.getError(errors[i]));
@@ -552,7 +463,7 @@ export class Project {
 
 				var inputFile = this.currentFiles[originalName];
 				var tsFile = this.program.getSourceFile(originalName);
-				var references = tsFile.referencedFiles.map(file => Project.getFileName(file));
+				var references = tsFile.referencedFiles.map(file => tsApi.getFileName(file));
 
 				for (var j = 0; j < outputJS.length; ++j) {
 					var other = outputJS[j];
@@ -595,7 +506,7 @@ export class Project {
 			filename: Project.normalizePath(filename),
 			originalFilename: filename,
 			content: content,
-			ts: this.typescript.createSourceFile(filename, content, this.options.target, this.version + '')
+			ts: tsApi.createSourceFile(this.typescript, filename, content, this.options.target, this.version + '')
 		};
 	}
 

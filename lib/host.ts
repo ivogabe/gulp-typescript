@@ -1,6 +1,7 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
 import ts = require('typescript');
+import tsApi = require('./tsapi');
 import gutil = require('gulp-util');
 import project = require('./project');
 import fs = require('fs');
@@ -25,7 +26,7 @@ export class Host implements ts.CompilerHost {
 		}
 
 		var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
-		return this.libDefault[filename] = typescript.createSourceFile('__lib.d.ts', content, typescript.ScriptTarget.ES3, "0"); // Will also work for ES5 & 6
+		return this.libDefault[filename] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
 	}
 
 	typescript: typeof ts;
@@ -99,7 +100,7 @@ export class Host implements ts.CompilerHost {
 
 		if (typeof text !== 'string') return undefined;
 
-		var file = this.typescript.createSourceFile(filename, text, languageVersion, "0");
+		var file = tsApi.createSourceFile(this.typescript, filename, text, languageVersion);
 
 		this.files[normalizedFilename] = {
 			filename: normalizedFilename,
