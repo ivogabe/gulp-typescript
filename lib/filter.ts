@@ -1,4 +1,5 @@
 import ts = require('typescript');
+import tsApi = require('./tsapi');
 import path = require('path');
 import project = require('./project');
 import main = require('./main');
@@ -19,8 +20,8 @@ export class Filter {
 				this.referencedFromAll.push(file.filename);
 
 				for (var i = 0; i < file.ts.referencedFiles.length; i++) {
-					var ref = project.Project.getFileName(file.ts.referencedFiles[i]);
-					ref = project.Project.normalizePath(path.join(path.dirname(project.Project.getFileName(file.ts)), ref));
+					var ref = tsApi.getFileName(file.ts.referencedFiles[i]);
+					ref = project.Project.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
 
 					var refFile = this.project.currentFiles[ref];
 					if (refFile) addReference(refFile);
