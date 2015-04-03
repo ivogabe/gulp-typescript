@@ -17,9 +17,7 @@ var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(proj, theReporter) {
         if (theReporter === void 0) { theReporter = _reporter.defaultReporter(); }
-        _super.call(this, {
-            objectMode: true
-        });
+        _super.call(this, { objectMode: true });
         this._hasSources = false;
         this.dts = new CompileOutputStream();
         this._project = proj;
@@ -27,12 +25,10 @@ var CompileStream = (function (_super) {
         // Backwards compatibility
         this.js = this;
         // Prevent "Unhandled stream error in pipe" when compilation error occurs.
-        this.on('error', function () {
-        });
+        this.on('error', function () { });
     }
     CompileStream.prototype._write = function (file, encoding, cb) {
-        if (cb === void 0) { cb = function (err) {
-        }; }
+        if (cb === void 0) { cb = function (err) { }; }
         if (!file)
             return cb();
         if (file.isNull()) {
@@ -81,9 +77,7 @@ var CompileStream = (function (_super) {
 var CompileOutputStream = (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
-        _super.call(this, {
-            objectMode: true
-        });
+        _super.call(this, { objectMode: true });
     }
     CompileOutputStream.prototype._read = function () {
     };
@@ -117,7 +111,14 @@ function getCompilerOptions(settings) {
     for (var key in settings) {
         if (!Object.hasOwnProperty.call(settings, key))
             continue;
-        if (key === 'outDir' || key === 'noExternalResolve' || key === 'declarationFiles' || key === 'sortOutput' || key === 'typescript' || key === 'target' || key === 'module' || key === 'sourceRoot')
+        if (key === 'outDir' ||
+            key === 'noExternalResolve' ||
+            key === 'declarationFiles' ||
+            key === 'sortOutput' ||
+            key === 'typescript' ||
+            key === 'target' ||
+            key === 'module' ||
+            key === 'sourceRoot')
             continue;
         tsSettings[key] = settings[key];
     }

@@ -128,11 +128,16 @@ var Project = (function () {
             line: endPos.line,
             character: endPos.character
         };
-        err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ') + info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
+        err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ')
+            + info.code + ' '
+            + tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
         return err;
     };
     Project.prototype.lazyCompile = function (jsStream, declStream) {
-        if (this.isFileChanged === false && Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length && this.previousOutputJS !== undefined && this.previousOutputDts !== undefined) {
+        if (this.isFileChanged === false
+            && Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length
+            && this.previousOutputJS !== undefined
+            && this.previousOutputDts !== undefined) {
             // Emit files from previous build, since they are the same.
             // JavaScript files
             for (var i = 0; i < this.previousOutputJS.length; i++) {
@@ -170,35 +175,7 @@ var Project = (function () {
     };
     Project.prototype.resolve = function (session, file) {
         var _this = this;
-        var references = file.ts.referencedFiles.map(function (item) {
-            return path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item));
-        });
-        this.typescript.forEachChild(file.ts, function (node) {
-            if (node.kind === _this.typescript.SyntaxKind.ImportDeclaration) {
-                var importNode = node;
-                if (importNode.moduleReference === undefined || importNode.moduleReference.kind !== _this.typescript.SyntaxKind.ExternalModuleReference) {
-                    return;
-                }
-                var reference = importNode.moduleReference;
-                if (reference.expression === undefined || reference.expression.kind !== _this.typescript.SyntaxKind.StringLiteral) {
-                    return;
-                }
-                if (typeof reference.text !== 'string') {
-                    return;
-                }
-                var ref = path.join(path.dirname(tsApi.getFileName(file.ts)), reference.text);
-                // Don't know if this name is defined with `declare module 'foo'`, but let's load it to be sure.
-                // We guess what file the user wants. This will be right in most cases.
-                // The advantage of guessing is that we can now use fs.readFile (async) instead of fs.readFileSync.
-                // If we guessed wrong, the file will be loaded with fs.readFileSync in Host#getSourceFile (host.ts)
-                if (ref.substr(-3).toLowerCase() === '.ts') {
-                    references.push(ref);
-                }
-                else {
-                    references.push(ref + '.ts');
-                }
-            }
-        });
+        var references = file.ts.referencedFiles.map(function (item) { return path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item)); });
         for (var i = 0; i < references.length; ++i) {
             (function (i) {
                 var ref = references[i];
@@ -347,9 +324,7 @@ var Project = (function () {
                     oldFiles = Object.keys(_this.currentFiles);
                 }
                 else {
-                    oldFiles = [
-                        originalName
-                    ];
+                    oldFiles = [originalName];
                 }
                 var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(parsedMap));
                 for (var i = 0; i < oldFiles.length; i++) {
@@ -380,9 +355,7 @@ var Project = (function () {
                 done[originalName] = true;
                 var inputFile = _this.currentFiles[originalName];
                 var tsFile = _this.program.getSourceFile(originalName);
-                var references = tsFile.referencedFiles.map(function (file) {
-                    return tsApi.getFileName(file);
-                });
+                var references = tsFile.referencedFiles.map(function (file) { return tsApi.getFileName(file); });
                 for (var j = 0; j < outputJS.length; ++j) {
                     var other = outputJS[j];
                     var otherName = _this.getOriginalName(other.path);
