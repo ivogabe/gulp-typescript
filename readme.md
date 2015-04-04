@@ -88,6 +88,8 @@ Options
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 - ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
 
+See `lib/main.ts` for a complete list with all options (interface `compile.Settings`).
+
 TypeScript version
 ------------------
 You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
