@@ -86,7 +86,7 @@ Options
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
-- ```typescript``` (object) - Use a different version / fork of TypeScript (see below). You probably won't need this option, unless you know what you're doing!
+- ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
 
 TypeScript version
 ------------------
@@ -99,6 +99,13 @@ You can use a custom version of TypeScript. Add the version you want (1.4+) to y
 	}
 }
 ```
+And add this to your gulpfile:
+```javascript
+[...].pipe(ts({
+	typescript: require('typescript')
+}));
+```
+You can use 1.5.0-alpha of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-alpha"`
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
 ```javascript
