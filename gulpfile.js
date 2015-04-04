@@ -138,7 +138,7 @@ gulp.task('test', ['clean-test', 'scripts'], function(cb) {
 
 // Accept new baselines
 gulp.task('test-baselines-accept', function(cb) {
-	rimraf(paths.releaseBeta, function() {
+	rimraf('test/baselines', function() {
 		gulp.src('test/output/**').pipe(gulp.dest('test/baselines')).on('finish', cb);
 	});
 });
