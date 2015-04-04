@@ -79,19 +79,19 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 				var lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
 
 				var logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
-					var line = lines[lineIndex - 1];
+					var line = lines[lineIndex];
 					if (errorEnd === undefined) errorEnd = line.length;
 					console.error('> ' + gutil.colors.gray('[' + lineIndex + '] ')
-						+ line.substring(0, errorStart - 1)
-						+ gutil.colors.red(line.substring(errorStart - 1, errorEnd))
+						+ line.substring(0, errorStart)
+						+ gutil.colors.red(line.substring(errorStart, errorEnd))
 						+ line.substring(errorEnd)
 					);
 				}
 
 				for (var i = error.startPosition.line; i <= error.endPosition.line; i++) {
 					logLine(i,
-						i === error.startPosition.line ? error.startPosition.character : 0,
-						i === error.endPosition.line ? error.endPosition.character : undefined
+						i === error.startPosition.line ? error.startPosition.character - 1 : 0,
+						i === error.endPosition.line ? error.endPosition.character - 1 : undefined
 					);
 				}
 			}
