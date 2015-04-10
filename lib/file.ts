@@ -32,13 +32,13 @@ export interface File {
 	ts?: ts.SourceFile;
 }
 export module File {
-	export function fromContent(filename: string, content: string): File {
+	export function fromContent(fileName: string, content: string): File {
 		let kind = FileKind.Source;
-		if (path.extname(filename).toLowerCase() === 'json') kind = FileKind.Config;
+		if (path.extname(fileName).toLowerCase() === 'json') kind = FileKind.Config;
 
 		return {
-			fileNameNormalized: utils.normalizePath(filename),
-			fileNameOriginal: filename,
+			fileNameNormalized: utils.normalizePath(fileName),
+			fileNameOriginal: fileName,
 			content,
 			kind
 		};
@@ -77,8 +77,13 @@ export class FileDictionary {
 		this.typescript = typescript;
 	}
 
-	add(gFile: gutil.File) {
-		let file = File.fromGulp(gFile);
+	addGulp(gFile: gutil.File) {
+		this.addFile(File.fromGulp(gFile));
+	}
+	addContent(fileName: string, content: string) {
+		this.addFile(File.fromContent(fileName, content));
+	}
+	private addFile(file: File) {
 		if (file.kind === FileKind.Source) this.initTypeScriptSourceFile(file);
 		this.files[file.fileNameNormalized] = file;
 	}
@@ -104,8 +109,11 @@ export class FileCache {
 		this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
 	}
 
-	add(gFile: gutil.File) {
-		this.current.add(gFile);
+	addGulp(gFile: gutil.File) {
+		this.current.addGulp(gFile);
+	}
+	addContent(fileName: string, content: string) {
+		this.addContent(fileName, content);
 	}
 
 	reset() {
