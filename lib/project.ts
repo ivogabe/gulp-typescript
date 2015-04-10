@@ -11,17 +11,9 @@ import fs = require('fs'); // Only used for readonly access
 import host = require('./host');
 import filter = require('./filter');
 import reporter = require('./reporter');
+import utils = require('./utils');
+import file = require('./file');
 
-export interface Map<T> {
-	[key: string]: T;
-}
-export interface FileData {
-	file?: gutil.File;
-	filename: string;
-	originalFilename: string;
-	content: string;
-	ts: ts.SourceFile;
-}
 interface OutputFile {
 	filename: string;
 	content: string;
@@ -31,13 +23,6 @@ interface OutputFile {
 
 
 export class Project {
-	static unresolvedFile: FileData = {
-		filename: undefined,
-		originalFilename: undefined,
-		content: undefined,
-		ts: undefined
-	};
-
 	/**
 	 * The TypeScript library that is used for this project.
 	 * Can also be jsx-typescript for example.
@@ -47,30 +32,15 @@ export class Project {
 	filterSettings: main.FilterSettings;
 
 	/**
-	 * Files from the previous compilation.
-	 * Used to find the differences with the previous compilation, to make the new compilation faster.
-	 */
-	previousFiles: Map<FileData> = {};
-	/**
-	 * The files in the current compilation.
-	 * This Map only contains the files in the project, not external files. Those are in Project#additionalFiles.
-	 * The file property of the FileData objects in this Map are set.
-	 */
-	currentFiles: Map<FileData> = {};
-	/**
-	 * External files of the current compilation.
-	 * When a file is imported by or referenced from another file, and the file is not one of the input files, it
-	 * is added to this Map. The file property of the FileData objects in this Map are not set.
-	 */
-	additionalFiles: Map<FileData> = {};
-	/**
 	 *
 	 */
-	firstFile: FileData = undefined;
+	firstFile: file.File = undefined;
 
 	private isFileChanged: boolean = false;
 	private previousOutputJS: OutputFile[];
 	private previousOutputDts: OutputFile[];
+
+	files: file.FileCache;
 
 	/**
 	 * Whether there should not be loaded external files to the project.
@@ -90,13 +60,6 @@ export class Project {
 	 */
 	private sortOutput: boolean;
 
-	/**
-	 * The version number of the compilation.
-	 * This number is increased for every compilation in the same gulp session.
-	 * Used for incremental builds.
-	 */
-	version: number = 0;
-
 	options: ts.CompilerOptions;
 	host: host.Host;
 	program: ts.Program;
@@ -107,6 +70,8 @@ export class Project {
 
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
+
+		this.files = new file.FileCache(typescript, options);
 	}
 
 	/**
@@ -114,46 +79,19 @@ export class Project {
 	 * The compiler needs to be reset for incremental builds.
 	 */
 	reset() {
-		this.previousFiles = this.currentFiles;
 		this.firstFile = undefined;
 
 		this.isFileChanged = false;
 
-		this.currentFiles = {};
-		this.additionalFiles = {};
-
-		this.version++;
+		this.files.reset();
 	}
 	/**
 	 * Adds a file to the project.
 	 */
 	addFile(file: gutil.File) {
-		var fileData: FileData;
-		var filename = Project.normalizePath(file.path);
+		this.files.addGulp(file);
 
-		// Incremental compilation
-		var oldFileData = this.previousFiles[filename];
-		if (oldFileData) {
-			if (oldFileData.content === file.contents.toString('utf8')) {
-				// Unchanged, we can use the (ts) file from previous build.
-				fileData = {
-					file: file,
-					filename: oldFileData.filename,
-					originalFilename: file.path,
-					content: oldFileData.content,
-					ts: oldFileData.ts
-				};
-			} else {
-				fileData = this.getFileDataFromGulpFile(file);
-				this.isFileChanged = true;
-			}
-		} else {
-			fileData = this.getFileDataFromGulpFile(file);
-			this.isFileChanged = true;
-		}
-
-		if (!this.firstFile) this.firstFile = fileData;
-		this.currentFiles[Project.normalizePath(file.path)] = fileData;
+		if (!this.firstFile) this.firstFile = this.files.getFile(file.path);
 	}
 
 	getOriginalName(filename: string): string {
@@ -170,22 +108,22 @@ export class Project {
 			return err;
 		}
 
-		var filename = this.getOriginalName(tsApi.getFileName(info.file));
-		var file = this.host.getFileData(filename);
+		var fileName = this.getOriginalName(tsApi.getFileName(info.file));
+		var file = this.files.getFile(fileName);
 
 		if (file) {
 			err.tsFile = file.ts;
-			err.fullFilename = file.originalFilename;
-			if (file.file) {
-				filename = path.relative(file.file.cwd, file.originalFilename);
-				err.relativeFilename = filename;
-				err.file = file.file;
+			err.fullFilename = file.fileNameOriginal;
+			if (file.gulp) {
+				fileName = path.relative(file.gulp.cwd, file.fileNameOriginal);
+				err.relativeFilename = fileName;
+				err.file = file.gulp;
 			} else {
-				filename = file.originalFilename;
+				fileName = file.fileNameOriginal;
 			}
 		} else {
-			filename = tsApi.getFileName(info.file);
-			err.fullFilename = filename;
+			fileName = tsApi.getFileName(info.file);
+			err.fullFilename = fileName;
 		}
 
 		var startPos = tsApi.getLineAndCharacterOfPosition(this.typescript, info.file, info.start);
@@ -202,7 +140,7 @@ export class Project {
 			character: endPos.character
 		};
 
-		err.message = gutil.colors.red(filename + '(' + startPos.line + ',' + startPos.character + '): ')
+		err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ')
 			+ info.code + ' '
 			+ tsApi.flattenDiagnosticMessageText(this.typescript, info.messageText);
 
@@ -210,7 +148,7 @@ export class Project {
 	}
 
 	lazyCompile(jsStream: stream.Readable, declStream: stream.Readable): boolean {
-		if (this.isFileChanged === false
+		/* if (this.isFileChanged === false
 			&& Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length
 			&& this.previousOutputJS !== undefined
 			&& this.previousOutputDts !== undefined) {
@@ -220,8 +158,7 @@ export class Project {
 			for (var i = 0; i < this.previousOutputJS.length; i++) {
 				var file = this.previousOutputJS[i];
 
-				var originalName = this.getOriginalName(Project.normalizePath(file.filename));
-				var original: FileData = this.currentFiles[originalName];
+				var original = this.files.getFile(file.filename);
 
 				if (!original) continue;
 
@@ -241,8 +178,7 @@ export class Project {
 			for (var i = 0; i < this.previousOutputDts.length; i++) {
 				var file = this.previousOutputDts[i];
 
-				var originalName = this.getOriginalName(Project.normalizePath(file.filename));
-				var original: FileData = this.currentFiles[originalName];
+				var original: file.File = this.files.getFile(file.filename);
 
 				if (!original) continue;
 
@@ -256,12 +192,12 @@ export class Project {
 
 			return true;
 		}
-
+		*/
 		return false;
 	}
 
-	private resolve(session: { tasks: number; callback: () => void; }, file: FileData) {
-		var references = file.ts.referencedFiles.map(item => path.join(path.dirname(tsApi.getFileName(file.ts)), tsApi.getFileName(item)));
+	private resolve(session: { tasks: number; callback: () => void; }, _file: file.File) {
+		/* var references = _file.ts.referencedFiles.map(item => path.join(path.dirname(tsApi.getFileName(_file.ts)), tsApi.getFileName(item)));
 
 		for (var i = 0; i < references.length; ++i) {
 			((i: number) => { // create scope
@@ -275,9 +211,9 @@ export class Project {
 
 					fs.readFile(ref, (error, data) => {
 						if (data) { // Typescript will throw an error when a file isn't found.
-							var file = this.getFileData(ref, data.toString('utf8'));
-							this.additionalFiles[normalizedRef] = file;
-							this.resolve(session, file);
+							var referencedFile = this.getFileData(ref, data.toString('utf8'));
+							this.additionalFiles[normalizedRef] = referencedFile;
+							this.resolve(session, referencedFile);
 						}
 
 						session.tasks--;
@@ -285,10 +221,10 @@ export class Project {
 					});
 				}
 			})(i);
-		}
+		} */
 	}
 	resolveAll(callback: () => void) {
-		if (this.noExternalResolve) {
+		/* if (this.noExternalResolve) {
 			callback();
 			return;
 		}
@@ -306,37 +242,29 @@ export class Project {
 
 		if (session.tasks === 0) {
 			callback();
-		}
+		} */
 	}
 
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: reporter.TypeScriptError) => void) {
-		var files: Map<FileData> = {};
+		// var files: utils.Map<file.File> = {};
 
-		var _filter: filter.Filter;
+		var rootFilenames: string[] = this.files.getFileNames(true);
+
 		if (this.filterSettings !== undefined) {
-			_filter = new filter.Filter(this, this.filterSettings);
+			let _filter = new filter.Filter(this, this.filterSettings);
+			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
 		}
 
-		var rootFilenames: string[] = [];
-
-		for (var filename in this.currentFiles) {
-			if (this.currentFiles.hasOwnProperty(filename)) {
-				if (!_filter || _filter.match(filename)) {
-					files[filename] = this.currentFiles[filename];
-					rootFilenames.push(files[filename].originalFilename);
-				}
-			}
-		}
-		for (var filename in this.additionalFiles) {
+		/*for (var filename in this.additionalFiles) {
 			if (this.additionalFiles.hasOwnProperty(filename)) {
 				files[filename] = this.additionalFiles[filename];
 			}
-		}
+		}*/
 
-		this.host = new host.Host(this.typescript, this.currentFiles[0] ? this.currentFiles[0].file.cwd : '', files, !this.noExternalResolve);
+		this.host = new host.Host(this.typescript, this.firstFile ? this.firstFile.gulp.cwd : '', this.files, !this.noExternalResolve);
 
 		// Creating a program compiles the sources
 		this.program = this.typescript.createProgram(rootFilenames, this.options, this.host);
@@ -361,18 +289,18 @@ export class Project {
 		for (var filename in this.host.output) {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
 
-			var originalName = this.getOriginalName(Project.normalizePath(filename));
-			var original: FileData;
+			var originalName = this.getOriginalName(utils.normalizePath(filename));
+			var original: file.File;
 			if (this.options.out !== undefined) {
 				original = this.firstFile;
 				if (!original) continue;
 
-				var fullOriginalName = path.join(original.file.base, this.options.out);
+				var fullOriginalName = path.join(original.gulp.base, this.options.out);
 			} else {
-				original = this.currentFiles[originalName];
+				original = this.files.getFile(originalName);
 				if (!original) continue;
 
-				var fullOriginalName = original.originalFilename;
+				var fullOriginalName = original.fileNameOriginal;
 			}
 
 			var lastDot = fullOriginalName.lastIndexOf('.');
@@ -386,8 +314,8 @@ export class Project {
 				var file = new gutil.File({
 					path: fullOriginalNameWithoutExtension + '.js',
 					contents: new Buffer(this.removeSourceMapComment(data)),
-					cwd: original.file.cwd,
-					base: original.file.base
+					cwd: original.gulp.cwd,
+					base: original.gulp.base
 				});
 
 				outputJS.push(file);
@@ -395,8 +323,8 @@ export class Project {
 				var file = new gutil.File({
 					path: fullOriginalNameWithoutExtension + '.d.ts',
 					contents: new Buffer(data),
-					cwd: original.file.cwd,
-					base: original.file.base
+					cwd: original.gulp.cwd,
+					base: original.gulp.base
 				});
 
 				if (this.previousOutputDts !== undefined) {
@@ -428,15 +356,15 @@ export class Project {
 
 				var oldFiles: string[];
 				if (this.options.out !== undefined) {
-					oldFiles = Object.keys(this.currentFiles);
+					oldFiles = this.files.getFileNames();
 				} else {
 					oldFiles = [originalName];
 				}
 				var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(parsedMap));
 				for (var i = 0; i < oldFiles.length; i++) {
-					var oldFile = this.currentFiles[oldFiles[i]];
-					if (!oldFile || !oldFile.file || !oldFile.file.sourceMap) continue;
-					generator.applySourceMap(new sourceMap.SourceMapConsumer(oldFile.file.sourceMap));
+					var oldFile = this.files.getFile(oldFiles[i]);
+					if (!oldFile || !oldFile.gulp || !oldFile.gulp.sourceMap) continue;
+					generator.applySourceMap(new sourceMap.SourceMapConsumer(oldFile.gulp.sourceMap));
 				}
 				file.sourceMap = JSON.parse(generator.toString());
 			} else console.log(originalName, sourcemaps);
@@ -456,12 +384,12 @@ export class Project {
 			var done: { [ filename: string] : boolean } = {};
 
 			var sortedEmit = (originalName: string, file: gutil.File) => {
-				originalName = Project.normalizePath(originalName);
+				originalName = utils.normalizePath(originalName);
 
 				if (done[originalName]) return;
 				done[originalName] = true;
 
-				var inputFile = this.currentFiles[originalName];
+				var inputFile = this.files.getFile(originalName);
 				var tsFile = this.program.getSourceFile(originalName);
 				var references = tsFile.referencedFiles.map(file => tsApi.getFileName(file));
 
@@ -486,28 +414,10 @@ export class Project {
 			for (var i = 0; i < outputJS.length; ++i) {
 				var file = outputJS[i];
 				var originalName = this.getOriginalName(file.path);
-				originalName = Project.normalizePath(originalName);
+				originalName = utils.normalizePath(originalName);
 				emit(originalName, file);
 			}
 		}
-	}
-
-	private getFileDataFromGulpFile(file: gutil.File): FileData {
-		var str = file.contents.toString('utf8');
-
-		var data = this.getFileData(file.path, str);
-		data.file = file;
-
-		return data;
-	}
-
-	private getFileData(filename: string, content: string): FileData {
-		return {
-			filename: Project.normalizePath(filename),
-			originalFilename: filename,
-			content: content,
-			ts: tsApi.createSourceFile(this.typescript, filename, content, this.options.target, this.version + '')
-		};
 	}
 
 	private removeSourceMapComment(content: string): string {
@@ -517,9 +427,5 @@ export class Project {
 		// (But the last line also ends with a \n, so we need to look for the \n before the other)
 		var index = content.lastIndexOf('\n', content.length - 2);
 		return content.substring(0, index) + '\n';
-	}
-
-	static normalizePath(pathString: string) {
-		return path.normalize(pathString).toLowerCase();
 	}
 }

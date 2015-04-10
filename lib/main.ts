@@ -5,6 +5,7 @@ import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
 import project = require('./project');
+import utils = require('./utils');
 import _filter = require('./filter');
 import _reporter = require('./reporter');
 import through2 = require('through2');
@@ -110,12 +111,12 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	return inputStream;
 }
 
-var langMap: project.Map<ts.ScriptTarget> = {
+var langMap: utils.Map<ts.ScriptTarget> = {
 	'es3': ts.ScriptTarget.ES3,
 	'es5': ts.ScriptTarget.ES5,
 	'es6': ts.ScriptTarget.ES6
 }
-var moduleMap: project.Map<ts.ModuleKind> = {
+var moduleMap: utils.Map<ts.ModuleKind> = {
 	'commonjs': ts.ModuleKind.CommonJS,
 	'amd': ts.ModuleKind.AMD,
 	'none': ts.ModuleKind.None

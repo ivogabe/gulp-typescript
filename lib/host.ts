@@ -10,7 +10,7 @@ import fs = require('fs');
 import path = require('path');
 
 export class Host implements ts.CompilerHost {
-	static libDefault: project.Map<ts.SourceFile> = {};
+	static libDefault: utils.Map<ts.SourceFile> = {};
 	static getLibDefault(typescript: typeof ts) {
 		var filename: string;
 		for (var i in require.cache) {
@@ -36,7 +36,7 @@ export class Host implements ts.CompilerHost {
 	private currentDirectory: string;
 	private externalResolve: boolean;
 	input: file.FileCache;
-	output: project.Map<string>;
+	output: utils.Map<string>;
 
 	constructor(typescript: typeof ts, currentDirectory: string, input: file.FileCache, externalResolve: boolean) {
 		this.typescript = typescript;

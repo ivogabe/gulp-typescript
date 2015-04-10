@@ -52,6 +52,7 @@ export module File {
 	}
 
 	export function equal(a: File, b: File): boolean {
+		if (a === undefined || b === undefined) return a === b; // They could be both undefined.
 		return (a.fileNameOriginal === b.fileNameOriginal)
 			&& (a.content === b.content);
 	}
@@ -93,6 +94,17 @@ export class FileDictionary {
 	}
 
 	initTypeScriptSourceFile: (file: File) => void;
+
+	getGulpFileNames(onlyGulp = false) {
+		const fileNames: string[] = [];
+		for (const fileName in this.files) {
+			if (!this.files.hasOwnProperty(fileName)) continue;
+			let file = this.files[fileName];
+			if (onlyGulp && !file.gulp) continue;
+			fileNames.push(file.fileNameOriginal);
+		}
+		return fileNames;
+	}
 }
 
 export class FileCache {
@@ -103,10 +115,11 @@ export class FileCache {
 	typescript: typeof ts;
 	version: number = 0;
 
-	constructor(typescript: typeof ts) {
+	constructor(typescript: typeof ts, options: ts.CompilerOptions) {
 		this.typescript = typescript;
 		this.current = new FileDictionary(typescript);
 		this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
+		this.options = options;
 	}
 
 	addGulp(gFile: gutil.File) {
@@ -150,5 +163,9 @@ export class FileCache {
 			current,
 			state: File.getChangeState(previous, current)
 		};
+	}
+
+	getFileNames(onlyGulp = false) {
+		return this.current.getGulpFileNames(onlyGulp);
 	}
 }
