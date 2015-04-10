@@ -148,8 +148,9 @@ export class Project {
 	}
 
 	lazyCompile(jsStream: stream.Readable, declStream: stream.Readable): boolean {
-		/* if (this.isFileChanged === false
-			&& Object.keys(this.currentFiles).length === Object.keys(this.previousFiles).length
+		if (this.isFileChanged === false
+			&& this.files.previous
+			&& Object.keys(this.files.current.files).length === Object.keys(this.files.previous.files).length
 			&& this.previousOutputJS !== undefined
 			&& this.previousOutputDts !== undefined) {
 			// Emit files from previous build, since they are the same.
@@ -163,10 +164,10 @@ export class Project {
 				if (!original) continue;
 
 				var gFile = new gutil.File({
-					path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.js',
+					path: original.fileNameOriginal.substr(0, original.fileNameOriginal.length - 3) + '.js',
 					contents: new Buffer(file.content),
-					cwd: original.file.cwd,
-					base: original.file.base
+					cwd: original.gulp.cwd,
+					base: original.gulp.base
 				});
 
 				gFile.sourceMap = file.sourcemap;
@@ -183,87 +184,29 @@ export class Project {
 				if (!original) continue;
 
 				declStream.push(new gutil.File({
-					path: original.originalFilename.substr(0, original.originalFilename.length - 3) + '.d.ts',
+					path: original.fileNameOriginal.substr(0, original.fileNameOriginal.length - 3) + '.d.ts',
 					contents: new Buffer(file.content),
-					cwd: original.file.cwd,
-					base: original.file.base
+					cwd: original.gulp.cwd,
+					base: original.gulp.base
 				}));
 			}
 
 			return true;
 		}
-		*/
+
 		return false;
-	}
-
-	private resolve(session: { tasks: number; callback: () => void; }, _file: file.File) {
-		/* var references = _file.ts.referencedFiles.map(item => path.join(path.dirname(tsApi.getFileName(_file.ts)), tsApi.getFileName(item)));
-
-		for (var i = 0; i < references.length; ++i) {
-			((i: number) => { // create scope
-				var ref = references[i];
-				var normalizedRef = Project.normalizePath(ref);
-
-				if (!this.currentFiles.hasOwnProperty(normalizedRef) && !this.additionalFiles.hasOwnProperty(normalizedRef)) {
-					session.tasks++;
-
-					this.additionalFiles[normalizedRef] = Project.unresolvedFile;
-
-					fs.readFile(ref, (error, data) => {
-						if (data) { // Typescript will throw an error when a file isn't found.
-							var referencedFile = this.getFileData(ref, data.toString('utf8'));
-							this.additionalFiles[normalizedRef] = referencedFile;
-							this.resolve(session, referencedFile);
-						}
-
-						session.tasks--;
-						if (session.tasks === 0) session.callback();
-					});
-				}
-			})(i);
-		} */
-	}
-	resolveAll(callback: () => void) {
-		/* if (this.noExternalResolve) {
-			callback();
-			return;
-		}
-
-		var session = {
-			tasks: 0,
-			callback: callback
-		};
-
-		for (var i in this.currentFiles) {
-			if (this.currentFiles.hasOwnProperty(i)) {
-				this.resolve(session, this.currentFiles[i]);
-			}
-		}
-
-		if (session.tasks === 0) {
-			callback();
-		} */
 	}
 
 	/**
 	 * Compiles the input files
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: reporter.TypeScriptError) => void) {
-		// var files: utils.Map<file.File> = {};
-		console.log('compile');
-
 		var rootFilenames: string[] = this.files.getFileNames(true);
 
 		if (this.filterSettings !== undefined) {
 			let _filter = new filter.Filter(this, this.filterSettings);
 			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
 		}
-
-		/*for (var filename in this.additionalFiles) {
-			if (this.additionalFiles.hasOwnProperty(filename)) {
-				files[filename] = this.additionalFiles[filename];
-			}
-		}*/
 
 		this.host = new host.Host(this.typescript, this.firstFile ? this.firstFile.gulp.cwd : '', this.files, !this.noExternalResolve);
 
@@ -368,7 +311,7 @@ export class Project {
 					generator.applySourceMap(new sourceMap.SourceMapConsumer(oldFile.gulp.sourceMap));
 				}
 				file.sourceMap = JSON.parse(generator.toString());
-			} else console.log(originalName, sourcemaps);
+			}
 
 			if (this.previousOutputJS !== undefined) {
 				this.previousOutputJS.push({
