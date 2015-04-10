@@ -71,7 +71,7 @@ export module File {
 }
 
 export class FileDictionary {
-	files: utils.Map<File>;
+	files: utils.Map<File> = {};
 	typescript: typeof ts;
 
 	constructor(typescript: typeof ts) {
@@ -117,27 +117,31 @@ export class FileCache {
 
 	constructor(typescript: typeof ts, options: ts.CompilerOptions) {
 		this.typescript = typescript;
-		this.current = new FileDictionary(typescript);
-		this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
 		this.options = options;
+		this.createDictionary();
 	}
 
 	addGulp(gFile: gutil.File) {
 		this.current.addGulp(gFile);
 	}
 	addContent(fileName: string, content: string) {
-		this.addContent(fileName, content);
+		this.current.addContent(fileName, content);
 	}
 
 	reset() {
 		this.version++;
 		this.previous = this.current;
+		this.createDictionary();
+	}
+
+	private createDictionary() {
 		this.current = new FileDictionary(this.typescript);
+		this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
 	}
 
 	private initTypeScriptSourceFile(file: File) {
 		if (this.previous) {
-			let previous = this.previous.getFile(name);
+			let previous = this.previous.getFile(file.fileNameOriginal);
 			if (File.equal(previous, file)) {
 				file.ts = previous.ts; // Re-use previous source file.
 				return;

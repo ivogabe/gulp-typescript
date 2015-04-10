@@ -62,7 +62,7 @@ class CompileStream extends stream.Duplex {
 			this.js.push(null);
 			this.dts.push(null);
 		} else {
-			this._project.resolveAll(() => {
+			// this._project.resolveAll(() => {
 				this._project.compile(this.js, this.dts, (err) => {
 					if (this.reporter.error) this.reporter.error(err, this._project.typescript);
 
@@ -70,7 +70,7 @@ class CompileStream extends stream.Duplex {
 				});
 				this.js.push(null);
 				this.dts.push(null);
-			});
+			// });
 		}
 	}
 

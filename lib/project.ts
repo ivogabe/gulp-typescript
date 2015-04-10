@@ -250,6 +250,7 @@ export class Project {
 	 */
 	compile(jsStream: stream.Readable, declStream: stream.Readable, errorCallback: (err: reporter.TypeScriptError) => void) {
 		// var files: utils.Map<file.File> = {};
+		console.log('compile');
 
 		var rootFilenames: string[] = this.files.getFileNames(true);
 
@@ -298,7 +299,7 @@ export class Project {
 				var fullOriginalName = path.join(original.gulp.base, this.options.out);
 			} else {
 				original = this.files.getFile(originalName);
-				if (!original) continue;
+				if (!original || !original.gulp) continue;
 
 				var fullOriginalName = original.fileNameOriginal;
 			}
