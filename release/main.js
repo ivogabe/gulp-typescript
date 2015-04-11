@@ -57,15 +57,13 @@ var CompileStream = (function (_super) {
             this.dts.push(null);
         }
         else {
-            this._project.resolveAll(function () {
-                _this._project.compile(_this.js, _this.dts, function (err) {
-                    if (_this.reporter.error)
-                        _this.reporter.error(err, _this._project.typescript);
-                    _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
-                });
-                _this.js.push(null);
-                _this.dts.push(null);
+            this._project.compile(this.js, this.dts, function (err) {
+                if (_this.reporter.error)
+                    _this.reporter.error(err, _this._project.typescript);
+                _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
             });
+            this.js.push(null);
+            this.dts.push(null);
         }
     };
     CompileStream.prototype.end = function (chunk, encoding, callback) {

@@ -1,55 +1,41 @@
 ///<reference path='../definitions/ref.d.ts'/>
 var tsApi = require('./tsapi');
-var project = require('./project');
+var utils = require('./utils');
 var fs = require('fs');
 var path = require('path');
 var Host = (function () {
-    function Host(typescript, currentDirectory, files, externalResolve) {
+    function Host(typescript, currentDirectory, input, externalResolve) {
         var _this = this;
         this.getCurrentDirectory = function () {
             return _this.currentDirectory;
         };
-        this.writeFile = function (filename, data, writeByteOrderMark, onError) {
-            _this.output[filename] = data;
+        this.writeFile = function (fileName, data, writeByteOrderMark, onError) {
+            _this.output[fileName] = data;
         };
-        this.getSourceFile = function (filename, languageVersion, onError) {
-            var text;
-            var normalizedFilename = project.Project.normalizePath(filename);
-            if (_this.files[normalizedFilename]) {
-                if (_this.files[normalizedFilename] === project.Project.unresolvedFile) {
-                    return undefined;
-                }
-                else {
-                    return _this.files[normalizedFilename].ts;
-                }
-            }
-            else if (normalizedFilename === '__lib.d.ts') {
+        this.getSourceFile = function (fileName, languageVersion, onError) {
+            if (fileName === '__lib.d.ts') {
                 return Host.getLibDefault(_this.typescript);
             }
-            else {
-                if (_this.externalResolve) {
-                    try {
-                        text = fs.readFileSync(filename).toString('utf8');
-                    }
-                    catch (ex) {
-                        return undefined;
-                    }
+            var sourceFile = _this.input.getFile(fileName);
+            if (sourceFile)
+                return sourceFile.ts;
+            if (_this.externalResolve) {
+                var text;
+                try {
+                    text = fs.readFileSync(fileName).toString('utf8');
                 }
+                catch (ex) {
+                    return undefined;
+                }
+                _this.input.addContent(fileName, text);
+                var sourceFile_1 = _this.input.getFile(fileName);
+                if (sourceFile_1)
+                    return sourceFile_1.ts;
             }
-            if (typeof text !== 'string')
-                return undefined;
-            var file = tsApi.createSourceFile(_this.typescript, filename, text, languageVersion);
-            _this.files[normalizedFilename] = {
-                filename: normalizedFilename,
-                originalFilename: filename,
-                content: text,
-                ts: file
-            };
-            return file;
         };
         this.typescript = typescript;
         this.currentDirectory = currentDirectory;
-        this.files = files;
+        this.input = input;
         this.externalResolve = externalResolve;
         this.reset();
     }
@@ -81,16 +67,13 @@ var Host = (function () {
         return false;
     };
     Host.prototype.getCanonicalFileName = function (filename) {
-        return project.Project.normalizePath(filename);
+        return utils.normalizePath(filename);
     };
     Host.prototype.getDefaultLibFilename = function () {
         return '__lib.d.ts';
     };
     Host.prototype.getDefaultLibFileName = function () {
         return '__lib.d.ts';
-    };
-    Host.prototype.getFileData = function (filename) {
-        return this.files[project.Project.normalizePath(filename)];
     };
     Host.libDefault = {};
     return Host;
