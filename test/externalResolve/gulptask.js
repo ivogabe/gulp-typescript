@@ -13,6 +13,6 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	tsResult.dts.pipe(gulp.dest(output + 'dts'));
 	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../../externalResolve/' }))
+			.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../externalResolve/' }))
 			.pipe(gulp.dest(output + 'js'));
 }

@@ -8,6 +8,6 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	tsResult.dts.pipe(gulp.dest(output + 'dts'));
 	return tsResult.js
-			.pipe(sourcemaps.write({ includeContent: false, sourceRoot: '../../../../errorReporting/' }))
+			.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../errorReporting/' }))
 			.pipe(gulp.dest(output + 'js'));
 }
