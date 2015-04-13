@@ -2,11 +2,11 @@
 import stream = require('stream');
 import path = require('path');
 import gutil = require('gulp-util');
-import file = require('./file');
+import input = require('./input');
 
 export interface OutputFile {
 	fileName: string;
-	original: file.File;
+	original: input.File;
 }
 export interface OutputJsFile extends OutputFile {
 	contentJs: string;
@@ -22,7 +22,7 @@ export class Output {
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
 
-	write(fileName: string, content: string, original: file.File) {
+	write(fileName: string, content: string, original: input.File) {
 		switch (path.extname(fileName).toLowerCase()) {
 			case 'js':
 				this.addOrMergeJsOrMap({

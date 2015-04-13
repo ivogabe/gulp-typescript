@@ -3,7 +3,7 @@ import tsApi = require('./tsapi');
 import path = require('path');
 import project = require('./project');
 import main = require('./main');
-import file = require('./file');
+import input = require('./input');
 import utils = require('./utils');
 
 export class Filter {
@@ -16,7 +16,7 @@ export class Filter {
 
 			this.referencedFromAll = [];
 
-			var addReference = (file: file.File) => {
+			var addReference = (file: input.File) => {
 				if (this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1) return;
 
 				this.referencedFromAll.push(file.fileNameNormalized);
@@ -37,7 +37,7 @@ export class Filter {
 	}
 
 	private mapFilenamesToFiles(filenames: string[]) {
-		var files: file.File[] = [];
+		var files: input.File[] = [];
 		for (var i = 0; i < filenames.length; i++) {
 			var file = this.getFile(filenames[i]);
 			if (file === undefined) {
@@ -49,7 +49,7 @@ export class Filter {
 		return files;
 	}
 
-	private getFile(filename: string): file.File {
+	private getFile(filename: string): input.File {
 		var fileNames = this.project.files.getFileNames(true);
 		for (const fileName of fileNames) {
 			const _file = this.project.files.getFile(fileName);
@@ -61,7 +61,7 @@ export class Filter {
 		return undefined;
 	}
 
-	private referencedFrom: file.File[] = undefined;
+	private referencedFrom: input.File[] = undefined;
 	private referencedFromAll: string[] = undefined;
 
 	match(filename: string) {
@@ -82,7 +82,7 @@ export class Filter {
 		return true;
 	}
 
-	private matchReferencedFrom(filename: string, originalFilename: string, _file: file.File) {
+	private matchReferencedFrom(filename: string, originalFilename: string, file: input.File) {
 		return this.referencedFromAll.indexOf(originalFilename) !== -1;
 	}
 }

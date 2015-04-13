@@ -4,7 +4,7 @@ import ts = require('typescript');
 import tsApi = require('./tsapi');
 import gutil = require('gulp-util');
 import project = require('./project');
-import file = require('./file');
+import input = require('./input');
 import utils = require('./utils');
 import fs = require('fs');
 import path = require('path');
@@ -35,10 +35,10 @@ export class Host implements ts.CompilerHost {
 
 	private currentDirectory: string;
 	private externalResolve: boolean;
-	input: file.FileCache;
+	input: input.FileCache;
 	output: utils.Map<string>;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: file.FileCache, externalResolve: boolean) {
+	constructor(typescript: typeof ts, currentDirectory: string, input: input.FileCache, externalResolve: boolean) {
 		this.typescript = typescript;
 
 		this.currentDirectory = currentDirectory;

@@ -12,7 +12,7 @@ import host = require('./host');
 import filter = require('./filter');
 import reporter = require('./reporter');
 import utils = require('./utils');
-import file = require('./file');
+import input = require('./input');
 
 interface OutputFile {
 	filename: string;
@@ -34,13 +34,13 @@ export class Project {
 	/**
 	 *
 	 */
-	firstFile: file.File = undefined;
+	firstFile: input.File = undefined;
 
 	private isFileChanged: boolean = false;
 	private previousOutputJS: OutputFile[];
 	private previousOutputDts: OutputFile[];
 
-	files: file.FileCache;
+	files: input.FileCache;
 
 	/**
 	 * Whether there should not be loaded external files to the project.
@@ -71,7 +71,7 @@ export class Project {
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
 
-		this.files = new file.FileCache(typescript, options);
+		this.files = new input.FileCache(typescript, options);
 	}
 
 	/**
@@ -179,7 +179,7 @@ export class Project {
 			for (var i = 0; i < this.previousOutputDts.length; i++) {
 				var file = this.previousOutputDts[i];
 
-				var original: file.File = this.files.getFile(file.filename);
+				var original: input.File = this.files.getFile(file.filename);
 
 				if (!original) continue;
 
@@ -234,7 +234,7 @@ export class Project {
 			if (!this.host.output.hasOwnProperty(filename)) continue;
 
 			var originalName = this.getOriginalName(utils.normalizePath(filename));
-			var original: file.File;
+			var original: input.File;
 			if (this.options.out !== undefined) {
 				original = this.firstFile;
 				if (!original) continue;
