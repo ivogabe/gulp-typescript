@@ -72,6 +72,7 @@ export module File {
 
 export class FileDictionary {
 	files: utils.Map<File> = {};
+	firstSourceFile: File = undefined;
 	typescript: typeof ts;
 
 	constructor(typescript: typeof ts) {
@@ -85,7 +86,10 @@ export class FileDictionary {
 		this.addFile(File.fromContent(fileName, content));
 	}
 	private addFile(file: File) {
-		if (file.kind === FileKind.Source) this.initTypeScriptSourceFile(file);
+		if (file.kind === FileKind.Source) {
+			this.initTypeScriptSourceFile(file);
+			if (!this.firstSourceFile) this.firstSourceFile = file;
+		}
 		this.files[file.fileNameNormalized] = file;
 	}
 
@@ -171,5 +175,9 @@ export class FileCache {
 
 	getFileNames(onlyGulp = false) {
 		return this.current.getGulpFileNames(onlyGulp);
+	}
+
+	get firstSourceFile() {
+		return this.current.firstSourceFile;
 	}
 }

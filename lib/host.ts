@@ -33,7 +33,7 @@ export class Host implements ts.CompilerHost {
 
 	typescript: typeof ts;
 
-	private currentDirectory: string;
+	currentDirectory: string;
 	private externalResolve: boolean;
 	input: input.FileCache;
 	output: utils.Map<string>;
