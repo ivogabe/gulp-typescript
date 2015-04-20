@@ -121,9 +121,9 @@ export class Output {
 		map.file = map.file.replace(/\\/g, '/');
 		map.sources = map.sources.map((path) => path.replace(/\\/g, '/'));
 
-		var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
+		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
 		for (const fileName in file.sourceMapOrigins) {
-			var sourceFile = this.project.input.getFile(fileName);
+			const sourceFile = this.project.input.getFile(fileName);
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 			generator.applySourceMap(new sourceMap.SourceMapConsumer(sourceFile.gulp.sourceMap));
 		}
@@ -135,7 +135,7 @@ export class Output {
 		// This should be removed because gulp-sourcemaps takes care of that.
 		// The comment is always on the last line, so it's easy to remove it
 		// (But the last line also ends with a \n, so we need to look for the \n before the other)
-		var index = content.lastIndexOf('\n', content.length - 2);
+		const index = content.lastIndexOf('\n', content.length - 2);
 		return content.substring(0, index) + '\n';
 	}
 
@@ -145,20 +145,22 @@ export class Output {
 		const contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
 		const fileJs = new gutil.File({
 			path: file.fileName + '.js',
-			content: new Buffer(contentJs),
+			contents: new Buffer(contentJs),
 			cwd: file.original.gulp.cwd,
 			base: file.original.gulp.base
 		});
 		if (file.original.gulp.sourceMap) fileJs.sourceMap = JSON.parse(file.sourceMapString);
 		this.streamJs.push(fileJs);
 
-		const fileDts = new gutil.File({
-			path: file.fileName + '.js',
-			content: new Buffer(file.content[OutputFileKind.JavaScript]),
-			cwd: file.original.gulp.cwd,
-			base: file.original.gulp.base
-		});
-		this.streamDts.push(fileDts);
+		if (this.project.options.declaration) {
+			const fileDts = new gutil.File({
+				path: file.fileName + '.d.ts',
+				contents: new Buffer(file.content[OutputFileKind.JavaScript]),
+				cwd: file.original.gulp.cwd,
+				base: file.original.gulp.base
+			});
+			this.streamDts.push(fileDts);
+		}
 	}
 
 	finish() {
@@ -225,8 +227,8 @@ export class Output {
 			err.fullFilename = fileName;
 		}
 
-		var startPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start);
-		var endPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start + info.length);
+		const startPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start);
+		const endPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start + info.length);
 
 		err.startPosition = {
 			position: info.start,
