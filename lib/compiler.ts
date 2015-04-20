@@ -9,7 +9,7 @@ import filter = require('./filter');
 
 
 export interface ICompiler {
-	prepare(inputFiles: input.FileCache, outputFiles: output.Output): void;
+	prepare(_project: project.Project): void;
 	inputFile(file: input.File);
 	inputDone();
 }
@@ -17,34 +17,26 @@ export interface ICompiler {
 /**
  * Compiles a whole project, with full type checking
  */
-export class ProjectCompiler {
-	input: input.FileCache;
-	output: output.Output;
+export class ProjectCompiler implements ICompiler {
 	host: host.Host;
 	project: project.Project;
 	program: ts.Program;
 
-	prepare(inputFiles: input.FileCache, outputFiles: output.Output, _project: project.Project) {
-		this.input = inputFiles;
-		this.output = outputFiles;
+	prepare(_project: project.Project) {
 		this.project = _project;
-
-		this.output.project = this.project;
-		this.output.sortOutput = this.project.sortOutput;
 	}
 
 	inputFile(file: input.File) { }
 
 	inputDone() {
-		if (!this.input.firstSourceFile) {
-			this.output.finish();
+		if (!this.project.input.firstSourceFile) {
+			this.project.output.finish();
 			return;
 		}
 
-		this.host = new host.Host(this.project.typescript, this.input.firstSourceFile.gulp.cwd, this.input, this.project.noExternalResolve);
-		this.output.currentDirectory = this.host.currentDirectory;
+		this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, this.project.noExternalResolve);
 
-		let rootFilenames: string[] = this.input.getFileNames(true);
+		let rootFilenames: string[] = this.project.input.getFileNames(true);
 
 		if (this.project.filterSettings !== undefined) {
 			let _filter = new filter.Filter(this.project, this.project.filterSettings);
@@ -57,7 +49,7 @@ export class ProjectCompiler {
 		var errors = tsApi.getDiagnosticsAndEmit(this.program);
 
 		for (var i = 0; i < errors.length; i++) {
-			this.output.error(errors[i]);
+			this.project.output.error(errors[i]);
 		}
 
 		var outputJS: gutil.File[] = [];
@@ -66,10 +58,10 @@ export class ProjectCompiler {
 		for (const fileName in this.host.output) {
 			if (!this.host.output.hasOwnProperty(fileName)) continue;
 
-			this.output.write(fileName, this.host.output[fileName]);
+			this.project.output.write(fileName, this.host.output[fileName]);
 		}
 
-		this.output.finish();
+		this.project.output.finish();
 	}
 }
 

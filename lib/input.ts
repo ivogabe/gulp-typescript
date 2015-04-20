@@ -80,10 +80,10 @@ export class FileDictionary {
 	}
 
 	addGulp(gFile: gutil.File) {
-		this.addFile(File.fromGulp(gFile));
+		return this.addFile(File.fromGulp(gFile));
 	}
 	addContent(fileName: string, content: string) {
-		this.addFile(File.fromContent(fileName, content));
+		return this.addFile(File.fromContent(fileName, content));
 	}
 	private addFile(file: File) {
 		if (file.kind === FileKind.Source) {
@@ -91,6 +91,7 @@ export class FileDictionary {
 			if (!this.firstSourceFile) this.firstSourceFile = file;
 		}
 		this.files[file.fileNameNormalized] = file;
+		return file;
 	}
 
 	getFile(name: string) {
@@ -126,10 +127,10 @@ export class FileCache {
 	}
 
 	addGulp(gFile: gutil.File) {
-		this.current.addGulp(gFile);
+		return this.current.addGulp(gFile);
 	}
 	addContent(fileName: string, content: string) {
-		this.current.addContent(fileName, content);
+		return this.current.addContent(fileName, content);
 	}
 
 	reset() {

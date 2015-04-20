@@ -25,7 +25,7 @@ export class Filter {
 					var ref = tsApi.getFileName(file.ts.referencedFiles[i]);
 					ref = utils.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
 
-					var refFile = this.project.files.getFile(ref);
+					var refFile = this.project.input.getFile(ref);
 					if (refFile) addReference(refFile);
 				}
 			};
@@ -50,9 +50,9 @@ export class Filter {
 	}
 
 	private getFile(filename: string): input.File {
-		var fileNames = this.project.files.getFileNames(true);
+		var fileNames = this.project.input.getFileNames(true);
 		for (const fileName of fileNames) {
-			const _file = this.project.files.getFile(fileName);
+			const _file = this.project.input.getFile(fileName);
 			if (!_file) console.log(fileName);
 			if (_file.gulp && _file.gulp.path.substring(_file.gulp.base.length) === filename) {
 				return _file;
@@ -64,17 +64,19 @@ export class Filter {
 	private referencedFrom: input.File[] = undefined;
 	private referencedFromAll: string[] = undefined;
 
-	match(filename: string) {
-		var originalFilename = utils.normalizePath(filename);
-		originalFilename = this.project.getOriginalName(originalFilename);
-		var file = this.project.files.getFile(originalFilename);
+	match(fileName: string) {
+		let fileNameExtensionless = utils.splitExtension(fileName)[0];
+		let outputFile = this.project.output.files[fileNameExtensionless];
 
-		if (!file) {
-			console.log('gulp-typescript: Could not find file ' + filename + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+		if (!outputFile) {
+			console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+			return false;
 		}
 
+		let file = outputFile.original;
+
 		if (this.referencedFrom !== undefined) {
-			if (!this.matchReferencedFrom(filename, originalFilename, file)) {
+			if (!this.matchReferencedFrom(fileName, file)) {
 				return false;
 			}
 		}
@@ -82,7 +84,7 @@ export class Filter {
 		return true;
 	}
 
-	private matchReferencedFrom(filename: string, originalFilename: string, file: input.File) {
-		return this.referencedFromAll.indexOf(originalFilename) !== -1;
+	private matchReferencedFrom(filename: string, file: input.File) {
+		return this.referencedFromAll.indexOf(file.fileNameOriginal) !== -1;
 	}
 }

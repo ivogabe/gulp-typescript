@@ -4,7 +4,7 @@ import path = require('path');
 import ts = require('typescript');
 import sourceMap = require('source-map');
 import gutil = require('gulp-util');
-import utils = require('utils');
+import utils = require('./utils');
 import input = require('./input');
 import tsApi = require('./tsApi');
 import reporter = require('./reporter');
@@ -31,19 +31,17 @@ export enum OutputFileKind {
 export class Output {
 	static knownExtensions: string[] = ['js', 'js.map', 'd.ts'];
 
+	constructor(_project: project.Project, streamJs: stream.Readable, streamDts: stream.Readable) {
+		this.project = _project;
+		this.streamJs = streamJs;
+		this.streamDts = streamDts;
+	}
+
 	project: project.Project;
-	input: input.FileCache;
 	files: utils.Map<OutputFile> = {};
 	errors: reporter.TypeScriptError[] = [];
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
-	reporter: reporter.Reporter = {};
-	sortOutput: boolean = false;
-	/**
-	 * `true` when using the `out` option.
-	 */
-	singleOutput: boolean = false;
-	currentDirectory: string = '';
 
 	write(fileName: string, content: string) {
 		const [fileNameExtensionless, extension] = utils.splitExtension(fileName, Output.knownExtensions);
@@ -78,21 +76,22 @@ export class Output {
 				&& file.content[OutputFileKind.SourceMap] !== undefined
 				&& file.content[OutputFileKind.Definitions] !== undefined) {
 
-				if (this.singleOutput) {
-					file.original = this.input.firstSourceFile;
-					file.sourceMapOrigins = this.input.getFileNames(true).map(fName => this.input.getFile(fName));
+				file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
+				if (this.project.singleOutput) {
+					file.original = this.project.input.firstSourceFile;
+					file.sourceMapOrigins = this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName));
 				} else {
-					file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
-					file.original = this.input.getFile(path.resolve(this.currentDirectory, file.sourceMap.sources[0]));
+					const originalFileName = path.resolve(path.dirname(fileName), file.sourceMap.sources[0])
+					file.original = this.project.input.getFile(originalFileName);
 					file.skipPush = !file.original.gulp;
 
 					file.sourceMapOrigins = [file.original];
 				}
 
-				if (!this.sortOutput) { // if sortOutput is enabled, emit is done in the `finish` method
+				this.applySourceMaps(file);
+
+				if (!this.project.sortOutput) { // if sortOutput is enabled, emit is done in the `finish` method
 					this.emit(file);
-				} else {
-					this.applySourceMaps(file);
 				}
 			}
 
@@ -118,14 +117,13 @@ export class Output {
 		if (file.sourceMapsApplied || file.skipPush || !file.original.gulp.sourceMap) return;
 
 		file.sourceMapsApplied = true;
-
 		const map = file.sourceMap;
 		map.file = map.file.replace(/\\/g, '/');
 		map.sources = map.sources.map((path) => path.replace(/\\/g, '/'));
 
 		var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
 		for (const fileName in file.sourceMapOrigins) {
-			var sourceFile = this.input.getFile(fileName);
+			var sourceFile = this.project.input.getFile(fileName);
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 			generator.applySourceMap(new sourceMap.SourceMapConsumer(sourceFile.gulp.sourceMap));
 		}
@@ -143,8 +141,6 @@ export class Output {
 
 	private emit(file: OutputFile) {
 		if (file.skipPush) return;
-
-		this.applySourceMaps(file);
 
 		const contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
 		const fileJs = new gutil.File({
@@ -166,7 +162,7 @@ export class Output {
 	}
 
 	finish() {
-		if (this.sortOutput) {
+		if (this.project.sortOutput) {
 			let sortedEmit = (fileName: string) => {
 				let file = this.files[fileName];
 				if (!file || file.skipPush || file.pushed) return;
@@ -255,7 +251,7 @@ export class Output {
 		// Save errors for lazy compilation (if the next input is the same as the current),
 		this.errors.push(error);
 		// call reporter callback
-		if (this.reporter.error) this.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
+		if (this.project.reporter.error) this.project.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
 		// & emit the error on the stream.
 		this.streamJs.emit('error', info);
 	}

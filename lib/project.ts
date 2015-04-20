@@ -1,46 +1,29 @@
 ///<reference path='../definitions/ref.d.ts'/>
 
+import stream = require('stream');
 import ts = require('typescript');
 import tsApi = require('./tsapi');
 import main = require('./main');
-import gutil = require('gulp-util');
-import sourceMap = require('source-map');
-import path = require('path');
-import stream = require('stream');
-import fs = require('fs'); // Only used for readonly access
 import host = require('./host');
-import filter = require('./filter');
 import reporter = require('./reporter');
-import utils = require('./utils');
 import input = require('./input');
-
-interface OutputFile {
-	filename: string;
-	content: string;
-	sourcemap?: Object;
-}
-
-
+import output = require('./output');
+import compiler = require('./compiler');
 
 export class Project {
+	input: input.FileCache;
+	output: output.Output;
+	compiler: compiler.ICompiler;
+
+	// region settings
+
 	/**
 	 * The TypeScript library that is used for this project.
 	 * Can also be jsx-typescript for example.
 	 */
 	typescript: typeof ts;
 
-	filterSettings: main.FilterSettings;
-
-	/**
-	 *
-	 */
-	firstFile: input.File = undefined;
-
-	private isFileChanged: boolean = false;
-	private previousOutputJS: OutputFile[];
-	private previousOutputDts: OutputFile[];
-
-	files: input.FileCache;
+	options: ts.CompilerOptions;
 
 	/**
 	 * Whether there should not be loaded external files to the project.
@@ -54,15 +37,22 @@ export class Project {
 	 * - If you forget some directory, your compile will fail.
 	 */
 	noExternalResolve: boolean;
+
 	/**
 	 * Sort output based on <reference> tags.
 	 * tsc does this when you pass the --out parameter.
 	 */
 	sortOutput: boolean;
 
-	options: ts.CompilerOptions;
-	host: host.Host;
-	program: ts.Program;
+	filterSettings: main.FilterSettings;
+
+	singleOutput: boolean;
+
+	reporter: reporter.Reporter;
+
+	// endregion
+
+	currentDirectory: string;
 
 	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.typescript = typescript;
@@ -70,27 +60,17 @@ export class Project {
 
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
+		this.singleOutput = options.out !== undefined;
 
-		this.files = new input.FileCache(typescript, options);
+		this.input = new input.FileCache(typescript, options);
 	}
 
 	/**
 	 * Resets the compiler.
 	 * The compiler needs to be reset for incremental builds.
 	 */
-	reset() {
-		this.firstFile = undefined;
-
-		this.isFileChanged = false;
-
-		this.files.reset();
-	}
-	/**
-	 * Adds a file to the project.
-	 */
-	addFile(file: gutil.File) {
-		this.files.addGulp(file);
-
-		if (!this.firstFile) this.firstFile = this.files.getFile(file.path);
+	reset(outputJs: stream.Readable, outputDts: stream.Readable) {
+		this.input.reset();
+		this.output = new output.Output(this, outputJs, outputDts);
 	}
 }

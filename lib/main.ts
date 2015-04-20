@@ -8,16 +8,16 @@ import project = require('./project');
 import utils = require('./utils');
 import _filter = require('./filter');
 import _reporter = require('./reporter');
+import compiler = require('./compiler');
 import through2 = require('through2');
 
 var PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
-	constructor(proj: project.Project, theReporter: _reporter.Reporter = _reporter.defaultReporter()) {
+	constructor(proj: project.Project) {
 		super({objectMode: true});
 
-		this._project = proj;
-		this.reporter = theReporter;
+		this.project = proj;
 
 		// Backwards compatibility
 		this.js = this;
@@ -26,10 +26,7 @@ class CompileStream extends stream.Duplex {
 		this.on('error', () => {});
 	}
 
-	private reporter: _reporter.Reporter;
-
-	private _project: project.Project;
-	private _hasSources: boolean = false;
+	private project: project.Project;
 
 	_write(file: gutil.File, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
@@ -42,39 +39,25 @@ class CompileStream extends stream.Duplex {
 			return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
 		}
 
-		this._hasSources = true;
-		this._project.addFile(file);
+		const isFirstFile = this.project.input.firstSourceFile === undefined;
+
+		const inputFile = this.project.input.addGulp(file);
+
+		if (isFirstFile) {
+			this.project.currentDirectory = this.project.input.firstSourceFile.gulp.cwd;
+		}
+
+		this.project.compiler.inputFile(inputFile);
+
 		cb();
 	}
 	_read() {
 
 	}
 
-	private compile() {
-		if (!this._hasSources) {
-			this.js.push(null);
-			this.dts.push(null);
-			return;
-		}
-
-		// Try to re-use the output of the previous build. If that fails, start normal compilation.
-		if (this._project.lazyCompile(this.js, this.dts)) {
-			this.js.push(null);
-			this.dts.push(null);
-		} else {
-			this._project.compile(this.js, this.dts, (err) => {
-				if (this.reporter.error) this.reporter.error(err, this._project.typescript);
-
-				this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
-			});
-			this.js.push(null);
-			this.dts.push(null);
-		}
-	}
-
 	end(chunk?, encoding?, callback?) {
 		this._write(chunk, encoding, callback);
-		this.compile();
+		this.project.compiler.inputDone();
 	}
 
 	js: stream.Readable;
@@ -98,13 +81,16 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
-		proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false, (param && param.typescript) || undefined);
+		proj = compile.createProject(param || {});
 	}
 
-	proj.reset();
-	proj.filterSettings = filters;
+	var inputStream = new CompileStream(proj);
 
-	var inputStream = new CompileStream(proj, theReporter);
+	proj.reset(inputStream.js, inputStream.dts);
+	proj.filterSettings = filters;
+	proj.reporter = theReporter || _reporter.defaultReporter();
+
+	proj.compiler.prepare(proj);
 
 	return inputStream;
 }
@@ -210,7 +196,9 @@ module compile {
 	export import Project = project.Project;
 	export import reporter = _reporter;
 	export function createProject(settings: Settings): Project {
-		return new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+		const project = new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+		project.compiler = new compiler.ProjectCompiler();
+		return project;
 	}
 
 	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {
