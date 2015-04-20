@@ -74,7 +74,7 @@ export class Output {
 
 			if (file.content[OutputFileKind.JavaScript] !== undefined
 				&& file.content[OutputFileKind.SourceMap] !== undefined
-				&& file.content[OutputFileKind.Definitions] !== undefined) {
+				&& (file.content[OutputFileKind.Definitions] !== undefined || !this.project.options.declaration)) {
 
 				file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
 				if (this.project.singleOutput) {
