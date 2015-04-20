@@ -155,7 +155,7 @@ export class Output {
 		if (this.project.options.declaration) {
 			const fileDts = new gutil.File({
 				path: file.fileName + '.d.ts',
-				contents: new Buffer(file.content[OutputFileKind.JavaScript]),
+				contents: new Buffer(file.content[OutputFileKind.Definitions]),
 				cwd: file.original.gulp.cwd,
 				base: file.original.gulp.base
 			});
