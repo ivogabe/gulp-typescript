@@ -34,7 +34,7 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 
-		this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, this.project.noExternalResolve);
+		this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve);
 
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
 
