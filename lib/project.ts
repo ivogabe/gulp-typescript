@@ -13,6 +13,7 @@ import compiler = require('./compiler');
 export class Project {
 	input: input.FileCache;
 	output: output.Output;
+	previousOutput: output.Output;
 	compiler: compiler.ICompiler;
 
 	// region settings
@@ -71,6 +72,7 @@ export class Project {
 	 */
 	reset(outputJs: stream.Readable, outputDts: stream.Readable) {
 		this.input.reset();
+		this.previousOutput = this.output;
 		this.output = new output.Output(this, outputJs, outputDts);
 	}
 }

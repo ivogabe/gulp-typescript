@@ -100,7 +100,7 @@ export class FileDictionary {
 
 	initTypeScriptSourceFile: (file: File) => void;
 
-	getGulpFileNames(onlyGulp = false) {
+	getFileNames(onlyGulp = false) {
 		const fileNames: string[] = [];
 		for (const fileName in this.files) {
 			if (!this.files.hasOwnProperty(fileName)) continue;
@@ -175,10 +175,30 @@ export class FileCache {
 	}
 
 	getFileNames(onlyGulp = false) {
-		return this.current.getGulpFileNames(onlyGulp);
+		return this.current.getFileNames(onlyGulp);
 	}
 
 	get firstSourceFile() {
 		return this.current.firstSourceFile;
+	}
+
+	isChanged(onlyGulp = false) {
+		if (!this.previous) return true;
+
+		const files = this.getFileNames(onlyGulp);
+		const oldFiles = this.previous.getFileNames(onlyGulp);
+
+		if (files.length !== oldFiles.length) return true;
+
+		for (const fileName in files) {
+			if (oldFiles.indexOf(fileName) === -1) return true;
+		}
+
+		for (const fileName in files) {
+			const change = this.getFileChange(fileName);
+			if (change.state !== FileChangeState.Equal) return true;
+		}
+
+		return false;
 	}
 }

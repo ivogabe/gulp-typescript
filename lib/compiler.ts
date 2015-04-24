@@ -34,6 +34,26 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 
+		if (!this.project.input.isChanged(true)) {
+			// Re-use old output
+			const old = this.project.previousOutput;
+
+			for (const error of old.errors) {
+				this.project.output.error(error);
+			}
+
+			for (const fileName of Object.keys(old.files)) {
+				const file = old.files[fileName];
+				this.project.output.write(file.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
+				this.project.output.write(file.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
+				if (file.content[output.OutputFileKind.Definitions] !== undefined) {
+					this.project.output.write(file.fileName + '.d.ts', file.content[output.OutputFileKind.Definitions]);
+				}
+			}
+
+			return;
+		}
+
 		this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve);
 
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
@@ -49,7 +69,7 @@ export class ProjectCompiler implements ICompiler {
 		var errors = tsApi.getDiagnosticsAndEmit(this.program);
 
 		for (var i = 0; i < errors.length; i++) {
-			this.project.output.error(errors[i]);
+			this.project.output.diagnostic(errors[i]);
 		}
 
 		var outputJS: gutil.File[] = [];

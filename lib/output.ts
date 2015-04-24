@@ -236,14 +236,15 @@ export class Output {
 
 		return err;
 	}
-	error(info: ts.Diagnostic) {
-		let error = this.getError(info);
-
+	diagnostic(info: ts.Diagnostic) {
+		this.error(this.getError(info));
+	}
+	error(error: reporter.TypeScriptError) {
 		// Save errors for lazy compilation (if the next input is the same as the current),
 		this.errors.push(error);
 		// call reporter callback
 		if (this.project.reporter.error) this.project.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
 		// & emit the error on the stream.
-		this.streamJs.emit('error', info);
+		this.streamJs.emit('error', error);
 	}
 }
