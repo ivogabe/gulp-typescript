@@ -188,17 +188,6 @@ export class Output {
 		this.streamDts.push(null);
 	}
 
-	private getFileFromOriginalFileName(fileName: string) {
-		const fileNameNormalized = utils.normalizePath(fileName);
-
-		for (const outputFileName of Object.keys(this.files)) {
-			const file = this.files[outputFileName];
-			if (file.original && file.original.fileNameOriginal === fileName) {
-				return file;
-			}
-		}
-	}
-
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
@@ -210,8 +199,7 @@ export class Output {
 		}
 
 		let fileName = tsApi.getFileName(info.file);
-		const fileOutput = this.getFileFromOriginalFileName(fileName);
-		const file = fileOutput && fileOutput.original;
+		const file = this.project.input.getFile(fileName);
 
 		if (file) {
 			err.tsFile = file.ts;
