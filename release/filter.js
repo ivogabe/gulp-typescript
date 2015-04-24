@@ -17,7 +17,7 @@ var Filter = (function () {
                 for (var i = 0; i < file.ts.referencedFiles.length; i++) {
                     var ref = tsApi.getFileName(file.ts.referencedFiles[i]);
                     ref = utils.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
-                    var refFile = _this.project.files.getFile(ref);
+                    var refFile = _this.project.input.getFile(ref);
                     if (refFile)
                         addReference(refFile);
                 }
@@ -41,10 +41,10 @@ var Filter = (function () {
         return files;
     };
     Filter.prototype.getFile = function (filename) {
-        var fileNames = this.project.files.getFileNames(true);
+        var fileNames = this.project.input.getFileNames(true);
         for (var _i = 0; _i < fileNames.length; _i++) {
             var fileName = fileNames[_i];
-            var _file = this.project.files.getFile(fileName);
+            var _file = this.project.input.getFile(fileName);
             if (!_file)
                 console.log(fileName);
             if (_file.gulp && _file.gulp.path.substring(_file.gulp.base.length) === filename) {
@@ -53,22 +53,23 @@ var Filter = (function () {
         }
         return undefined;
     };
-    Filter.prototype.match = function (filename) {
-        var originalFilename = utils.normalizePath(filename);
-        originalFilename = this.project.getOriginalName(originalFilename);
-        var file = this.project.files.getFile(originalFilename);
-        if (!file) {
-            console.log('gulp-typescript: Could not find file ' + filename + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+    Filter.prototype.match = function (fileName) {
+        var fileNameExtensionless = utils.splitExtension(fileName)[0];
+        var outputFile = this.project.output.files[fileNameExtensionless];
+        if (!outputFile) {
+            console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+            return false;
         }
+        var file = outputFile.original;
         if (this.referencedFrom !== undefined) {
-            if (!this.matchReferencedFrom(filename, originalFilename, file)) {
+            if (!this.matchReferencedFrom(fileName, file)) {
                 return false;
             }
         }
         return true;
     };
-    Filter.prototype.matchReferencedFrom = function (filename, originalFilename, _file) {
-        return this.referencedFromAll.indexOf(originalFilename) !== -1;
+    Filter.prototype.matchReferencedFrom = function (filename, file) {
+        return this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1;
     };
     return Filter;
 })();

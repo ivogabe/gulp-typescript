@@ -11,17 +11,15 @@ var stream = require('stream');
 var project = require('./project');
 var _filter = require('./filter');
 var _reporter = require('./reporter');
+var compiler = require('./compiler');
 var through2 = require('through2');
 var PLUGIN_NAME = 'gulp-typescript';
 var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
-    function CompileStream(proj, theReporter) {
-        if (theReporter === void 0) { theReporter = _reporter.defaultReporter(); }
+    function CompileStream(proj) {
         _super.call(this, { objectMode: true });
-        this._hasSources = false;
         this.dts = new CompileOutputStream();
-        this._project = proj;
-        this.reporter = theReporter;
+        this.project = proj;
         // Backwards compatibility
         this.js = this;
         // Prevent "Unhandled stream error in pipe" when compilation error occurs.
@@ -38,37 +36,19 @@ var CompileStream = (function (_super) {
         if (file.isStream()) {
             return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
         }
-        this._hasSources = true;
-        this._project.addFile(file);
+        var isFirstFile = this.project.input.firstSourceFile === undefined;
+        var inputFile = this.project.input.addGulp(file);
+        if (isFirstFile) {
+            this.project.currentDirectory = this.project.input.firstSourceFile.gulp.cwd;
+        }
+        this.project.compiler.inputFile(inputFile);
         cb();
     };
     CompileStream.prototype._read = function () {
     };
-    CompileStream.prototype.compile = function () {
-        var _this = this;
-        if (!this._hasSources) {
-            this.js.push(null);
-            this.dts.push(null);
-            return;
-        }
-        // Try to re-use the output of the previous build. If that fails, start normal compilation.
-        if (this._project.lazyCompile(this.js, this.dts)) {
-            this.js.push(null);
-            this.dts.push(null);
-        }
-        else {
-            this._project.compile(this.js, this.dts, function (err) {
-                if (_this.reporter.error)
-                    _this.reporter.error(err, _this._project.typescript);
-                _this.emit('error', new gutil.PluginError(PLUGIN_NAME, err.message));
-            });
-            this.js.push(null);
-            this.dts.push(null);
-        }
-    };
     CompileStream.prototype.end = function (chunk, encoding, callback) {
         this._write(chunk, encoding, callback);
-        this.compile();
+        this.project.compiler.inputDone();
     };
     return CompileStream;
 })(stream.Duplex);
@@ -87,11 +67,13 @@ function compile(param, filters, theReporter) {
         proj = param;
     }
     else {
-        proj = new project.Project(getCompilerOptions(param || {}), (param && param.noExternalResolve) || false, (param && param.sortOutput) || false, (param && param.typescript) || undefined);
+        proj = compile.createProject(param || {});
     }
-    proj.reset();
+    var inputStream = new CompileStream(proj);
+    proj.reset(inputStream.js, inputStream.dts);
     proj.filterSettings = filters;
-    var inputStream = new CompileStream(proj, theReporter);
+    proj.reporter = theReporter || _reporter.defaultReporter();
+    proj.compiler.prepare(proj);
     return inputStream;
 }
 var langMap = {
@@ -159,7 +141,9 @@ var compile;
     compile.Project = project.Project;
     compile.reporter = _reporter;
     function createProject(settings) {
-        return new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        var project = new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        project.compiler = new compiler.ProjectCompiler();
+        return project;
     }
     compile.createProject = createProject;
     function filter(project, filters) {
