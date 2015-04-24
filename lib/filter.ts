@@ -85,6 +85,6 @@ export class Filter {
 	}
 
 	private matchReferencedFrom(filename: string, file: input.File) {
-		return this.referencedFromAll.indexOf(file.fileNameOriginal) !== -1;
+		return this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1;
 	}
 }
