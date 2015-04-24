@@ -143,8 +143,9 @@ export class Output {
 		if (file.skipPush) return;
 
 		const contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
+		const base = (this.project.singleOutput ? file.original.gulp.base : '')
 		const fileJs = new gutil.File({
-			path: file.fileName + '.js',
+			path: base + file.fileName + '.js',
 			contents: new Buffer(contentJs),
 			cwd: file.original.gulp.cwd,
 			base: file.original.gulp.base
@@ -154,7 +155,7 @@ export class Output {
 
 		if (this.project.options.declaration) {
 			const fileDts = new gutil.File({
-				path: file.fileName + '.d.ts',
+				path: base + file.fileName + '.d.ts',
 				contents: new Buffer(file.content[OutputFileKind.Definitions]),
 				cwd: file.original.gulp.cwd,
 				base: file.original.gulp.base
