@@ -3,6 +3,8 @@ import tsApi = require('./tsapi');
 import path = require('path');
 import project = require('./project');
 import main = require('./main');
+import input = require('./input');
+import utils = require('./utils');
 
 export class Filter {
 	project: project.Project;
@@ -14,16 +16,16 @@ export class Filter {
 
 			this.referencedFromAll = [];
 
-			var addReference = (file: project.FileData) => {
-				if (this.referencedFromAll.indexOf(file.filename) !== -1) return;
+			var addReference = (file: input.File) => {
+				if (this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1) return;
 
-				this.referencedFromAll.push(file.filename);
+				this.referencedFromAll.push(file.fileNameNormalized);
 
 				for (var i = 0; i < file.ts.referencedFiles.length; i++) {
 					var ref = tsApi.getFileName(file.ts.referencedFiles[i]);
-					ref = project.Project.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
+					ref = utils.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
 
-					var refFile = this.project.currentFiles[ref];
+					var refFile = this.project.input.getFile(ref);
 					if (refFile) addReference(refFile);
 				}
 			};
@@ -35,7 +37,7 @@ export class Filter {
 	}
 
 	private mapFilenamesToFiles(filenames: string[]) {
-		var files: project.FileData[] = [];
+		var files: input.File[] = [];
 		for (var i = 0; i < filenames.length; i++) {
 			var file = this.getFile(filenames[i]);
 			if (file === undefined) {
@@ -47,31 +49,34 @@ export class Filter {
 		return files;
 	}
 
-	private getFile(filename: string) {
-		var files = this.project.currentFiles;
-		for (var i in files) {
-			if (!files.hasOwnProperty(i)) continue;
-			if (files[i].file.path.substring(files[i].file.base.length) == filename) {
-				return files[i];
+	private getFile(filename: string): input.File {
+		var fileNames = this.project.input.getFileNames(true);
+		for (const fileName of fileNames) {
+			const _file = this.project.input.getFile(fileName);
+			if (!_file) console.log(fileName);
+			if (_file.gulp && _file.gulp.path.substring(_file.gulp.base.length) === filename) {
+				return _file;
 			}
 		}
 		return undefined;
 	}
 
-	private referencedFrom: project.FileData[] = undefined;
+	private referencedFrom: input.File[] = undefined;
 	private referencedFromAll: string[] = undefined;
 
-	match(filename: string) {
-		var originalFilename = project.Project.normalizePath(filename);
-		originalFilename = this.project.getOriginalName(originalFilename);
-		var file = this.project.currentFiles[originalFilename];
+	match(fileName: string) {
+		let fileNameExtensionless = utils.splitExtension(fileName)[0];
+		let outputFile = this.project.output.files[fileNameExtensionless];
 
-		if (!file) {
-			console.log('gulp-typescript: Could not find file ' + filename + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+		if (!outputFile) {
+			console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+			return false;
 		}
 
+		let file = outputFile.original;
+
 		if (this.referencedFrom !== undefined) {
-			if (!this.matchReferencedFrom(filename, originalFilename, file)) {
+			if (!this.matchReferencedFrom(fileName, file)) {
 				return false;
 			}
 		}
@@ -79,7 +84,7 @@ export class Filter {
 		return true;
 	}
 
-	private matchReferencedFrom(filename: string, originalFilename: string, file: project.FileData) {
-		return this.referencedFromAll.indexOf(originalFilename) !== -1;
+	private matchReferencedFrom(filename: string, file: input.File) {
+		return this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1;
 	}
 }

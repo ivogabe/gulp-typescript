@@ -83,6 +83,8 @@ function runTest(name, callback) {
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
+	var done = 0;
+
 	fs.mkdirSync('test/output/' + name);
 	for (var i = 0; i < libs.length; i++) {
 		(function(i) {
@@ -97,15 +99,19 @@ function runTest(name, callback) {
 			fs.mkdirSync(output);
 			test(newTS, lib[1], output, reporter).on('finish', function() {
 				fs.writeFileSync(output + 'errors.txt', errors.join('\n'));
-				function onError(error) {
-					console.error('Test ' + name + ' failed: ' + error.message);
+				done++;
+
+				if (done === libs.length) {
+					function onError(error) {
+						console.error('Test ' + name + ' failed: ' + error.message);
+					}
+					gulp.src(output)
+						.pipe(diff('test/baselines/' + name))
+						.on('error', onError)
+						.pipe(diff.reporter({ fail: true }))
+						.on('error', onError)
+						.on('finish', callback);
 				}
-				gulp.src(output)
-					.pipe(diff('test/baselines/' + name))
-					.on('error', onError)
-					.pipe(diff.reporter({ fail: true }))
-					.on('error', onError)
-					.on('finish', callback);
 			});
 		})(i);
 	}
