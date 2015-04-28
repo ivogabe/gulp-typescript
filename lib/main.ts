@@ -162,6 +162,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 module compile {
 	export interface Settings {
 		out?: string;
+		outDir?: string;
 
 		allowNonTsExtensions?: boolean;
 		charset?: string;
