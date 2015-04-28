@@ -72,9 +72,6 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.diagnostic(errors[i]);
 		}
 
-		var outputJS: gutil.File[] = [];
-		var sourcemaps: { [ filename: string ]: string } = {};
-
 		for (const fileName in this.host.output) {
 			if (!this.host.output.hasOwnProperty(fileName)) continue;
 
