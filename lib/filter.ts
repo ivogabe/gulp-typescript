@@ -16,30 +16,30 @@ export class Filter {
 
 			this.referencedFromAll = [];
 
-			var addReference = (file: input.File) => {
+			const addReference = (file: input.File) => {
 				if (this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1) return;
 
 				this.referencedFromAll.push(file.fileNameNormalized);
 
-				for (var i = 0; i < file.ts.referencedFiles.length; i++) {
-					var ref = tsApi.getFileName(file.ts.referencedFiles[i]);
+				for (let i = 0; i < file.ts.referencedFiles.length; i++) {
+					let ref = tsApi.getFileName(file.ts.referencedFiles[i]);
 					ref = utils.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
 
-					var refFile = this.project.input.getFile(ref);
+					const refFile = this.project.input.getFile(ref);
 					if (refFile) addReference(refFile);
 				}
 			};
 
-			for (var i = 0; i < this.referencedFrom.length; i++) {
+			for (let i = 0; i < this.referencedFrom.length; i++) {
 				addReference(this.referencedFrom[i]);
 			}
 		}
 	}
 
 	private mapFilenamesToFiles(filenames: string[]) {
-		var files: input.File[] = [];
-		for (var i = 0; i < filenames.length; i++) {
-			var file = this.getFile(filenames[i]);
+		const files: input.File[] = [];
+		for (let i = 0; i < filenames.length; i++) {
+			const file = this.getFile(filenames[i]);
 			if (file === undefined) {
 				console.log('gulp-typescript: Could not find file ' + filenames[i]);
 			} else {
@@ -50,7 +50,7 @@ export class Filter {
 	}
 
 	private getFile(filename: string): input.File {
-		var fileNames = this.project.input.getFileNames(true);
+		const fileNames = this.project.input.getFileNames(true);
 		for (const fileName of fileNames) {
 			const _file = this.project.input.getFile(fileName);
 			if (!_file) console.log(fileName);

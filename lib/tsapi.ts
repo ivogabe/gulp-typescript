@@ -52,32 +52,32 @@ export function getFileName(thing: { filename: string} | { fileName: string }): 
 }
 export function getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagnostic[] {
 	if ((<Program14> program).getDiagnostics) {
-		var errors = (<Program14> program).getDiagnostics();
+		let errors = (<Program14> program).getDiagnostics();
 
 		if (!errors.length) {
 			// If there are no syntax errors, check types
-			var checker = (<Program14> program).getTypeChecker(true);
+			const checker = (<Program14> program).getTypeChecker(true);
 
-			var semanticErrors = checker.getDiagnostics();
+			const semanticErrors = checker.getDiagnostics();
 
-			var emitErrors = checker.emitFiles().diagnostics;
+			const emitErrors = checker.emitFiles().diagnostics;
 
 			errors = semanticErrors.concat(emitErrors);
 		}
 
 		return errors;
 	} else {
-		var errors = (<Program15> program).getSyntacticDiagnostics();
+		let errors = (<Program15> program).getSyntacticDiagnostics();
 		if (errors.length === 0) errors = (<Program15> program).getGlobalDiagnostics();
 		if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
 
-		var emitOutput = (<Program15> program).emit();
+		const emitOutput = (<Program15> program).emit();
 		return errors.concat(emitOutput.diagnostics);
 	}
 }
 export function getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFile14 | TSFile15, position: number) {
 	if ((<TSFile15> file).getLineAndCharacterOfPosition) { // TS 1.5
-		var lineAndCharacter = (<TSFile15> file).getLineAndCharacterOfPosition(position);
+		const lineAndCharacter = (<TSFile15> file).getLineAndCharacterOfPosition(position);
 		return {
 			line: lineAndCharacter.line + 1,
 			character: lineAndCharacter.character + 1

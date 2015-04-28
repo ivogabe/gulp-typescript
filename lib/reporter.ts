@@ -45,7 +45,7 @@ function flattenDiagnosticsVerbose(message: string | tsApi.DiagnosticMessageChai
 	} else if (typeof message === 'string') {
 		return message;
 	} else {
-		var result: string;
+		let result: string;
 		if (index === 0) {
 			result = message.messageText;
 		} else {
@@ -76,10 +76,10 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 
 			if (error.tsFile) {
 				console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
-				var lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
+				const lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
 
-				var logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
-					var line = lines[lineIndex];
+				const logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
+					const line = lines[lineIndex];
 					if (errorEnd === undefined) errorEnd = line.length;
 					console.error('> ' + gutil.colors.gray('[' + lineIndex + '] ')
 						+ line.substring(0, errorStart)
@@ -88,7 +88,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 					);
 				}
 
-				for (var i = error.startPosition.line; i <= error.endPosition.line; i++) {
+				for (let i = error.startPosition.line; i <= error.endPosition.line; i++) {
 					logLine(i,
 						i === error.startPosition.line ? error.startPosition.character - 1 : 0,
 						i === error.endPosition.line ? error.endPosition.character - 1 : undefined

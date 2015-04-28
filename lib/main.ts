@@ -11,7 +11,7 @@ import _reporter = require('./reporter');
 import compiler = require('./compiler');
 import through2 = require('through2');
 
-var PLUGIN_NAME = 'gulp-typescript';
+const PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
 	constructor(proj: project.Project) {
@@ -77,14 +77,14 @@ function compile();
 function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
 function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
 function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): any {
-	var proj: project.Project;
+	let proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
 	} else {
 		proj = compile.createProject(param || {});
 	}
 
-	var inputStream = new CompileStream(proj);
+	const inputStream = new CompileStream(proj);
 
 	proj.reset(inputStream.js, inputStream.dts);
 	proj.filterSettings = filters;
@@ -95,21 +95,21 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	return inputStream;
 }
 
-var langMap: utils.Map<ts.ScriptTarget> = {
+const langMap: utils.Map<ts.ScriptTarget> = {
 	'es3': ts.ScriptTarget.ES3,
 	'es5': ts.ScriptTarget.ES5,
 	'es6': ts.ScriptTarget.ES6
 }
-var moduleMap: utils.Map<ts.ModuleKind> = {
+const moduleMap: utils.Map<ts.ModuleKind> = {
 	'commonjs': ts.ModuleKind.CommonJS,
 	'amd': ts.ModuleKind.AMD,
 	'none': ts.ModuleKind.None
 }
 
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
-	var tsSettings: ts.CompilerOptions = {};
+	const tsSettings: ts.CompilerOptions = {};
 
-	for (var key in settings) {
+	for (const key in settings) {
 		if (!Object.hasOwnProperty.call(settings, key)) continue;
 		if (key === 'outDir' ||
 			key === 'noExternalResolve' ||
@@ -202,7 +202,7 @@ module compile {
 	}
 
 	export function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream {
-		var filterObj: _filter.Filter = undefined;
+		let filterObj: _filter.Filter = undefined;
 		return through2.obj(function (file: gutil.File, encoding, callback: () => void) {
 			if (!filterObj) { // Make sure we create the filter object when the compilation is complete.
 				filterObj = new _filter.Filter(project, filters);

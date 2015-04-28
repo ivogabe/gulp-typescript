@@ -66,9 +66,9 @@ export class ProjectCompiler implements ICompiler {
 		// Creating a program to compile the sources
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
 
-		var errors = tsApi.getDiagnosticsAndEmit(this.program);
+		const errors = tsApi.getDiagnosticsAndEmit(this.program);
 
-		for (var i = 0; i < errors.length; i++) {
+		for (let i = 0; i < errors.length; i++) {
 			this.project.output.diagnostic(errors[i]);
 		}
 

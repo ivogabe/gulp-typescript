@@ -12,23 +12,23 @@ import path = require('path');
 export class Host implements ts.CompilerHost {
 	static libDefault: utils.Map<ts.SourceFile> = {};
 	static getLibDefault(typescript: typeof ts) {
-		var filename: string;
-		for (var i in require.cache) {
+		let fileName: string;
+		for (const i in require.cache) {
 			if (!Object.prototype.hasOwnProperty.call(require.cache, i)) continue;
 
 			if (require.cache[i].exports === typescript) {
-				filename = i;
+				fileName = i;
 			}
 		}
-		if (filename === undefined) {
+		if (fileName === undefined) {
 			return undefined; // Not found
 		}
-		if (this.libDefault[filename]) {
-			return this.libDefault[filename]; // Already loaded
+		if (this.libDefault[fileName]) {
+			return this.libDefault[fileName]; // Already loaded
 		}
 
-		var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
-		return this.libDefault[filename] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
+		const content = fs.readFileSync(path.resolve(path.dirname(fileName) + '/lib.d.ts')).toString('utf8');
+		return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
 	}
 
 	typescript: typeof ts;
