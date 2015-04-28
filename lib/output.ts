@@ -143,22 +143,38 @@ export class Output {
 		if (file.skipPush) return;
 
 		const contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
-		const base = (this.project.singleOutput ? file.original.gulp.base : '')
+
+		let root: string;
+		if (this.project.singleOutput) {
+			root = file.original.gulp.base;
+		} else if (this.project.options.outDir !== undefined) {
+			root = file.original.gulp.cwd + '/';
+		} else {
+			root = '';
+		}
+
+		let base: string;
+		if (this.project.options.outDir !== undefined) {
+			base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
+		} else {
+			base = file.original.gulp.base;
+		}
+
 		const fileJs = new gutil.File({
-			path: base + file.fileName + '.js',
+			path: root + file.fileName + '.js',
 			contents: new Buffer(contentJs),
 			cwd: file.original.gulp.cwd,
-			base: file.original.gulp.base
+			base
 		});
 		if (file.original.gulp.sourceMap) fileJs.sourceMap = JSON.parse(file.sourceMapString);
 		this.streamJs.push(fileJs);
 
 		if (this.project.options.declaration) {
 			const fileDts = new gutil.File({
-				path: base + file.fileName + '.d.ts',
+				path: root + file.fileName + '.d.ts',
 				contents: new Buffer(file.content[OutputFileKind.Definitions]),
 				cwd: file.original.gulp.cwd,
-				base: file.original.gulp.base
+				base
 			});
 			this.streamDts.push(fileDts);
 		}
