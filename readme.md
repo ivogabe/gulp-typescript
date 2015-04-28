@@ -76,6 +76,7 @@ Make sure you create the project outside of a task! Otherwise it won't work.
 Options
 -------
 - ```out``` (string) - Generate one javascript and one definition file. Only works when no module system is used.
+- ```outDir``` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
 - ```removeComments``` (boolean) - Do not emit comments to output.
 - ```noImplicitAny``` (boolean) - Warn on expressions and declarations with an implied 'any' type.
 - ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)

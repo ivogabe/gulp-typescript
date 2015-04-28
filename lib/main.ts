@@ -111,8 +111,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 
 	for (const key in settings) {
 		if (!Object.hasOwnProperty.call(settings, key)) continue;
-		if (key === 'outDir' ||
-			key === 'noExternalResolve' ||
+		if (key === 'noExternalResolve' ||
 			key === 'declarationFiles' ||
 			key === 'sortOutput' ||
 			key === 'typescript' ||
@@ -163,6 +162,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 module compile {
 	export interface Settings {
 		out?: string;
+		outDir?: string;
 
 		allowNonTsExtensions?: boolean;
 		charset?: string;
