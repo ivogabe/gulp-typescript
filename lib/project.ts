@@ -2,6 +2,8 @@
 
 import stream = require('stream');
 import ts = require('typescript');
+import vfs = require('vinyl-fs');
+import path = require('path');
 import tsApi = require('./tsapi');
 import main = require('./main');
 import host = require('./host');
@@ -9,12 +11,16 @@ import reporter = require('./reporter');
 import input = require('./input');
 import output = require('./output');
 import compiler = require('./compiler');
+import tsConfig = require('./tsconfig');
 
 export class Project {
 	input: input.FileCache;
 	output: output.Output;
 	previousOutput: output.Output;
 	compiler: compiler.ICompiler;
+	
+	configFileName: string;
+	config: tsConfig.TsConfig;
 
 	// region settings
 
@@ -55,8 +61,10 @@ export class Project {
 
 	currentDirectory: string;
 
-	constructor(options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+	constructor(configFileName: string, config: tsConfig.TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.typescript = typescript;
+		this.configFileName = configFileName;
+		this.config = config;
 		this.options = options;
 
 		this.noExternalResolve = noExternalResolve;
@@ -74,5 +82,15 @@ export class Project {
 		this.input.reset();
 		this.previousOutput = this.output;
 		this.output = new output.Output(this, outputJs, outputDts);
+	}
+	
+	src() {
+		if (!this.config.files) {
+			throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
+		}
+		
+		let base = path.dirname(this.configFileName);
+		
+		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base });
 	}
 }

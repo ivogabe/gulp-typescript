@@ -1,6 +1,7 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
 import ts = require('typescript');
+import fs = require('fs');
 import gutil = require('gulp-util');
 import path = require('path');
 import stream = require('stream');
@@ -9,6 +10,7 @@ import utils = require('./utils');
 import _filter = require('./filter');
 import _reporter = require('./reporter');
 import compiler = require('./compiler');
+import tsConfig = require('./tsconfig');
 import through2 = require('through2');
 
 const PLUGIN_NAME = 'gulp-typescript';
@@ -196,8 +198,32 @@ module compile {
 	}
 	export import Project = project.Project;
 	export import reporter = _reporter;
-	export function createProject(settings: Settings): Project {
-		const project = new Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+	
+	export function createProject(settings?: Settings);
+	export function createProject(tsConfigFileName: string, settings?: Settings);
+	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
+		let tsConfigFileName: string = undefined;
+		let tsConfigContent: tsConfig.TsConfig = undefined;
+		if (fileNameOrSettings !== undefined) {
+			if (typeof fileNameOrSettings === 'string') {
+				tsConfigFileName = fileNameOrSettings;
+				tsConfigContent = JSON.parse(fs.readFileSync(fileNameOrSettings).toString());
+				let newSettings: any = {};
+				if (tsConfigContent.compilerOptions) {
+					for (const key of Object.keys(tsConfigContent.compilerOptions)) {
+						newSettings[key] = tsConfigContent.compilerOptions[key];
+					}
+				}
+				for (const key of Object.keys(settings)) {
+					newSettings[key] = settings[key];
+				}
+				settings = newSettings;
+			} else {
+				settings = fileNameOrSettings;
+			}
+		}
+		
+		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 		project.compiler = new compiler.ProjectCompiler();
 		return project;
 	}
