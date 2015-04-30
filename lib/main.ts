@@ -1,4 +1,4 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 
 import ts = require('typescript');
 import gutil = require('gulp-util');
@@ -28,6 +28,7 @@ class CompileStream extends stream.Duplex {
 
 	private project: project.Project;
 
+	_write(file: any, encoding, cb: (err?) => void);
 	_write(file: gutil.File, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
 

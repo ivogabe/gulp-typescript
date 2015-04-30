@@ -1,4 +1,4 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 
 import ts = require('typescript');
 import tsApi = require('./tsapi');

@@ -20,7 +20,8 @@ var tsOptions = {
 var tsProject = ts.createProject(tsOptions);
 
 var paths = {
-	scripts: ['lib/**.ts', 'definitions/**.ts'],
+	scripts: ['lib/**.ts', 'typings/**/**.ts'],
+	definitionTypeScript: [path.join(path.dirname(require.resolve('typescript')), 'typescript.d.ts')],
 	releaseBeta: 'release-2',
 	release: 'release'
 };
@@ -42,7 +43,7 @@ gulp.task('clean-release', function(cb) {
 
 // Compile sources
 gulp.task('scripts', ['clean'], function() {
-	var tsResult = gulp.src(paths.scripts)
+	var tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
 					   .pipe(ts(tsProject));
 
 	return tsResult.js

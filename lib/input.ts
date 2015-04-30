@@ -1,9 +1,11 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
+
 import ts = require('typescript');
 import gutil = require('gulp-util');
 import path = require('path');
 import tsApi = require('./tsapi');
 import utils = require('./utils');
+import VinylFile = require('./vinyl-file');
 
 export enum FileChangeState {
 	New,
@@ -24,7 +26,7 @@ export interface FileChange {
 }
 
 export interface File {
-	gulp?: gutil.File;
+	gulp?: VinylFile;
 	fileNameNormalized: string;
 	fileNameOriginal: string;
 	content: string;
@@ -43,7 +45,7 @@ export module File {
 			kind
 		};
 	}
-	export function fromGulp(file: gutil.File): File {
+	export function fromGulp(file: VinylFile): File {
 		let str = file.contents.toString('utf8');
 		let data = fromContent(file.path, str);
 		data.gulp = file;
@@ -79,7 +81,7 @@ export class FileDictionary {
 		this.typescript = typescript;
 	}
 
-	addGulp(gFile: gutil.File) {
+	addGulp(gFile: VinylFile) {
 		return this.addFile(File.fromGulp(gFile));
 	}
 	addContent(fileName: string, content: string) {
@@ -126,7 +128,7 @@ export class FileCache {
 		this.createDictionary();
 	}
 
-	addGulp(gFile: gutil.File) {
+	addGulp(gFile: VinylFile) {
 		return this.current.addGulp(gFile);
 	}
 	addContent(fileName: string, content: string) {

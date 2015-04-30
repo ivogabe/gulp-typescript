@@ -1,4 +1,5 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
+
 import path = require('path');
 
 export interface Map<T> {
