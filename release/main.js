@@ -1,4 +1,4 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -6,6 +6,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var ts = require('typescript');
+var fs = require('fs');
 var gutil = require('gulp-util');
 var stream = require('stream');
 var project = require('./project');
@@ -91,8 +92,7 @@ function getCompilerOptions(settings) {
     for (var key in settings) {
         if (!Object.hasOwnProperty.call(settings, key))
             continue;
-        if (key === 'outDir' ||
-            key === 'noExternalResolve' ||
+        if (key === 'noExternalResolve' ||
             key === 'declarationFiles' ||
             key === 'sortOutput' ||
             key === 'typescript' ||
@@ -140,8 +140,31 @@ var compile;
 (function (compile) {
     compile.Project = project.Project;
     compile.reporter = _reporter;
-    function createProject(settings) {
-        var project = new compile.Project(getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+    function createProject(fileNameOrSettings, settings) {
+        var tsConfigFileName = undefined;
+        var tsConfigContent = undefined;
+        if (fileNameOrSettings !== undefined) {
+            if (typeof fileNameOrSettings === 'string') {
+                tsConfigFileName = fileNameOrSettings;
+                tsConfigContent = JSON.parse(fs.readFileSync(fileNameOrSettings).toString());
+                var newSettings = {};
+                if (tsConfigContent.compilerOptions) {
+                    for (var _i = 0, _a = Object.keys(tsConfigContent.compilerOptions); _i < _a.length; _i++) {
+                        var key = _a[_i];
+                        newSettings[key] = tsConfigContent.compilerOptions[key];
+                    }
+                }
+                for (var _b = 0, _c = Object.keys(settings); _b < _c.length; _b++) {
+                    var key = _c[_b];
+                    newSettings[key] = settings[key];
+                }
+                settings = newSettings;
+            }
+            else {
+                settings = fileNameOrSettings;
+            }
+        }
+        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
         project.compiler = new compiler.ProjectCompiler();
         return project;
     }

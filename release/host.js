@@ -1,4 +1,4 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 var tsApi = require('./tsapi');
 var utils = require('./utils');
 var fs = require('fs');
@@ -40,22 +40,22 @@ var Host = (function () {
         this.reset();
     }
     Host.getLibDefault = function (typescript) {
-        var filename;
+        var fileName;
         for (var i in require.cache) {
             if (!Object.prototype.hasOwnProperty.call(require.cache, i))
                 continue;
             if (require.cache[i].exports === typescript) {
-                filename = i;
+                fileName = i;
             }
         }
-        if (filename === undefined) {
+        if (fileName === undefined) {
             return undefined; // Not found
         }
-        if (this.libDefault[filename]) {
-            return this.libDefault[filename]; // Already loaded
+        if (this.libDefault[fileName]) {
+            return this.libDefault[fileName]; // Already loaded
         }
-        var content = fs.readFileSync(path.resolve(path.dirname(filename) + '/lib.d.ts')).toString('utf8');
-        return this.libDefault[filename] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, 0 /* ES3 */); // Will also work for ES5 & 6
+        var content = fs.readFileSync(path.resolve(path.dirname(fileName) + '/lib.d.ts')).toString('utf8');
+        return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, 0 /* ES3 */); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
         this.output = {};

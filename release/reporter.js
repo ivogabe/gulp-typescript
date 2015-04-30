@@ -1,4 +1,4 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 var gutil = require('gulp-util');
 function nullReporter() {
     return {};

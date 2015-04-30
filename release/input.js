@@ -1,3 +1,4 @@
+///<reference path='../typings/tsd.d.ts'/>
 var path = require('path');
 var tsApi = require('./tsapi');
 var utils = require('./utils');
@@ -80,7 +81,7 @@ var FileDictionary = (function () {
     FileDictionary.prototype.getFile = function (name) {
         return this.files[utils.normalizePath(name)];
     };
-    FileDictionary.prototype.getGulpFileNames = function (onlyGulp) {
+    FileDictionary.prototype.getFileNames = function (onlyGulp) {
         if (onlyGulp === void 0) { onlyGulp = false; }
         var fileNames = [];
         for (var fileName in this.files) {
@@ -147,7 +148,7 @@ var FileCache = (function () {
     };
     FileCache.prototype.getFileNames = function (onlyGulp) {
         if (onlyGulp === void 0) { onlyGulp = false; }
-        return this.current.getGulpFileNames(onlyGulp);
+        return this.current.getFileNames(onlyGulp);
     };
     Object.defineProperty(FileCache.prototype, "firstSourceFile", {
         get: function () {
@@ -156,6 +157,25 @@ var FileCache = (function () {
         enumerable: true,
         configurable: true
     });
+    FileCache.prototype.isChanged = function (onlyGulp) {
+        if (onlyGulp === void 0) { onlyGulp = false; }
+        if (!this.previous)
+            return true;
+        var files = this.getFileNames(onlyGulp);
+        var oldFiles = this.previous.getFileNames(onlyGulp);
+        if (files.length !== oldFiles.length)
+            return true;
+        for (var fileName in files) {
+            if (oldFiles.indexOf(fileName) === -1)
+                return true;
+        }
+        for (var fileName in files) {
+            var change = this.getFileChange(fileName);
+            if (change.state !== FileChangeState.Equal)
+                return true;
+        }
+        return false;
+    };
     return FileCache;
 })();
 exports.FileCache = FileCache;
