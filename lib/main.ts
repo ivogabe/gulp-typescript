@@ -120,7 +120,8 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 			key === 'typescript' ||
 			key === 'target' || // Target, module & sourceRoot are added below
 			key === 'module' ||
-			key === 'sourceRoot') continue;
+			key === 'sourceRoot' ||
+			key === 'rootDir') continue;
 
 		tsSettings[key] = settings[key];
 	}
@@ -150,6 +151,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
+	if (settings.rootDir !== undefined) {
+		console.warn('gulp-typescript: rootDir isn\'t supported. Use the base option of gulp.src instead.')
+	}
 
 	if (settings.declarationFiles !== undefined) {
 		tsSettings.declaration = settings.declarationFiles;
@@ -178,7 +182,6 @@ module compile {
 		noResolve?: boolean;
 		preserveConstEnums?: boolean;
 		removeComments?: boolean;
-		sourceRoot?: string;
 		suppressImplicitAnyIndexErrors?: boolean;
 
 		target: string | ts.ScriptTarget;
@@ -190,6 +193,10 @@ module compile {
 		sortOutput?: boolean;
 
 		typescript?: typeof ts;
+		
+		// Options unsupported by gulp-typescript
+		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
+		rootDir?: string; // Use base in gulp.src instead
 	}
 	export interface FilterSettings {
 		referencedFrom: string[];

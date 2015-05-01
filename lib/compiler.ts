@@ -1,4 +1,5 @@
 import ts = require('typescript');
+import path = require('path');
 import gutil = require('gulp-util');
 import tsApi = require('./tsApi');
 import input = require('./input');
@@ -6,7 +7,6 @@ import output = require('./output');
 import host = require('./host');
 import project = require('./project');
 import filter = require('./filter');
-
 
 export interface ICompiler {
 	prepare(_project: project.Project): void;
@@ -53,7 +53,14 @@ export class ProjectCompiler implements ICompiler {
 
 			return;
 		}
-
+		
+		let root = path.resolve(
+			this.project.input.firstSourceFile.gulp.cwd,
+			this.project.input.firstSourceFile.gulp.base
+		);
+		this.project.options.sourceRoot = root;
+		(<any> this.project.options).rootDir = root; // rootDir was added in 1.5 & not available in 1.4
+		
 		this.host = new host.Host(
 			this.project.typescript,
 			this.project.currentDirectory,
@@ -70,7 +77,6 @@ export class ProjectCompiler implements ICompiler {
 		}
 
 		// Creating a program to compile the sources
-		this.project.options.sourceRoot = this.project.input.firstSourceFile.gulp.base;
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
 
 		const errors = tsApi.getDiagnosticsAndEmit(this.program);

@@ -47,7 +47,7 @@ export class Host implements ts.CompilerHost {
 		this.input = input;
 
 		this.externalResolve = externalResolve;
-		this.libFileName = libFileName;		
+		this.libFileName = libFileName;
 
 		this.reset();
 	}
