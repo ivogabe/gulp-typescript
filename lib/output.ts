@@ -83,7 +83,7 @@ export class Output {
 					file.original = this.project.input.firstSourceFile;
 					file.sourceMapOrigins = this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName));
 				} else {
-					const originalFileName = path.resolve(path.dirname(fileName), file.sourceMap.sources[0])
+					const originalFileName = path.resolve(file.sourceMap.sourceRoot, file.sourceMap.sources[0]);
 					file.original = this.project.input.getFile(originalFileName);
 					file.skipPush = !file.original.gulp;
 
@@ -121,6 +121,7 @@ export class Output {
 		file.sourceMapsApplied = true;
 		const map = file.sourceMap;
 		map.file = map.file.replace(/\\/g, '/');
+		delete map.sourceRoot;
 		map.sources = map.sources.map((path) => path.replace(/\\/g, '/'));
 
 		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));

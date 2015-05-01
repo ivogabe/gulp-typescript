@@ -64,6 +64,7 @@ export class ProjectCompiler implements ICompiler {
 		}
 
 		// Creating a program to compile the sources
+		this.project.options.sourceRoot = this.project.input.firstSourceFile.gulp.base;
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
 
 		const errors = tsApi.getDiagnosticsAndEmit(this.program);

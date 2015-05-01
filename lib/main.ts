@@ -146,11 +146,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 		// Same bug in TS 1.4 as previous comment.
 		tsSettings.module = ts.ModuleKind.None;
 	}
-
-	if (settings.sourceRoot === undefined) {
-		tsSettings.sourceRoot = process.cwd();
-	} else {
-		tsSettings.sourceRoot = settings.sourceRoot;
+	
+	if (settings.sourceRoot !== undefined) {
+		console.log('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
 
 	if (settings.declarationFiles !== undefined) {
