@@ -7,7 +7,6 @@ module.exports = function(newTS, lib, output, reporter) {
 		declarationFiles: true,
 		noExternalResolve: true,
 		sortOutput: true,
-		sourceRoot: '',
 		typescript: lib
 	});
 

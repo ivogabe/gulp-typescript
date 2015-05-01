@@ -1,8 +1,7 @@
 {
 	"compilerOptions": {
 		"declaration": true,
-		"module": "amd",
-		"sourceRoot": ""
+		"module": "amd"
 	},
 	"files": [
 		"test-3.ts",

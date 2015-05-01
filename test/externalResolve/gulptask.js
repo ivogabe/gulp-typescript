@@ -7,7 +7,6 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(newTS({
 			declarationFiles: true,
 			module: 'commonjs',
-			sourceRoot: '',
 			typescript: lib
 		}, undefined, reporter));
 

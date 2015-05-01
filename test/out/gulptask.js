@@ -6,7 +6,6 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(sourcemaps.init())
 		.pipe(newTS({
 			declarationFiles: true,
-			sourceRoot: '',
 			out: 'concat.js',
 			typescript: lib
 		}, undefined, reporter));
