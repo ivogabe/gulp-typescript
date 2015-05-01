@@ -42,6 +42,7 @@ var ProjectCompiler = (function () {
             rootFilenames = rootFilenames.filter(function (fileName) { return _filter.match(fileName); });
         }
         // Creating a program to compile the sources
+        this.project.options.sourceRoot = this.project.input.firstSourceFile.gulp.base;
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
         var errors = tsApi.getDiagnosticsAndEmit(this.program);
         for (var i = 0; i < errors.length; i++) {

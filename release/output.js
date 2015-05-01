@@ -54,7 +54,7 @@ var Output = (function () {
                     file.sourceMapOrigins = this.project.input.getFileNames(true).map(function (fName) { return _this.project.input.getFile(fName); });
                 }
                 else {
-                    var originalFileName = path.resolve(path.dirname(fileName), file.sourceMap.sources[0]);
+                    var originalFileName = path.resolve(file.sourceMap.sourceRoot, file.sourceMap.sources[0]);
                     file.original = this.project.input.getFile(originalFileName);
                     file.skipPush = !file.original.gulp;
                     file.sourceMapOrigins = [file.original];
@@ -72,7 +72,8 @@ var Output = (function () {
             sourceMapOrigins: undefined,
             content: (_a = {},
                 _a[kind] = content,
-                _a),
+                _a
+            ),
             pushed: false,
             skipPush: undefined,
             sourceMapsApplied: false,
@@ -87,6 +88,7 @@ var Output = (function () {
         file.sourceMapsApplied = true;
         var map = file.sourceMap;
         map.file = map.file.replace(/\\/g, '/');
+        delete map.sourceRoot;
         map.sources = map.sources.map(function (path) { return path.replace(/\\/g, '/'); });
         var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
         for (var fileName in file.sourceMapOrigins) {
