@@ -49,13 +49,13 @@ export class Filter {
 		return files;
 	}
 
-	private getFile(filename: string): input.File {
+	private getFile(searchFileName: string): input.File {
 		const fileNames = this.project.input.getFileNames(true);
 		for (const fileName of fileNames) {
-			const _file = this.project.input.getFile(fileName);
-			if (!_file) console.log(fileName);
-			if (_file.gulp && _file.gulp.path.substring(_file.gulp.base.length) === filename) {
-				return _file;
+			const file = this.project.input.getFile(fileName);
+			if (!file || !file.gulp) continue;
+			if (file.gulp.path.substring(file.gulp.base.length) === searchFileName) {
+				return file;
 			}
 		}
 		return undefined;
