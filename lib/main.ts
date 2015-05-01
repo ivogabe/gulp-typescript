@@ -148,7 +148,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	}
 	
 	if (settings.sourceRoot !== undefined) {
-		console.log('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
+		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
 
 	if (settings.declarationFiles !== undefined) {
