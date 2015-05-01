@@ -7,7 +7,8 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(newTS({
 			declarationFiles: true,
 			out: 'concat.js',
-			typescript: lib
+			typescript: lib,
+			target: 'es6'
 		}, undefined, reporter));
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
