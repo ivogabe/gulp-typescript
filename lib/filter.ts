@@ -54,7 +54,11 @@ export class Filter {
 		for (const fileName of fileNames) {
 			const file = this.project.input.getFile(fileName);
 			if (!file || !file.gulp) continue;
-			if (file.gulp.path.substring(file.gulp.base.length) === searchFileName) {
+			const base = path.resolve(
+				file.gulp.cwd,
+				file.gulp.base
+			) + '/';
+			if (file.gulp.path.substring(base.length) === searchFileName) {
 				return file;
 			}
 		}
