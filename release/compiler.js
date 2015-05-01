@@ -1,3 +1,5 @@
+var ts = require('typescript');
+var path = require('path');
 var tsApi = require('./tsApi');
 var output = require('./output');
 var host = require('./host');
@@ -35,14 +37,16 @@ var ProjectCompiler = (function () {
             }
             return;
         }
-        this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve);
+        var root = path.resolve(this.project.input.firstSourceFile.gulp.cwd, this.project.input.firstSourceFile.gulp.base);
+        this.project.options.sourceRoot = root;
+        this.project.options.rootDir = root; // rootDir was added in 1.5 & not available in 1.4
+        this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');
         var rootFilenames = this.project.input.getFileNames(true);
         if (this.project.filterSettings !== undefined) {
             var _filter = new filter.Filter(this.project, this.project.filterSettings);
             rootFilenames = rootFilenames.filter(function (fileName) { return _filter.match(fileName); });
         }
         // Creating a program to compile the sources
-        this.project.options.sourceRoot = this.project.input.firstSourceFile.gulp.base;
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
         var errors = tsApi.getDiagnosticsAndEmit(this.program);
         for (var i = 0; i < errors.length; i++) {

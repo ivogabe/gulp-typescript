@@ -40,15 +40,15 @@ var Filter = (function () {
         }
         return files;
     };
-    Filter.prototype.getFile = function (filename) {
+    Filter.prototype.getFile = function (searchFileName) {
         var fileNames = this.project.input.getFileNames(true);
         for (var _i = 0; _i < fileNames.length; _i++) {
             var fileName = fileNames[_i];
-            var _file = this.project.input.getFile(fileName);
-            if (!_file)
-                console.log(fileName);
-            if (_file.gulp && _file.gulp.path.substring(_file.gulp.base.length) === filename) {
-                return _file;
+            var file = this.project.input.getFile(fileName);
+            if (!file || !file.gulp)
+                continue;
+            if (file.gulp.path.substring(file.gulp.base.length) === searchFileName) {
+                return file;
             }
         }
         return undefined;

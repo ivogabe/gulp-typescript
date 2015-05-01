@@ -4,7 +4,7 @@ var utils = require('./utils');
 var fs = require('fs');
 var path = require('path');
 var Host = (function () {
-    function Host(typescript, currentDirectory, input, externalResolve) {
+    function Host(typescript, currentDirectory, input, externalResolve, libFileName) {
         var _this = this;
         this.getCurrentDirectory = function () {
             return _this.currentDirectory;
@@ -14,7 +14,7 @@ var Host = (function () {
         };
         this.getSourceFile = function (fileName, languageVersion, onError) {
             if (fileName === '__lib.d.ts') {
-                return Host.getLibDefault(_this.typescript);
+                return Host.getLibDefault(_this.typescript, _this.libFileName);
             }
             var sourceFile = _this.input.getFile(fileName);
             if (sourceFile)
@@ -37,9 +37,10 @@ var Host = (function () {
         this.currentDirectory = currentDirectory;
         this.input = input;
         this.externalResolve = externalResolve;
+        this.libFileName = libFileName;
         this.reset();
     }
-    Host.getLibDefault = function (typescript) {
+    Host.getLibDefault = function (typescript, libFileName) {
         var fileName;
         for (var i in require.cache) {
             if (!Object.prototype.hasOwnProperty.call(require.cache, i))
@@ -51,10 +52,11 @@ var Host = (function () {
         if (fileName === undefined) {
             return undefined; // Not found
         }
+        fileName = path.join(path.dirname(fileName), libFileName);
         if (this.libDefault[fileName]) {
             return this.libDefault[fileName]; // Already loaded
         }
-        var content = fs.readFileSync(path.resolve(path.dirname(fileName) + '/lib.d.ts')).toString('utf8');
+        var content = fs.readFileSync(fileName).toString('utf8');
         return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, 0 /* ES3 */); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {

@@ -98,7 +98,8 @@ function getCompilerOptions(settings) {
             key === 'typescript' ||
             key === 'target' ||
             key === 'module' ||
-            key === 'sourceRoot')
+            key === 'sourceRoot' ||
+            key === 'rootDir')
             continue;
         tsSettings[key] = settings[key];
     }
@@ -125,7 +126,10 @@ function getCompilerOptions(settings) {
         tsSettings.module = 0 /* None */;
     }
     if (settings.sourceRoot !== undefined) {
-        console.log('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
+        console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
+    }
+    if (settings.rootDir !== undefined) {
+        console.warn('gulp-typescript: rootDir isn\'t supported. Use the base option of gulp.src instead.');
     }
     if (settings.declarationFiles !== undefined) {
         tsSettings.declaration = settings.declarationFiles;
