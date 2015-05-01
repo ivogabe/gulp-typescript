@@ -11,7 +11,7 @@ import path = require('path');
 
 export class Host implements ts.CompilerHost {
 	static libDefault: utils.Map<ts.SourceFile> = {};
-	static getLibDefault(typescript: typeof ts) {
+	static getLibDefault(typescript: typeof ts, libFileName: string) {
 		let fileName: string;
 		for (const i in require.cache) {
 			if (!Object.prototype.hasOwnProperty.call(require.cache, i)) continue;
@@ -23,11 +23,12 @@ export class Host implements ts.CompilerHost {
 		if (fileName === undefined) {
 			return undefined; // Not found
 		}
+		fileName = path.join(path.dirname(fileName), libFileName);
 		if (this.libDefault[fileName]) {
 			return this.libDefault[fileName]; // Already loaded
 		}
 
-		const content = fs.readFileSync(path.resolve(path.dirname(fileName) + '/lib.d.ts')).toString('utf8');
+		const content = fs.readFileSync(fileName).toString('utf8');
 		return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
 	}
 
@@ -35,16 +36,18 @@ export class Host implements ts.CompilerHost {
 
 	currentDirectory: string;
 	private externalResolve: boolean;
+	private libFileName: string;
 	input: input.FileCache;
 	output: utils.Map<string>;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: input.FileCache, externalResolve: boolean) {
+	constructor(typescript: typeof ts, currentDirectory: string, input: input.FileCache, externalResolve: boolean, libFileName: string) {
 		this.typescript = typescript;
 
 		this.currentDirectory = currentDirectory;
 		this.input = input;
 
 		this.externalResolve = externalResolve;
+		this.libFileName = libFileName;		
 
 		this.reset();
 	}
@@ -79,7 +82,7 @@ export class Host implements ts.CompilerHost {
 
 	getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
 		if (fileName === '__lib.d.ts') {
-			return Host.getLibDefault(this.typescript);
+			return Host.getLibDefault(this.typescript, this.libFileName);
 		}
 
 		let sourceFile = this.input.getFile(fileName);

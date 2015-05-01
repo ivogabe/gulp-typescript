@@ -54,7 +54,13 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 
-		this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve);
+		this.host = new host.Host(
+			this.project.typescript,
+			this.project.currentDirectory,
+			this.project.input,
+			!this.project.noExternalResolve,
+			this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts'
+		);
 
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
 
