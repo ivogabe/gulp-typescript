@@ -1,4 +1,5 @@
 var tsApi = require('./tsApi');
+var output = require('./output');
 var host = require('./host');
 var filter = require('./filter');
 /**
@@ -16,6 +17,24 @@ var ProjectCompiler = (function () {
             this.project.output.finish();
             return;
         }
+        if (!this.project.input.isChanged(true)) {
+            // Re-use old output
+            var old = this.project.previousOutput;
+            for (var _i = 0, _a = old.errors; _i < _a.length; _i++) {
+                var error = _a[_i];
+                this.project.output.error(error);
+            }
+            for (var _b = 0, _c = Object.keys(old.files); _b < _c.length; _b++) {
+                var fileName = _c[_b];
+                var file = old.files[fileName];
+                this.project.output.write(file.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
+                this.project.output.write(file.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
+                if (file.content[output.OutputFileKind.Definitions] !== undefined) {
+                    this.project.output.write(file.fileName + '.d.ts', file.content[output.OutputFileKind.Definitions]);
+                }
+            }
+            return;
+        }
         this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve);
         var rootFilenames = this.project.input.getFileNames(true);
         if (this.project.filterSettings !== undefined) {
@@ -26,10 +45,8 @@ var ProjectCompiler = (function () {
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
         var errors = tsApi.getDiagnosticsAndEmit(this.program);
         for (var i = 0; i < errors.length; i++) {
-            this.project.output.error(errors[i]);
+            this.project.output.diagnostic(errors[i]);
         }
-        var outputJS = [];
-        var sourcemaps = {};
         for (var fileName in this.host.output) {
             if (!this.host.output.hasOwnProperty(fileName))
                 continue;

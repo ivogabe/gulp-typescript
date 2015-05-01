@@ -1,11 +1,15 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
 var ts = require('typescript');
+var vfs = require('vinyl-fs');
+var path = require('path');
 var input = require('./input');
 var output = require('./output');
 var Project = (function () {
-    function Project(options, noExternalResolve, sortOutput, typescript) {
+    function Project(configFileName, config, options, noExternalResolve, sortOutput, typescript) {
         if (typescript === void 0) { typescript = ts; }
         this.typescript = typescript;
+        this.configFileName = configFileName;
+        this.config = config;
         this.options = options;
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
@@ -18,7 +22,15 @@ var Project = (function () {
      */
     Project.prototype.reset = function (outputJs, outputDts) {
         this.input.reset();
+        this.previousOutput = this.output;
         this.output = new output.Output(this, outputJs, outputDts);
+    };
+    Project.prototype.src = function () {
+        if (!this.config.files) {
+            throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
+        }
+        var base = path.dirname(this.configFileName);
+        return vfs.src(this.config.files.map(function (file) { return path.resolve(base, file); }), { base: base });
     };
     return Project;
 })();

@@ -1,3 +1,4 @@
+///<reference path='../typings/tsd.d.ts'/>
 var path = require('path');
 var sourceMap = require('source-map');
 var gutil = require('gulp-util');
@@ -108,22 +109,38 @@ var Output = (function () {
         if (file.skipPush)
             return;
         var contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
-        var base = (this.project.singleOutput ? file.original.gulp.base : '');
+        var root;
+        if (this.project.singleOutput) {
+            root = file.original.gulp.base;
+        }
+        else if (this.project.options.outDir !== undefined) {
+            root = file.original.gulp.cwd + '/';
+        }
+        else {
+            root = '';
+        }
+        var base;
+        if (this.project.options.outDir !== undefined) {
+            base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
+        }
+        else {
+            base = file.original.gulp.base;
+        }
         var fileJs = new gutil.File({
-            path: base + file.fileName + '.js',
+            path: root + file.fileName + '.js',
             contents: new Buffer(contentJs),
             cwd: file.original.gulp.cwd,
-            base: file.original.gulp.base
+            base: base
         });
         if (file.original.gulp.sourceMap)
             fileJs.sourceMap = JSON.parse(file.sourceMapString);
         this.streamJs.push(fileJs);
         if (this.project.options.declaration) {
             var fileDts = new gutil.File({
-                path: base + file.fileName + '.d.ts',
+                path: root + file.fileName + '.d.ts',
                 contents: new Buffer(file.content[OutputFileKind.Definitions]),
                 cwd: file.original.gulp.cwd,
-                base: file.original.gulp.base
+                base: base
             });
             this.streamDts.push(fileDts);
         }
@@ -187,20 +204,22 @@ var Output = (function () {
             line: endPos.line,
             character: endPos.character
         };
-        err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ')
+        err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
             + info.code + ' '
             + tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
         return err;
     };
-    Output.prototype.error = function (info) {
-        var error = this.getError(info);
+    Output.prototype.diagnostic = function (info) {
+        this.error(this.getError(info));
+    };
+    Output.prototype.error = function (error) {
         // Save errors for lazy compilation (if the next input is the same as the current),
         this.errors.push(error);
         // call reporter callback
         if (this.project.reporter.error)
             this.project.reporter.error(error, this.project.typescript);
         // & emit the error on the stream.
-        this.streamJs.emit('error', info);
+        this.streamJs.emit('error', error);
     };
     Output.knownExtensions = ['js', 'js.map', 'd.ts'];
     return Output;

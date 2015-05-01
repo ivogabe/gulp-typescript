@@ -1,4 +1,5 @@
-///<reference path='../definitions/ref.d.ts'/>
+///<reference path='../typings/tsd.d.ts'/>
+
 import stream = require('stream');
 import path = require('path');
 import ts = require('typescript');
@@ -9,6 +10,7 @@ import input = require('./input');
 import tsApi = require('./tsApi');
 import reporter = require('./reporter');
 import project = require('./project');
+import VinylFile = require('./vinyl-file');
 
 export interface OutputFile {
 	fileName: string;
@@ -160,7 +162,7 @@ export class Output {
 			base = file.original.gulp.base;
 		}
 
-		const fileJs = new gutil.File({
+		const fileJs = <VinylFile> new gutil.File({
 			path: root + file.fileName + '.js',
 			contents: new Buffer(contentJs),
 			cwd: file.original.gulp.cwd,
@@ -246,7 +248,7 @@ export class Output {
 			character: endPos.character
 		};
 
-		err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ')
+		err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
 			+ info.code + ' '
 			+ tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
 

@@ -91,6 +91,27 @@ Options
 
 See `lib/main.ts` for a complete list with all options (interface `compile.Settings`).
 
+tsconfig.json
+-------------
+To use `tsconfig.json`, you have to use `ts.createProject`:
+```javascript
+var tsProject = ts.createProject('tsconfig.json');
+```
+If you want to add or overwrite certain settings in the `tsconfig.json` file, you can use:
+```javascript
+var tsProject = ts.createProject('tsconfig.json', { sortOutput: true });
+```
+The task will look like:
+```javascript
+gulp.task('scripts', function() {
+	var tsResult = tsProject.src() // instead of gulp.src(...)
+		.pipe(ts(tsProject));
+	
+	return tsResult.js.pipe('release');
+});
+```
+Note: you can only use `tsProject.src()` if your `tsconfig.json` file has a `files` property. If it doesn't, you should use `gulp.src('**/**.ts')`.
+
 TypeScript version
 ------------------
 You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:

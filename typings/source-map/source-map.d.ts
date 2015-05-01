@@ -1,4 +1,4 @@
-// Type definitions for source-map v0.1.38
+﻿// Type definitions for source-map v0.1.38
 // Project: https://github.com/mozilla/source-map
 // Definitions by: Morten Houston Ludvigsen <https://github.com/MortenHoustonLudvigsen>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
