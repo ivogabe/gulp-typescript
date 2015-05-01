@@ -89,7 +89,9 @@ Options
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 - ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
 
-See `lib/main.ts` for a complete list with all options (interface `compile.Settings`).
+You can use almost all other options that TypeScript supports too. Only these two are not supported:
+- `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
+- `rootDir` - Use `base` option of `gulp.src()` instead.
 
 tsconfig.json
 -------------
