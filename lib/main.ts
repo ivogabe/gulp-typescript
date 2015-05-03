@@ -219,8 +219,10 @@ module compile {
 						newSettings[key] = tsConfigContent.compilerOptions[key];
 					}
 				}
-				for (const key of Object.keys(settings)) {
-					newSettings[key] = settings[key];
+				if (settings) {
+					for (const key of Object.keys(settings)) {
+						newSettings[key] = settings[key];
+					}
 				}
 				settings = newSettings;
 			} else {
