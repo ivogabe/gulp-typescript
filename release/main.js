@@ -155,9 +155,11 @@ var compile;
                         newSettings[key] = tsConfigContent.compilerOptions[key];
                     }
                 }
-                for (var _b = 0, _c = Object.keys(settings); _b < _c.length; _b++) {
-                    var key = _c[_b];
-                    newSettings[key] = settings[key];
+                if (settings) {
+                    for (var _b = 0, _c = Object.keys(settings); _b < _c.length; _b++) {
+                        var key = _c[_b];
+                        newSettings[key] = settings[key];
+                    }
                 }
                 settings = newSettings;
             }
