@@ -49,7 +49,7 @@ var Output = (function () {
                 && file.content[OutputFileKind.SourceMap] !== undefined
                 && (file.content[OutputFileKind.Definitions] !== undefined || !this.project.options.declaration)) {
                 file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
-                if (this.project.singleOutput) {
+                if (this.project.singleOutput || this.project.noExternalResolve) {
                     file.original = this.project.input.firstSourceFile;
                     file.sourceMapOrigins = this.project.input.getFileNames(true).map(function (fName) { return _this.project.input.getFile(fName); });
                 }
