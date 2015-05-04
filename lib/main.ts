@@ -98,19 +98,35 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	return inputStream;
 }
 
-const langMap: utils.Map<ts.ScriptTarget> = {
-	'es3': ts.ScriptTarget.ES3,
-	'es5': ts.ScriptTarget.ES5,
-	'es6': ts.ScriptTarget.ES6
+type Enum = utils.Map<number | string>;
+function createEnumMap(input: Enum): utils.Map<number> {
+	const map: utils.Map<number> = {};
+	const keys = Object.keys(input);
+	
+	for (const key in keys) {
+		let value = map[key];
+		if (typeof value === 'number') {
+			map[key.toLowerCase()] = value;
+		}
+	}
+	
+	return map;
 }
-const moduleMap: utils.Map<ts.ModuleKind> = {
-	'commonjs': ts.ModuleKind.CommonJS,
-	'amd': ts.ModuleKind.AMD,
-	'none': ts.ModuleKind.None
+
+function getScriptTarget(typescript: typeof ts, language: string) {
+	const map: utils.Map<ts.ScriptTarget> = createEnumMap((<any> ts).ScriptTarget);
+	return map[language.toLowerCase()];
+}
+
+function getModuleKind(typescript: typeof ts, moduleName: string) {
+	const map: utils.Map<ts.ModuleKind> = createEnumMap((<any> ts).ModuleKind);
+	return map[moduleName.toLowerCase()];
 }
 
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	const tsSettings: ts.CompilerOptions = {};
+	
+	var typescript = settings.typescript || ts;
 
 	for (const key in settings) {
 		if (!Object.hasOwnProperty.call(settings, key)) continue;
@@ -127,12 +143,12 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	}
 
 	if (typeof settings.target === 'string') {
-		tsSettings.target = langMap[(<string> settings.target).toLowerCase()];
+		tsSettings.target = getScriptTarget(typescript, <string> settings.target);
 	} else if (typeof settings.target === 'number') {
 		tsSettings.target = <number> settings.target;
 	}
 	if (typeof settings.module === 'string') {
-		tsSettings.module = moduleMap[(<string> settings.module).toLowerCase()];
+		tsSettings.module = getModuleKind(typescript, <string> settings.module);
 	} else if (typeof settings.module === 'number') {
 		tsSettings.module = <number> settings.module;
 	}
