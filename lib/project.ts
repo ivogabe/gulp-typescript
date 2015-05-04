@@ -90,6 +90,9 @@ export class Project {
 		}
 		
 		let base = path.dirname(this.configFileName);
+		if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
+			base = path.resolve(base, this.config.compilerOptions.rootDir);
+		}
 		
 		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base });
 	}

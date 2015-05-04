@@ -167,9 +167,6 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
-	if (settings.rootDir !== undefined) {
-		console.warn('gulp-typescript: rootDir isn\'t supported. Use the base option of gulp.src instead.')
-	}
 
 	if (settings.declarationFiles !== undefined) {
 		tsSettings.declaration = settings.declarationFiles;
@@ -210,9 +207,10 @@ module compile {
 
 		typescript?: typeof ts;
 		
-		// Options unsupported by gulp-typescript
+		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
+		
+		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
-		rootDir?: string; // Use base in gulp.src instead
 	}
 	export interface FilterSettings {
 		referencedFrom: string[];
