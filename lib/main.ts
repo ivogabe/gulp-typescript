@@ -103,8 +103,8 @@ function createEnumMap(input: Enum): utils.Map<number> {
 	const map: utils.Map<number> = {};
 	const keys = Object.keys(input);
 	
-	for (const key in keys) {
-		let value = map[key];
+	for (const key of keys) {
+		let value = input[key];
 		if (typeof value === 'number') {
 			map[key.toLowerCase()] = value;
 		}

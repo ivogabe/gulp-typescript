@@ -80,8 +80,9 @@ function compile(param, filters, theReporter) {
 function createEnumMap(input) {
     var map = {};
     var keys = Object.keys(input);
-    for (var key in keys) {
-        var value = map[key];
+    for (var _i = 0; _i < keys.length; _i++) {
+        var key = keys[_i];
+        var value = input[key];
         if (typeof value === 'number') {
             map[key.toLowerCase()] = value;
         }
