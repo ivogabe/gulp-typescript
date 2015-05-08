@@ -1,5 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
-var __extends = this.__extends || function (d, b) {
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
@@ -77,18 +77,28 @@ function compile(param, filters, theReporter) {
     proj.compiler.prepare(proj);
     return inputStream;
 }
-var langMap = {
-    'es3': 0 /* ES3 */,
-    'es5': 1 /* ES5 */,
-    'es6': 2 /* ES6 */
-};
-var moduleMap = {
-    'commonjs': 1 /* CommonJS */,
-    'amd': 2 /* AMD */,
-    'none': 0 /* None */
-};
+function createEnumMap(input) {
+    var map = {};
+    var keys = Object.keys(input);
+    for (var key in keys) {
+        var value = map[key];
+        if (typeof value === 'number') {
+            map[key.toLowerCase()] = value;
+        }
+    }
+    return map;
+}
+function getScriptTarget(typescript, language) {
+    var map = createEnumMap(ts.ScriptTarget);
+    return map[language.toLowerCase()];
+}
+function getModuleKind(typescript, moduleName) {
+    var map = createEnumMap(ts.ModuleKind);
+    return map[moduleName.toLowerCase()];
+}
 function getCompilerOptions(settings) {
     var tsSettings = {};
+    var typescript = settings.typescript || ts;
     for (var key in settings) {
         if (!Object.hasOwnProperty.call(settings, key))
             continue;
@@ -104,13 +114,13 @@ function getCompilerOptions(settings) {
         tsSettings[key] = settings[key];
     }
     if (typeof settings.target === 'string') {
-        tsSettings.target = langMap[settings.target.toLowerCase()];
+        tsSettings.target = getScriptTarget(typescript, settings.target);
     }
     else if (typeof settings.target === 'number') {
         tsSettings.target = settings.target;
     }
     if (typeof settings.module === 'string') {
-        tsSettings.module = moduleMap[settings.module.toLowerCase()];
+        tsSettings.module = getModuleKind(typescript, settings.module);
     }
     else if (typeof settings.module === 'number') {
         tsSettings.module = settings.module;
@@ -127,9 +137,6 @@ function getCompilerOptions(settings) {
     }
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
-    }
-    if (settings.rootDir !== undefined) {
-        console.warn('gulp-typescript: rootDir isn\'t supported. Use the base option of gulp.src instead.');
     }
     if (settings.declarationFiles !== undefined) {
         tsSettings.declaration = settings.declarationFiles;

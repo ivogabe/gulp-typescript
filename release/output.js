@@ -3,7 +3,7 @@ var path = require('path');
 var sourceMap = require('source-map');
 var gutil = require('gulp-util');
 var utils = require('./utils');
-var tsApi = require('./tsApi');
+var tsApi = require('./tsapi');
 (function (OutputFileKind) {
     OutputFileKind[OutputFileKind["JavaScript"] = 0] = "JavaScript";
     OutputFileKind[OutputFileKind["SourceMap"] = 1] = "SourceMap";

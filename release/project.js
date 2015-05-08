@@ -30,6 +30,9 @@ var Project = (function () {
             throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
         }
         var base = path.dirname(this.configFileName);
+        if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
+            base = path.resolve(base, this.config.compilerOptions.rootDir);
+        }
         return vfs.src(this.config.files.map(function (file) { return path.resolve(base, file); }), { base: base });
     };
     return Project;

@@ -1,6 +1,6 @@
 var ts = require('typescript');
 var path = require('path');
-var tsApi = require('./tsApi');
+var tsApi = require('./tsapi');
 var output = require('./output');
 var host = require('./host');
 var filter = require('./filter');
