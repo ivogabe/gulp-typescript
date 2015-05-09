@@ -76,8 +76,8 @@ export module File {
  * Finds the common base path of two directories
  */
 function getCommonBasePath(a: string, b: string) {
-	const aSplit = a.split(/\\\//); // Split on '/' or '\'.
-	const bSplit = b.split(/\\\//);
+	const aSplit = a.split(/\\|\//); // Split on '/' or '\'.
+	const bSplit = b.split(/\\|\//);
 	let commonLength = 0;
 	for (let i = 0; i < aSplit.length && i < bSplit.length; i++) {
 		if (aSplit[i] !== bSplit[i]) break;

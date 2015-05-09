@@ -61,8 +61,8 @@ var File;
  * Finds the common base path of two directories
  */
 function getCommonBasePath(a, b) {
-    var aSplit = a.split(/\\\//); // Split on '/' or '\'.
-    var bSplit = b.split(/\\\//);
+    var aSplit = a.split(/\\|\//); // Split on '/' or '\'.
+    var bSplit = b.split(/\\|\//);
     var commonLength = 0;
     for (var i = 0; i < aSplit.length && i < bSplit.length; i++) {
         if (aSplit[i] !== bSplit[i])
