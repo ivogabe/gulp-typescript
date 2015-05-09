@@ -114,12 +114,12 @@ function createEnumMap(input: Enum): utils.Map<number> {
 }
 
 function getScriptTarget(typescript: typeof ts, language: string) {
-	const map: utils.Map<ts.ScriptTarget> = createEnumMap((<any> ts).ScriptTarget);
+	const map: utils.Map<ts.ScriptTarget> = createEnumMap((<any> typescript).ScriptTarget);
 	return map[language.toLowerCase()];
 }
 
 function getModuleKind(typescript: typeof ts, moduleName: string) {
-	const map: utils.Map<ts.ModuleKind> = createEnumMap((<any> ts).ModuleKind);
+	const map: utils.Map<ts.ModuleKind> = createEnumMap((<any> typescript).ModuleKind);
 	return map[moduleName.toLowerCase()];
 }
 
