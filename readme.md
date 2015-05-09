@@ -109,7 +109,7 @@ gulp.task('scripts', function() {
 	var tsResult = tsProject.src() // instead of gulp.src(...)
 		.pipe(ts(tsProject));
 	
-	return tsResult.js.pipe('release');
+	return tsResult.js.pipe(gulp.dest('release'));
 });
 ```
 Note: you can only use `tsProject.src()` if your `tsconfig.json` file has a `files` property. If it doesn't, you should use `gulp.src('**/**.ts')`.
