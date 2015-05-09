@@ -57,6 +57,20 @@ var File;
     }
     File.getChangeState = getChangeState;
 })(File = exports.File || (exports.File = {}));
+/**
+ * Finds the common base path of two directories
+ */
+function getCommonBasePath(a, b) {
+    var aSplit = a.split(/\\\//); // Split on '/' or '\'.
+    var bSplit = b.split(/\\\//);
+    var commonLength = 0;
+    for (var i = 0; i < aSplit.length && i < bSplit.length; i++) {
+        if (aSplit[i] !== bSplit[i])
+            break;
+        commonLength += aSplit[i].length + 1;
+    }
+    return a.substr(0, commonLength);
+}
 var FileDictionary = (function () {
     function FileDictionary(typescript) {
         this.files = {};
@@ -94,6 +108,21 @@ var FileDictionary = (function () {
         }
         return fileNames;
     };
+    Object.defineProperty(FileDictionary.prototype, "commonBasePath", {
+        get: function () {
+            var _this = this;
+            var fileNames = this.getFileNames(true);
+            return fileNames
+                .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; })
+                .map(function (fileName) {
+                var file = _this.files[utils.normalizePath(fileName)];
+                return path.resolve(file.gulp.cwd, file.gulp.base);
+            })
+                .reduce(getCommonBasePath);
+        },
+        enumerable: true,
+        configurable: true
+    });
     return FileDictionary;
 })();
 exports.FileDictionary = FileDictionary;
@@ -153,6 +182,13 @@ var FileCache = (function () {
     Object.defineProperty(FileCache.prototype, "firstSourceFile", {
         get: function () {
             return this.current.firstSourceFile;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FileCache.prototype, "commonBasePath", {
+        get: function () {
+            return this.current.commonBasePath;
         },
         enumerable: true,
         configurable: true

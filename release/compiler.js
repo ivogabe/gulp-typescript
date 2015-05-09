@@ -1,5 +1,4 @@
 var ts = require('typescript');
-var path = require('path');
 var tsApi = require('./tsapi');
 var output = require('./output');
 var host = require('./host');
@@ -37,7 +36,7 @@ var ProjectCompiler = (function () {
             }
             return;
         }
-        var root = path.resolve(this.project.input.firstSourceFile.gulp.cwd, this.project.input.firstSourceFile.gulp.base);
+        var root = this.project.input.commonBasePath;
         this.project.options.sourceRoot = root;
         this.project.options.rootDir = root; // rootDir was added in 1.5 & not available in 1.4
         this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');

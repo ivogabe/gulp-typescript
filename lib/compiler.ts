@@ -54,10 +54,7 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 		
-		let root = path.resolve(
-			this.project.input.firstSourceFile.gulp.cwd,
-			this.project.input.firstSourceFile.gulp.base
-		);
+		let root = this.project.input.commonBasePath;
 		this.project.options.sourceRoot = root;
 		(<any> this.project.options).rootDir = root; // rootDir was added in 1.5 & not available in 1.4
 		

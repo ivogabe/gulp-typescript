@@ -72,6 +72,22 @@ export module File {
 	}
 }
 
+/**
+ * Finds the common base path of two directories
+ */
+function getCommonBasePath(a: string, b: string) {
+	const aSplit = a.split(/\\\//); // Split on '/' or '\'.
+	const bSplit = b.split(/\\\//);
+	let commonLength = 0;
+	for (let i = 0; i < aSplit.length && i < bSplit.length; i++) {
+		if (aSplit[i] !== bSplit[i]) break;
+		
+		commonLength += aSplit[i].length + 1;
+	}
+	
+	return a.substr(0, commonLength);
+}
+
 export class FileDictionary {
 	files: utils.Map<File> = {};
 	firstSourceFile: File = undefined;
@@ -111,6 +127,17 @@ export class FileDictionary {
 			fileNames.push(file.fileNameOriginal);
 		}
 		return fileNames;
+	}
+	
+	get commonBasePath() {
+		const fileNames = this.getFileNames(true);
+		return fileNames
+			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts')
+			.map(fileName => {
+				const file = this.files[utils.normalizePath(fileName)];
+				return path.resolve(file.gulp.cwd, file.gulp.base);
+			})
+			.reduce(getCommonBasePath)
 	}
 }
 
@@ -182,6 +209,9 @@ export class FileCache {
 
 	get firstSourceFile() {
 		return this.current.firstSourceFile;
+	}
+	get commonBasePath() {
+		return this.current.commonBasePath;
 	}
 
 	isChanged(onlyGulp = false) {
