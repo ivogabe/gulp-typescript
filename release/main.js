@@ -90,11 +90,11 @@ function createEnumMap(input) {
     return map;
 }
 function getScriptTarget(typescript, language) {
-    var map = createEnumMap(ts.ScriptTarget);
+    var map = createEnumMap(typescript.ScriptTarget);
     return map[language.toLowerCase()];
 }
 function getModuleKind(typescript, moduleName) {
-    var map = createEnumMap(ts.ModuleKind);
+    var map = createEnumMap(typescript.ModuleKind);
     return map[moduleName.toLowerCase()];
 }
 function getCompilerOptions(settings) {
