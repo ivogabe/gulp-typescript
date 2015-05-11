@@ -126,21 +126,19 @@ export class ProjectCompiler implements ICompiler {
 		
 		if (diffLength < 0) {
 			// There were files added outside of the common base.
+			let outsideRoot = false;
 			map.sources = map.sources.map<string>(fileName => {
 				const full = utils.normalizePath(path.join(this.project.input.commonSourceDirectory, fileName));
 				let relative = path.relative(utils.normalizePath(this.project.input.commonBasePath), full);
 				if (relative.substring(0, 3) === '../') {
-					
-					return undefined;
-				}
-				
-				if (relative.substring(0, 2) === './') {
+					outsideRoot = true;
+				} else if (relative.substring(0, 2) === './') {
 					relative = relative.substring(2);
 				}
 				return full.substring(full.length - relative.length);
-			}).filter(fileName => fileName !== undefined);
+			});
 			
-			if (map.sources.length === 0) return false;
+			if (outsideRoot) return false;
 		}
 		
 		return true;
