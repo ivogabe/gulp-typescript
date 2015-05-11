@@ -213,6 +213,12 @@ export class Output {
 	}
 
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
+		if (info.code === 6059) {
+			// "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+			// This is handled by ICompiler#correctSourceMap, so this error can be muted.
+			return undefined;
+		}
+		
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
 		err.diagnostic = info;
@@ -264,6 +270,8 @@ export class Output {
 		this.error(this.getError(info));
 	}
 	error(error: reporter.TypeScriptError) {
+		if (!error) return;
+		
 		// Save errors for lazy compilation (if the next input is the same as the current),
 		this.errors.push(error);
 		// call reporter callback
