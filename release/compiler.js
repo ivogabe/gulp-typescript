@@ -1,8 +1,10 @@
 var ts = require('typescript');
+var path = require('path');
 var tsApi = require('./tsapi');
 var output = require('./output');
 var host = require('./host');
 var filter = require('./filter');
+var utils = require('./utils');
 /**
  * Compiles a whole project, with full type checking
  */
@@ -57,6 +59,48 @@ var ProjectCompiler = (function () {
             this.project.output.write(fileName, this.host.output[fileName]);
         }
         this.project.output.finish();
+    };
+    Object.defineProperty(ProjectCompiler.prototype, "commonBaseDiff", {
+        /**
+         * Calculates the difference between the common base directory calculated based on the base paths of the input files
+         * and the common source directory calculated by TypeScript.
+         */
+        get: function () {
+            if (this._commonBaseDiff)
+                return this._commonBaseDiff;
+            var expected = this.project.input.commonBasePath;
+            var real = this.project.input.commonSourceDirectory;
+            var length = real.length - expected.length;
+            if (length > 0) {
+                return this._commonBaseDiff = [length, real.substring(real.length - length)];
+            }
+            else {
+                return this._commonBaseDiff = [length, expected.substring(expected.length + length)];
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ProjectCompiler.prototype.correctSourceMap = function (map) {
+        var _this = this;
+        var _a = this.commonBaseDiff, diffLength = _a[0], diff = _a[1];
+        if (diffLength < 0) {
+            // There were files added outside of the common base.
+            map.sources = map.sources.map(function (fileName) {
+                var full = utils.normalizePath(path.join(_this.project.input.commonSourceDirectory, fileName));
+                var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), full);
+                if (relative.substring(0, 3) === '../') {
+                    return undefined;
+                }
+                if (relative.substring(0, 2) === './') {
+                    relative = relative.substring(2);
+                }
+                return full.substring(full.length - relative.length);
+            }).filter(function (fileName) { return fileName !== undefined; });
+            if (map.sources.length === 0)
+                return false;
+        }
+        return true;
     };
     return ProjectCompiler;
 })();

@@ -79,6 +79,11 @@ export class Output {
 				&& (file.content[OutputFileKind.Definitions] !== undefined || !this.project.options.declaration)) {
 
 				file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
+				if (!this.project.compiler.correctSourceMap(file.sourceMap)) {
+					file.skipPush = true;
+					return;
+				}
+				
 				if (this.project.singleOutput) {
 					file.original = this.project.input.firstSourceFile;
 					file.sourceMapOrigins = this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName));
@@ -208,6 +213,12 @@ export class Output {
 	}
 
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
+		if (info.code === 6059) {
+			// "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+			// This is handled by ICompiler#correctSourceMap, so this error can be muted.
+			return undefined;
+		}
+		
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
 		err.diagnostic = info;
@@ -259,6 +270,8 @@ export class Output {
 		this.error(this.getError(info));
 	}
 	error(error: reporter.TypeScriptError) {
+		if (!error) return;
+		
 		// Save errors for lazy compilation (if the next input is the same as the current),
 		this.errors.push(error);
 		// call reporter callback

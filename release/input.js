@@ -123,6 +123,21 @@ var FileDictionary = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(FileDictionary.prototype, "commonSourceDirectory", {
+        get: function () {
+            var _this = this;
+            var fileNames = this.getFileNames();
+            return fileNames
+                .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; })
+                .map(function (fileName) {
+                var file = _this.files[utils.normalizePath(fileName)];
+                return path.dirname(file.fileNameNormalized);
+            })
+                .reduce(getCommonBasePath);
+        },
+        enumerable: true,
+        configurable: true
+    });
     return FileDictionary;
 })();
 exports.FileDictionary = FileDictionary;
@@ -189,6 +204,13 @@ var FileCache = (function () {
     Object.defineProperty(FileCache.prototype, "commonBasePath", {
         get: function () {
             return this.current.commonBasePath;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FileCache.prototype, "commonSourceDirectory", {
+        get: function () {
+            return this.current.commonSourceDirectory;
         },
         enumerable: true,
         configurable: true
