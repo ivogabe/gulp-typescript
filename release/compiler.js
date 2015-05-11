@@ -84,20 +84,23 @@ var ProjectCompiler = (function () {
     ProjectCompiler.prototype.correctSourceMap = function (map) {
         var _this = this;
         var _a = this.commonBaseDiff, diffLength = _a[0], diff = _a[1];
+        if (this.project.singleOutput)
+            return true;
         if (diffLength < 0) {
             // There were files added outside of the common base.
+            var outsideRoot = false;
             map.sources = map.sources.map(function (fileName) {
                 var full = utils.normalizePath(path.join(_this.project.input.commonSourceDirectory, fileName));
                 var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), full);
                 if (relative.substring(0, 3) === '../') {
-                    return undefined;
+                    outsideRoot = true;
                 }
-                if (relative.substring(0, 2) === './') {
+                else if (relative.substring(0, 2) === './') {
                     relative = relative.substring(2);
                 }
                 return full.substring(full.length - relative.length);
-            }).filter(function (fileName) { return fileName !== undefined; });
-            if (map.sources.length === 0)
+            });
+            if (outsideRoot)
                 return false;
         }
         return true;
