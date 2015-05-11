@@ -49,6 +49,10 @@ var Output = (function () {
                 && file.content[OutputFileKind.SourceMap] !== undefined
                 && (file.content[OutputFileKind.Definitions] !== undefined || !this.project.options.declaration)) {
                 file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
+                if (!this.project.compiler.correctSourceMap(file.sourceMap)) {
+                    file.skipPush = true;
+                    return;
+                }
                 if (this.project.singleOutput) {
                     file.original = this.project.input.firstSourceFile;
                     file.sourceMapOrigins = this.project.input.getFileNames(true).map(function (fName) { return _this.project.input.getFile(fName); });
@@ -169,6 +173,11 @@ var Output = (function () {
         this.streamDts.push(null);
     };
     Output.prototype.getError = function (info) {
+        if (info.code === 6059) {
+            // "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+            // This is handled by ICompiler#correctSourceMap, so this error can be muted.
+            return undefined;
+        }
         var err = new Error();
         err.name = 'TypeScript error';
         err.diagnostic = info;
@@ -215,6 +224,8 @@ var Output = (function () {
         this.error(this.getError(info));
     };
     Output.prototype.error = function (error) {
+        if (!error)
+            return;
         // Save errors for lazy compilation (if the next input is the same as the current),
         this.errors.push(error);
         // call reporter callback
