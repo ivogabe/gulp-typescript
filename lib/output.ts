@@ -79,6 +79,11 @@ export class Output {
 				&& (file.content[OutputFileKind.Definitions] !== undefined || !this.project.options.declaration)) {
 
 				file.sourceMap = JSON.parse(file.content[OutputFileKind.SourceMap]);
+				if (!this.project.compiler.correctSourceMap(file.sourceMap)) {
+					file.skipPush = true;
+					return;
+				}
+				
 				if (this.project.singleOutput) {
 					file.original = this.project.input.firstSourceFile;
 					file.sourceMapOrigins = this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName));
