@@ -122,6 +122,8 @@ export class ProjectCompiler implements ICompiler {
 	correctSourceMap(map: sourceMap.RawSourceMap) {
 		const [diffLength, diff] = this.commonBaseDiff;
 		
+		if (this.project.singleOutput) return true;
+		
 		if (diffLength < 0) {
 			// There were files added outside of the common base.
 			map.sources = map.sources.map<string>(fileName => {
