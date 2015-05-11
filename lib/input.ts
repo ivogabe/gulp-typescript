@@ -139,6 +139,16 @@ export class FileDictionary {
 			})
 			.reduce(getCommonBasePath)
 	}
+	get commonSourceDirectory() {
+		const fileNames = this.getFileNames();
+		return fileNames
+			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts')
+			.map(fileName => {
+				const file = this.files[utils.normalizePath(fileName)];
+				return path.dirname(file.fileNameNormalized);
+			})
+			.reduce(getCommonBasePath)
+	}
 }
 
 export class FileCache {
@@ -212,6 +222,9 @@ export class FileCache {
 	}
 	get commonBasePath() {
 		return this.current.commonBasePath;
+	}
+	get commonSourceDirectory() {
+		return this.current.commonSourceDirectory;
 	}
 
 	isChanged(onlyGulp = false) {
