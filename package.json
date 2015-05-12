@@ -47,6 +47,10 @@
     {
       "name": "Jaroslaw Zalucki",
       "email": "mad.jaro@gmail.com"
+    },
+    {
+      "name": "Yui Tanglertsampan",
+      "email": "yuisu@microsoft.com"
     }
   ],
   "main": "release/main.js",
