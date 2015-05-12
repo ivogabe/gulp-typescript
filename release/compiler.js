@@ -10,9 +10,11 @@ var utils = require('./utils');
  */
 var ProjectCompiler = (function () {
     function ProjectCompiler() {
+        this.hasThrownSourceDirWarning = false;
     }
     ProjectCompiler.prototype.prepare = function (_project) {
         this.project = _project;
+        this.hasThrownSourceDirWarning = false;
     };
     ProjectCompiler.prototype.inputFile = function (file) { };
     ProjectCompiler.prototype.inputDone = function () {
@@ -92,16 +94,28 @@ var ProjectCompiler = (function () {
             map.sources = map.sources.map(function (fileName) {
                 var full = utils.normalizePath(path.join(_this.project.input.commonSourceDirectory, fileName));
                 var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), full);
-                if (relative.substring(0, 3) === '../') {
+                var first2 = relative.substring(0, 2);
+                var first3 = relative.substring(0, 3);
+                if (first3 === '../' || first3 === '..\\') {
                     outsideRoot = true;
                 }
-                else if (relative.substring(0, 2) === './') {
+                else if (first2 === './' || first2 === '.\\') {
                     relative = relative.substring(2);
                 }
                 return full.substring(full.length - relative.length);
             });
             if (outsideRoot)
                 return false;
+        }
+        else if (diffLength > 0) {
+            if (!this.hasThrownSourceDirWarning) {
+                this.hasThrownSourceDirWarning = true;
+                console.error('The common source directory of the source files isn\'t equal to '
+                    + 'the common base directory of the input files. That isn\'t supported '
+                    + 'using the version of TypeScript currently used. Use a newer version of TypeScript instead '
+                    + 'or have the common source directory point to the common base directory.');
+            }
+            return false;
         }
         return true;
     };

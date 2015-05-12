@@ -60,8 +60,17 @@ var Output = (function () {
                 else {
                     var originalFileName = path.resolve(file.sourceMap.sourceRoot, file.sourceMap.sources[0]);
                     file.original = this.project.input.getFile(originalFileName);
-                    file.skipPush = !file.original.gulp;
-                    file.sourceMapOrigins = [file.original];
+                    if (!file.original) {
+                        console.error(("Could not find input file " + originalFileName + ". This is probably an issue of gulp-typescript.")
+                            + "\nPlease report it at https://github.com/ivogabe/gulp-typescript/issues"
+                            + ("\nDebug information: \nsourceRoot = " + JSON.stringify(file.sourceMap.sourceRoot) + "\nsources = " + JSON.stringify(file.sourceMap.sources)));
+                        file.skipPush = true;
+                        file.sourceMapOrigins = [];
+                    }
+                    else {
+                        file.skipPush = !file.original.gulp;
+                        file.sourceMapOrigins = [file.original];
+                    }
                 }
                 this.applySourceMaps(file);
                 if (!this.project.sortOutput) {
