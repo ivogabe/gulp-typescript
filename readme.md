@@ -12,7 +12,7 @@ Features
 
 How to install
 --------------
-##### 1. Install Gulp
+##### 1. Install gulp
 ```shell
 npm install --global gulp
 ```
@@ -35,7 +35,6 @@ Options
 - ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
-- ```sourceRoot``` (string) - Specifies the location where debugger should locate TypeScript files instead of source locations.
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
@@ -50,19 +49,19 @@ Basis Usage
 Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `out.js` in  `built/local`. To invoke, simple run `gulp`.
 
 ```javascript
-var gulp = require("gulp");
-var ts = require("gulp-typescript");
+var gulp = require('gulp');
+var ts = require('gulp-typescript");
 
-gulp.task("default", function () {
-  var tsResult = gulp.src("src/*.ts")
+gulp.task('default', function () {
+  var tsResult = gulp.src('src/*.ts')
     .pipe(ts({
         noImplicitAny: true,
-        out: "output.js"
+        out: 'output.js'
       }));
   return tsResult.js.pipe(gulp.dest('built/local'));
 });
 ```
-Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp script` instead of `gulp`.
+Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp script` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
 ```javascript
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
@@ -128,7 +127,7 @@ gulp.task('scripts', function() {
 	var tsResult = tsProject.src() // instead of gulp.src(...)
 		.pipe(ts(tsProject));
 	
-	return tsResult.js.pipe('release');
+	return tsResult.js.pipe(gulp.dest('release'));
 });
 ```
 Note: you can only use `tsProject.src()` if your `tsconfig.json` file has a `files` property. If it doesn't, you should use `gulp.src('**/**.ts')`.
@@ -210,8 +209,11 @@ The other option is to use `gulp-concat`. The ```tsc``` command sorts the files 
 
 Source maps
 ----------
-Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
+Example of ```gulpfile.js``` which will compiler typescript to javascript as well as generate
+associated sourcemap.
+
 ```javascript
+var gulp = require('gulp')
 var ts = require('gulp-typescript');
 var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
@@ -246,6 +248,6 @@ You can set options, project or filter to `undefined` if you don't want to set t
 
 If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in that file is an interface which a reporter should implement.
 
-Build gulp-typeScript
+Build gulp-typescript
 ------------
 The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
