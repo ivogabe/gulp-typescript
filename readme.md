@@ -1,6 +1,6 @@
 gulp-typescript
 ===============
-A gulp plugin that compiles TypeScript files.
+A gulp plugin for handling TypeScript compilation workflow. The plugin exposes TypeScript's compiler options to gulp using TypeScript API.
 
 Features
 --------
@@ -9,38 +9,75 @@ Features
 - Different output streams for .js, .d.ts files.
 - Support for sourcemaps using gulp-sourcemaps
 - Compile once, and filter different targets
-- Not just a wrapper around the ```tsc``` command, but a plugin that uses the TypeScript API.
 
 How to install
 --------------
+##### 1. Install Gulp
+```shell
+npm install --global gulp
+```
+##### 2. Install gulp in the project dependency
+```shell
+npm install gulp
+```
+##### 3. Install gulp-typeScript
 ```shell
 npm install gulp-typescript
 ```
 
-Easy usage
+Options
+-------
+- ```out``` (string) - Generate one javascript and one definition file. Only works when no module system is used.
+- ```outDir``` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
+- ```removeComments``` (boolean) - Do not emit comments to output.
+- ```noImplicitAny``` (boolean) - Warn on expressions and declarations with an implied 'any' type.
+- ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
+- ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
+- ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
+- ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
+- ```sourceRoot``` (string) - Specifies the location where debugger should locate TypeScript files instead of source locations.
+- ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
+- ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
+- ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
+- ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
+
+You can use almost all other options that TypeScript supports too. Only these two are not supported:
+- `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
+- `rootDir` - Use `base` option of `gulp.src()` instead.
+
+Basis Usage
 ----------
+Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `out.js` in  `built/local`. To invoke, simple run `gulp`.
+
 ```javascript
-var ts = require('gulp-typescript');
-[...]
-var tsResult = [...].pipe(ts(options));
-tsResult.dts.pipe(...)
-tsResult.js.pipe(...)
+var gulp = require("gulp");
+var ts = require("gulp-typescript");
+
+gulp.task("default", function () {
+  var tsResult = gulp.src("src/*.ts")
+    .pipe(ts({
+        noImplicitAny: true,
+        out: "output.js"
+      }));
+  return tsResult.js.pipe(gulp.dest('built/local'));
+});
 ```
-Example gulpfile:
+Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp script` instead of `gulp`.
 ```javascript
+var gulp = require('gulp');
 var ts = require('gulp-typescript');
-var merge = require('merge2');
+var merge = require('merge2');  // Require separate installation
 gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/*.ts')
-					   .pipe(ts({
-						   declarationFiles: true,
-						   noExternalResolve: true
-					   }));
-	
-	return merge([
-		tsResult.dts.pipe(gulp.dest('release/definitions')),
-		tsResult.js.pipe(gulp.dest('release/js'))
-	]);
+  var tsResult = gulp.src('lib/*.ts')
+    .pipe(ts({
+        declarationFiles: true,
+        noExternalResolve: true
+      }));
+
+  return merge([
+    tsResult.dts.pipe(gulp.dest('release/definitions')),
+    tsResult.js.pipe(gulp.dest('release/js'))
+    ]);
 });
 ```
 
@@ -48,6 +85,7 @@ Incremental compilation
 -----------------------
 Instead of calling ```ts(options)```, you can create a project first, and then call ```ts(project)```. An example:
 ```javascript
+var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');
 
@@ -73,27 +111,8 @@ When you run ```gulp watch```, the source will be compiled as usual. Then, when 
 
 Make sure you create the project outside of a task! Otherwise it won't work.
 
-Options
--------
-- ```out``` (string) - Generate one javascript and one definition file. Only works when no module system is used.
-- ```outDir``` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
-- ```removeComments``` (boolean) - Do not emit comments to output.
-- ```noImplicitAny``` (boolean) - Warn on expressions and declarations with an implied 'any' type.
-- ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
-- ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
-- ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
-- ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
-- ```sourceRoot``` (string) - Specifies the location where debugger should locate TypeScript files instead of source locations.
-- ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
-- ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
-- ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
-- ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
 
-You can use almost all other options that TypeScript supports too. Only these two are not supported:
-- `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
-- `rootDir` - Use `base` option of `gulp.src()` instead.
-
-tsconfig.json
+Using `tsconfig.json`
 -------------
 To use `tsconfig.json`, you have to use `ts.createProject`:
 ```javascript
@@ -109,7 +128,7 @@ gulp.task('scripts', function() {
 	var tsResult = tsProject.src() // instead of gulp.src(...)
 		.pipe(ts(tsProject));
 	
-	return tsResult.js.pipe(gulp.dest('release'));
+	return tsResult.js.pipe('release');
 });
 ```
 Note: you can only use `tsProject.src()` if your `tsconfig.json` file has a `files` property. If it doesn't, you should use `gulp.src('**/**.ts')`.
@@ -188,6 +207,7 @@ You can use the `out` option. This is fine for small projects, but for big proje
 
 The other option is to use `gulp-concat`. The ```tsc``` command sorts the files using the ```<reference>``` tags. ```gulp-typescript``` does this when you enable the ```sortOutput``` option. You can use the ```referencedFrom``` filter to only include files that are referenced from certain files.
 
+
 Source maps
 ----------
 Source maps have changed a bit in version 0.2.0. Here's an example gulpfile:
@@ -226,8 +246,6 @@ You can set options, project or filter to `undefined` if you don't want to set t
 
 If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in that file is an interface which a reporter should implement.
 
-How to build
+Build gulp-typeScript
 ------------
-First you have to install gulp using ```npm install gulp -g```, if you haven't done already. Then you must install the npm dependencies, using ```npm install```.
-
 The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
