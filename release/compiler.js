@@ -107,7 +107,7 @@ var ProjectCompiler = (function () {
             if (outsideRoot)
                 return false;
         }
-        else if (diffLength > 0) {
+        else if (diffLength > 0 && tsApi.isTS14(this.project.typescript)) {
             if (!this.hasThrownSourceDirWarning) {
                 this.hasThrownSourceDirWarning = true;
                 console.error('The common source directory of the source files isn\'t equal to '
