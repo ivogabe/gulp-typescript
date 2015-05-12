@@ -53,7 +53,7 @@ var gulp = require('gulp');
 var ts = require('gulp-typescript");
 
 gulp.task('default', function () {
-  var tsResult = gulp.src('src/*.ts')
+  var tsResult = gulp.src('src/**/*.ts')
     .pipe(ts({
         noImplicitAny: true,
         out: 'output.js'
@@ -67,7 +67,7 @@ var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');  // Require separate installation
 gulp.task('scripts', function() {
-  var tsResult = gulp.src('lib/*.ts')
+  var tsResult = gulp.src('lib/**/*.ts')
     .pipe(ts({
         declarationFiles: true,
         noExternalResolve: true
@@ -97,7 +97,7 @@ gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					.pipe(ts(tsProject));
 
-	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done. 
+	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done.
 		tsResult.dts.pipe(gulp.dest('release/definitions')),
 		tsResult.js.pipe(gulp.dest('release/js'))
 	]);
@@ -209,7 +209,7 @@ The other option is to use `gulp-concat`. The ```tsc``` command sorts the files 
 
 Source maps
 ----------
-Example of ```gulpfile.js``` which will compiler typescript to javascript as well as generate
+Example of ```gulpfile.js``` which will compile typescript to javascript as well as generate
 associated sourcemap.
 
 ```javascript
