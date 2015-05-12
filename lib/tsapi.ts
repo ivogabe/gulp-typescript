@@ -46,6 +46,10 @@ export interface TSFile15 {
 	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
 }
 
+export function isTS14(typescript: typeof ts) {
+	return !('findConfigFile' in typescript);
+}
+
 export function getFileName(thing: { filename: string} | { fileName: string }): string {
 	if ((<any> thing).filename) return (<any> thing).filename; // TS 1.4
 	return (<any> thing).fileName; // TS 1.5
