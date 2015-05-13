@@ -171,6 +171,7 @@ export class FileCompiler implements ICompiler {
 
 	prepare(_project: project.Project) {
 		this.project = _project;
+		this.project.input.noParse = true;
 	}
 
 	inputFile(file: input.File) {
