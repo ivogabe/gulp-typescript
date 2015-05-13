@@ -230,9 +230,15 @@ export class Output {
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
 		err.diagnostic = info;
+		
+		const codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+			' TS' +
+			info.code +
+			': ' +
+			tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText)
 
 		if (!info.file) {
-			err.message = info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
+			err.message = codeAndMessageText;
 			return err;
 		}
 
@@ -269,8 +275,7 @@ export class Output {
 		};
 
 		err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
-			+ info.code + ' '
-			+ tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
+			+ codeAndMessageText;
 
 		return err;
 	}
