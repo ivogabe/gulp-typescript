@@ -7,6 +7,7 @@ export interface TypeScript15 {
 	createSourceFile(fileName: string, content: string, target: ts.ScriptTarget, isOpen: boolean);
 	findConfigFile(searchPath: string): string;
 	flattenDiagnosticMessageText(messageText: string | DiagnosticMessageChain15, newLine: string): string;
+	transpile(input: string, compilerOptions?: ts.CompilerOptions, fileName?: string, diagnostics?: ts.Diagnostic[]): string;
 }
 
 /*
@@ -103,4 +104,12 @@ export function flattenDiagnosticMessageText(typescript: TypeScript14 | TypeScri
 	} else {
 		return (<TypeScript15> typescript).flattenDiagnosticMessageText(messageText, "\n");
 	}
+}
+
+export function transpile(typescript: TypeScript14 | TypeScript15, input: string, compilerOptions?: ts.CompilerOptions, fileName?: string, diagnostics?: ts.Diagnostic[]): string {
+	if (!(<TypeScript15> typescript).transpile) {
+		throw new Error('gulp-typescript: Single file compilation is not supported using TypeScript 1.4');
+	}
+	
+	return (<TypeScript15> typescript).transpile(input, compilerOptions, fileName, diagnostics);
 }
