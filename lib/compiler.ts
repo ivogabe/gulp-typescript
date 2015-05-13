@@ -165,14 +165,38 @@ export class FileCompiler implements ICompiler {
 	host: host.Host;
 	project: project.Project;
 	program: ts.Program;
+	
+	private errorsPerFile: utils.Map<ts.Diagnostic[]> = {};
+	private previousErrorsPerFile: utils.Map<ts.Diagnostic[]> = {};
 
 	prepare(_project: project.Project) {
 		this.project = _project;
 	}
 
 	inputFile(file: input.File) {
+		if (this.project.input.getFileChange(file.fileNameOriginal).state === input.FileChangeState.Equal) {
+			// Not changed, re-use old file.
+			
+			const old = this.project.previousOutput;
+
+			for (const error of this.previousErrorsPerFile[file.fileNameNormalized]) {
+				this.project.output.diagnostic(error);
+			}
+			this.errorsPerFile[file.fileNameNormalized] = this.previousErrorsPerFile[file.fileNameNormalized];
+
+			for (const fileName of Object.keys(old.files)) {
+				const oldFile = old.files[fileName];
+				if (oldFile.original.fileNameNormalized !== file.fileNameNormalized) continue;
+				
+				this.project.output.write(oldFile.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
+				this.project.output.write(oldFile.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
+			}
+
+			return;
+		}
+		
 		const diagnostics: ts.Diagnostic[] = [];
-		const output = tsApi.transpile(
+		const outputString = tsApi.transpile(
 			this.project.typescript,
 			file.content,
 			this.project.options,
@@ -180,8 +204,8 @@ export class FileCompiler implements ICompiler {
 			diagnostics
 		);
 		
-		let index = output.lastIndexOf('\n')
-		let mapString = output.substring(index + 1);
+		let index = outputString.lastIndexOf('\n')
+		let mapString = outputString.substring(index + 1);
 		if (mapString.substring(0, 1) === '\r') mapString = mapString.substring(1);
 		
 		const start = '//# sourceMappingURL=data:application/json;base64,';
@@ -197,12 +221,17 @@ export class FileCompiler implements ICompiler {
 		
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		
-		this.project.output.write(fileNameExtensionless + '.js', output.substring(0, index));
+		this.project.output.write(fileNameExtensionless + '.js', outputString.substring(0, index));
 		this.project.output.write(fileNameExtensionless + '.js.map', JSON.stringify(map));
+		
+		this.errorsPerFile[file.fileNameNormalized] = diagnostics;
 	}
 
 	inputDone() {
 		this.project.output.finish();
+		
+		this.previousErrorsPerFile = this.errorsPerFile;
+		this.errorsPerFile = {};
 	}
 	
 	correctSourceMap(map: sourceMap.RawSourceMap) {
