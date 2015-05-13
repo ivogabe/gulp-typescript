@@ -205,6 +205,10 @@ export class FileCompiler implements ICompiler {
 			diagnostics
 		);
 		
+		for (const diagnostic of diagnostics) {
+			this.project.output.diagnostic(diagnostic);
+		}
+		
 		let index = outputString.lastIndexOf('\n')
 		let mapString = outputString.substring(index + 1);
 		if (mapString.substring(0, 1) === '\r') mapString = mapString.substring(1);
