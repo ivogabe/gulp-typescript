@@ -1,0 +1,22 @@
+{
+    "version": "0.1.0",
+    "command": "gulp",
+    "isShellCommand": true,
+    "args": [
+        "--no-color"
+    ],
+    "tasks": [
+        {
+            "taskName": "scripts",
+            "isBuildCommand": true,
+            "args": [],
+            "problemMatcher": ["$tsc"]
+        },
+        {
+            "taskName": "test",
+            "isTestCommand": true,
+            "args": [],
+            "problemMatcher": ["$tsc"]
+        }
+    ]
+}
