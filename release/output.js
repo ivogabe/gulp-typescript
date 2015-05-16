@@ -1,5 +1,6 @@
 ///<reference path='../typings/tsd.d.ts'/>
 var path = require('path');
+var ts = require('typescript');
 var sourceMap = require('source-map');
 var gutil = require('gulp-util');
 var utils = require('./utils');
@@ -190,8 +191,13 @@ var Output = (function () {
         var err = new Error();
         err.name = 'TypeScript error';
         err.diagnostic = info;
+        var codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+            ' TS' +
+            info.code +
+            ': ' +
+            tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
         if (!info.file) {
-            err.message = info.code + ' ' + tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
+            err.message = codeAndMessageText;
             return err;
         }
         var fileName = tsApi.getFileName(info.file);
@@ -225,8 +231,7 @@ var Output = (function () {
             character: endPos.character
         };
         err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
-            + info.code + ' '
-            + tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
+            + codeAndMessageText;
         return err;
     };
     Output.prototype.diagnostic = function (info) {
