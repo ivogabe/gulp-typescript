@@ -50,7 +50,7 @@ Below is a minimalist `gulpfile.js` which will compile all TypeScript file in fo
 
 ```javascript
 var gulp = require('gulp');
-var ts = require('gulp-typescript");
+var ts = require('gulp-typescript');
 
 gulp.task('default', function () {
   var tsResult = gulp.src('src/**/*.ts')
