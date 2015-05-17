@@ -102,20 +102,21 @@ function runTest(name, callback) {
 				fs.writeFileSync(output + 'errors.txt', errors.join('\n'));
 				done++;
 
-				if (done === libs.length) {
-					function onError(error) {
-						console.error('Test ' + name + ' failed: ' + error.message);
-					}
-					gulp.src(output)
-						.pipe(diff('test/baselines/' + name))
-						.on('error', onError)
-						.pipe(diff.reporter({ fail: true }))
-						.on('error', onError)
-						.on('finish', callback);
-				}
+				if (done === libs.length) compareTest(name, callback);
 			});
 		})(i);
 	}
+}
+function compareTest(name, callback) {
+	function onError(error) {
+		console.error('Test "' + name + '" failed: ' + error.message);
+	}
+	gulp.src('test/output/' + name + '/**/**.**')
+		.pipe(diff('test/baselines/' + name + '/'))
+		.on('error', onError)
+		.pipe(diff.reporter({ fail: true }))
+		.on('error', onError)
+		.on('finish', callback);
 }
 
 gulp.task('test', ['clean-test', 'scripts'], function(cb) {
