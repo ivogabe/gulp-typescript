@@ -113,11 +113,19 @@ export class ProjectCompiler implements ICompiler {
 		
 		const length = real.length - expected.length;
 		
+		this._commonBaseDiff = [length, real.substring(real.length - length)]
+		
 		if (length > 0) {
-			return this._commonBaseDiff = [length, real.substring(real.length - length)];
+			this._commonBaseDiff = [length, real.substring(real.length - length)];
 		} else {
-			return this._commonBaseDiff = [length, expected.substring(expected.length + length)];
+			this._commonBaseDiff = [length, expected.substring(expected.length + length)];
 		}
+		
+		if (this._commonBaseDiff[1] === '/' || this._commonBaseDiff[1] === '\\') {
+			this._commonBaseDiff = [0, ''];
+		}
+		
+		return this._commonBaseDiff;
 	}
 	
 	private hasThrownSourceDirWarning = false;
