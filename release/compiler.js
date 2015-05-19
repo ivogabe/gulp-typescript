@@ -10,11 +10,9 @@ var utils = require('./utils');
  */
 var ProjectCompiler = (function () {
     function ProjectCompiler() {
-        this.hasThrownSourceDirWarning = false;
     }
     ProjectCompiler.prototype.prepare = function (_project) {
         this.project = _project;
-        this.hasThrownSourceDirWarning = false;
     };
     ProjectCompiler.prototype.inputFile = function (file) { };
     ProjectCompiler.prototype.inputDone = function () {
@@ -48,6 +46,12 @@ var ProjectCompiler = (function () {
         if (this.project.filterSettings !== undefined) {
             var _filter = new filter.Filter(this.project, this.project.filterSettings);
             rootFilenames = rootFilenames.filter(function (fileName) { return _filter.match(fileName); });
+        }
+        if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
+            // Add an empty file under the root, as the rootDir option is not supported in TS1.4.
+            var emptyFileName = path.join(root, '________________empty.ts');
+            rootFilenames.push(emptyFileName);
+            this.project.input.addContent(emptyFileName, '');
         }
         // Creating a program to compile the sources
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
@@ -111,16 +115,6 @@ var ProjectCompiler = (function () {
             });
             if (outsideRoot)
                 return false;
-        }
-        else if (diffLength > 0 && tsApi.isTS14(this.project.typescript)) {
-            if (!this.hasThrownSourceDirWarning) {
-                this.hasThrownSourceDirWarning = true;
-                console.error('The common source directory of the source files isn\'t equal to '
-                    + 'the common base directory of the input files. That isn\'t supported '
-                    + 'using the version of TypeScript currently used. Use a newer version of TypeScript instead '
-                    + 'or have the common source directory point to the common base directory.');
-            }
-            return false;
         }
         return true;
     };
