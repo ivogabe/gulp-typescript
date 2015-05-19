@@ -32,7 +32,6 @@ export class ProjectCompiler implements ICompiler {
 
 	prepare(_project: project.Project) {
 		this.project = _project;
-		this.hasThrownSourceDirWarning = false;
 	}
 
 	inputFile(file: input.File) { }
@@ -135,7 +134,6 @@ export class ProjectCompiler implements ICompiler {
 		return this._commonBaseDiff;
 	}
 	
-	private hasThrownSourceDirWarning = false;
 	correctSourceMap(map: sourceMap.RawSourceMap) {
 		const [diffLength, diff] = this.commonBaseDiff;
 		
@@ -159,16 +157,6 @@ export class ProjectCompiler implements ICompiler {
 			});
 			
 			if (outsideRoot) return false;
-		} else if (diffLength > 0 && tsApi.isTS14(this.project.typescript)) {
-			if (!this.hasThrownSourceDirWarning) {
-				this.hasThrownSourceDirWarning = true;
-				console.error('The common source directory of the source files isn\'t equal to '
-					+ 'the common base directory of the input files. That isn\'t supported '
-					+ 'using the version of TypeScript currently used. Use a newer version of TypeScript instead '
-					+ 'or have the common source directory point to the common base directory.');
-			}
-			
-			return false;
 		}
 		
 		return true;
