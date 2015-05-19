@@ -2,6 +2,8 @@ gulp-typescript
 ===============
 A gulp plugin for handling TypeScript compilation workflow. The plugin exposes TypeScript's compiler options to gulp using TypeScript API.
 
+[![Build Status](https://travis-ci.org/ivogabe/gulp-typescript.svg?branch=master)](https://travis-ci.org/ivogabe/gulp-typescript)
+
 Features
 --------
 - Incremental compilation (so faster builds)
