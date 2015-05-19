@@ -151,7 +151,7 @@ And add this to your gulpfile:
 	typescript: require('typescript')
 }));
 ```
-You can use 1.5.0-alpha of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-alpha"`
+You can use 1.5.0-beta of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-beta"`
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
 ```javascript
