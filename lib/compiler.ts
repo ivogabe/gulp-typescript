@@ -76,16 +76,16 @@ export class ProjectCompiler implements ICompiler {
 
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
 
+		if (this.project.filterSettings !== undefined) {
+			let _filter = new filter.Filter(this.project, this.project.filterSettings);
+			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
+		}
+		
 		if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
 			// Add an empty file under the root, as the rootDir option is not supported in TS1.4.
 			let emptyFileName = path.join(root, '________________empty.ts')
 			rootFilenames.push(emptyFileName);
 			this.project.input.addContent(emptyFileName, '');
-		}
-
-		if (this.project.filterSettings !== undefined) {
-			let _filter = new filter.Filter(this.project, this.project.filterSettings);
-			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
 		}
 
 		// Creating a program to compile the sources
