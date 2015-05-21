@@ -144,6 +144,7 @@ exports.FileDictionary = FileDictionary;
 var FileCache = (function () {
     function FileCache(typescript, options) {
         this.previous = undefined;
+        this.noParse = false; // true when using a file based compiler.
         this.version = 0;
         this.typescript = typescript;
         this.options = options;
@@ -166,6 +167,8 @@ var FileCache = (function () {
         this.current.initTypeScriptSourceFile = function (file) { return _this.initTypeScriptSourceFile(file); };
     };
     FileCache.prototype.initTypeScriptSourceFile = function (file) {
+        if (this.noParse)
+            return;
         if (this.previous) {
             var previous = this.previous.getFile(file.fileNameOriginal);
             if (File.equal(previous, file)) {

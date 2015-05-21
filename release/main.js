@@ -13,6 +13,7 @@ var project = require('./project');
 var _filter = require('./filter');
 var _reporter = require('./reporter');
 var compiler = require('./compiler');
+var tsApi = require('./tsapi');
 var through2 = require('through2');
 var PLUGIN_NAME = 'gulp-typescript';
 var CompileStream = (function (_super) {
@@ -176,7 +177,16 @@ var compile;
             }
         }
         var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
-        project.compiler = new compiler.ProjectCompiler();
+        // Isolated modules are only supported when using TS1.5+
+        if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
+            project.options.sourceMap = false;
+            project.options.declaration = false;
+            project.options['inlineSourceMap'] = true;
+            project.compiler = new compiler.FileCompiler();
+        }
+        else {
+            project.compiler = new compiler.ProjectCompiler();
+        }
         return project;
     }
     compile.createProject = createProject;
