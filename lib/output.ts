@@ -146,19 +146,8 @@ export class Output {
 		file.sourceMapString = generator.toString();
 	}
 
-	private removeSourceMapComment(content: string): string {
-		// By default the TypeScript automaticly inserts a source map comment.
-		// This should be removed because gulp-sourcemaps takes care of that.
-		// The comment is always on the last line, so it's easy to remove it
-		// (But the last line also ends with a \n, so we need to look for the \n before the other)
-		const index = content.lastIndexOf('\n', content.length - 2);
-		return content.substring(0, index) + '\n';
-	}
-
 	private emit(file: OutputFile) {
 		if (file.skipPush) return;
-
-		const contentJs = this.removeSourceMapComment(file.content[OutputFileKind.JavaScript]);
 
 		let root: string;
 		if (this.project.singleOutput) {
@@ -178,7 +167,7 @@ export class Output {
 
 		const fileJs = <VinylFile> new gutil.File({
 			path: root + file.fileName + '.js',
-			contents: new Buffer(contentJs),
+			contents: new Buffer(file.content[OutputFileKind.JavaScript]),
 			cwd: file.original.gulp.cwd,
 			base
 		});

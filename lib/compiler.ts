@@ -99,8 +99,14 @@ export class ProjectCompiler implements ICompiler {
 
 		for (const fileName in this.host.output) {
 			if (!this.host.output.hasOwnProperty(fileName)) continue;
+			
+			let content = this.host.output[fileName]
+			const [, extension] = utils.splitExtension(fileName);
+			if (extension === 'js') {
+				content = this.removeSourceMapComment(content);
+			}
 
-			this.project.output.write(fileName, this.host.output[fileName]);
+			this.project.output.write(fileName, content);
 		}
 
 		this.project.output.finish();
@@ -161,9 +167,17 @@ export class ProjectCompiler implements ICompiler {
 		
 		return true;
 	}
+	
+	private removeSourceMapComment(content: string): string {
+		// By default the TypeScript automaticly inserts a source map comment.
+		// This should be removed because gulp-sourcemaps takes care of that.
+		// The comment is always on the last line, so it's easy to remove it
+		// (But the last line also ends with a \n, so we need to look for the \n before the other)
+		const index = content.lastIndexOf('\n', content.length - 2);
+		return content.substring(0, index) + '\n';
+	}
 }
 
-// TODO: file-based compiler
 export class FileCompiler implements ICompiler {
 	host: host.Host;
 	project: project.Project;
