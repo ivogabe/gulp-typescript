@@ -69,7 +69,8 @@
     "gulp-header": "~1.2.2",
     "gulp-diff": "~0.3.1",
     "yargs": "~3.8.0",
-    "jsx-typescript": "^1.5.0-alpha.5"
+    "jsx-typescript": "^1.5.0-alpha.5",
+    "gulp-plumber": "^1.0.1"
   },
   "repository": {
     "type": "git",
