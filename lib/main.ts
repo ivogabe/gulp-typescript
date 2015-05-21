@@ -11,7 +11,7 @@ import _filter = require('./filter');
 import _reporter = require('./reporter');
 import compiler = require('./compiler');
 import tsConfig = require('./tsconfig');
-import tsApi = require('./tsApi');
+import tsApi = require('./tsapi');
 import through2 = require('through2');
 
 const PLUGIN_NAME = 'gulp-typescript';
