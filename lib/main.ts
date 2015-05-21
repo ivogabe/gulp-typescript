@@ -247,8 +247,8 @@ module compile {
 		
 		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 		
-		// Seperate compilation is only supported when using TS1.5+
-		if (project.options['seperateCompilation'] && !tsApi.isTS14(project.typescript)) {
+		// Isolated modules are only supported when using TS1.5+
+		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
 			project.options.sourceMap = false;
 			project.options.declaration = false;
 			project.options['inlineSourceMap'] = true;
