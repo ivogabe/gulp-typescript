@@ -178,6 +178,10 @@ export class FileCompiler implements ICompiler {
 	}
 
 	inputFile(file: input.File) {
+		if (file.fileNameNormalized.substr(file.fileNameNormalized.length - 5) === '.d.ts') {
+			return; // Don't compile definition files
+		}
+		
 		if (this.project.input.getFileChange(file.fileNameOriginal).state === input.FileChangeState.Equal) {
 			// Not changed, re-use old file.
 			
