@@ -3,7 +3,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var plumber = require('gulp-plumber');
 
 module.exports = function(newTS, lib, output, reporter) {
-	var tsProject = newTS.createProject('test/seperateCompilation/tsconfig.json', {
+	var tsProject = newTS.createProject('test/isolatedModules/tsconfig.json', {
 		typescript: lib
 	});
 	
@@ -14,6 +14,6 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
-		.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../seperateCompilation/' }))
+		.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../isolatedModules/' }))
 		.pipe(gulp.dest(output + 'js'));
 }

@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "amd",
-		"seperateCompilation": true,
+		"isolatedModules": true,
 		"declaration": true
 	},
 	"files": [
