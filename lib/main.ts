@@ -208,6 +208,8 @@ module compile {
 
 		typescript?: typeof ts;
 		
+		isolatedModules?: boolean;
+		
 		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
 		
 		// Unsupported by gulp-typescript
