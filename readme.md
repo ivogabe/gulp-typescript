@@ -2,6 +2,8 @@ gulp-typescript
 ===============
 A gulp plugin for handling TypeScript compilation workflow. The plugin exposes TypeScript's compiler options to gulp using TypeScript API.
 
+[![Build Status](https://travis-ci.org/ivogabe/gulp-typescript.svg?branch=master)](https://travis-ci.org/ivogabe/gulp-typescript)
+
 Features
 --------
 - Incremental compilation (so faster builds)
@@ -20,7 +22,7 @@ npm install --global gulp
 ```shell
 npm install gulp
 ```
-##### 3. Install gulp-typeScript
+##### 3. Install gulp-typescript
 ```shell
 npm install gulp-typescript
 ```
@@ -50,7 +52,7 @@ Below is a minimalist `gulpfile.js` which will compile all TypeScript file in fo
 
 ```javascript
 var gulp = require('gulp');
-var ts = require('gulp-typescript");
+var ts = require('gulp-typescript');
 
 gulp.task('default', function () {
   var tsResult = gulp.src('src/**/*.ts')
@@ -149,7 +151,7 @@ And add this to your gulpfile:
 	typescript: require('typescript')
 }));
 ```
-You can use 1.5.0-alpha of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-alpha"`
+You can use 1.5.0-beta of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-beta"`
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
 ```javascript

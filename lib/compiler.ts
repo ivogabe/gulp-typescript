@@ -32,7 +32,6 @@ export class ProjectCompiler implements ICompiler {
 
 	prepare(_project: project.Project) {
 		this.project = _project;
-		this.hasThrownSourceDirWarning = false;
 	}
 
 	inputFile(file: input.File) { }
@@ -81,6 +80,13 @@ export class ProjectCompiler implements ICompiler {
 			let _filter = new filter.Filter(this.project, this.project.filterSettings);
 			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
 		}
+		
+		if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
+			// Add an empty file under the root, as the rootDir option is not supported in TS1.4.
+			let emptyFileName = path.join(root, '________________empty.ts')
+			rootFilenames.push(emptyFileName);
+			this.project.input.addContent(emptyFileName, '');
+		}
 
 		// Creating a program to compile the sources
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
@@ -113,14 +119,21 @@ export class ProjectCompiler implements ICompiler {
 		
 		const length = real.length - expected.length;
 		
+		this._commonBaseDiff = [length, real.substring(real.length - length)]
+		
 		if (length > 0) {
-			return this._commonBaseDiff = [length, real.substring(real.length - length)];
+			this._commonBaseDiff = [length, real.substring(real.length - length)];
 		} else {
-			return this._commonBaseDiff = [length, expected.substring(expected.length + length)];
+			this._commonBaseDiff = [length, expected.substring(expected.length + length)];
 		}
+		
+		if (this._commonBaseDiff[1] === '/' || this._commonBaseDiff[1] === '\\') {
+			this._commonBaseDiff = [0, ''];
+		}
+		
+		return this._commonBaseDiff;
 	}
 	
-	private hasThrownSourceDirWarning = false;
 	correctSourceMap(map: sourceMap.RawSourceMap) {
 		const [diffLength, diff] = this.commonBaseDiff;
 		
@@ -144,16 +157,6 @@ export class ProjectCompiler implements ICompiler {
 			});
 			
 			if (outsideRoot) return false;
-		} else if (diffLength > 0 && tsApi.isTS14(this.project.typescript)) {
-			if (!this.hasThrownSourceDirWarning) {
-				this.hasThrownSourceDirWarning = true;
-				console.error('The common source directory of the source files isn\'t equal to '
-					+ 'the common base directory of the input files. That isn\'t supported '
-					+ 'using the version of TypeScript currently used. Use a newer version of TypeScript instead '
-					+ 'or have the common source directory point to the common base directory.');
-			}
-			
-			return false;
 		}
 		
 		return true;
