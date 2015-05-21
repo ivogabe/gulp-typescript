@@ -196,8 +196,8 @@ export class FileCompiler implements ICompiler {
 				const oldFile = old.files[fileName];
 				if (oldFile.original.fileNameNormalized !== file.fileNameNormalized) continue;
 				
-				this.project.output.write(oldFile.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
-				this.project.output.write(oldFile.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
+				this.project.output.write(oldFile.fileName + '.js', oldFile.content[output.OutputFileKind.JavaScript]);
+				this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[output.OutputFileKind.SourceMap]);
 			}
 
 			return;
@@ -229,7 +229,8 @@ export class FileCompiler implements ICompiler {
 		mapString = mapString.substring(start.length);
 		
 		let map: sourceMap.RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
-		map.sources[0] = path.relative(path.resolve(file.gulp.cwd, file.gulp.base), file.gulp.path);
+		map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base)
+		map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
 		
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		
@@ -247,6 +248,6 @@ export class FileCompiler implements ICompiler {
 	}
 	
 	correctSourceMap(map: sourceMap.RawSourceMap) {
-		return false;
+		return true;
 	}
 }
