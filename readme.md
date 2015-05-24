@@ -48,7 +48,7 @@ You can use almost all other options that TypeScript supports too. Only these tw
 
 Basis Usage
 ----------
-Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `out.js` in  `built/local`. To invoke, simple run `gulp`.
+Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `output.js` in  `built/local`. To invoke, simple run `gulp`.
 
 ```javascript
 var gulp = require('gulp');
