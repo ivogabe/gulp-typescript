@@ -24,6 +24,9 @@ function getDiagnosticsAndEmit(program) {
         var errors = program.getSyntacticDiagnostics();
         if (errors.length === 0)
             errors = program.getGlobalDiagnostics();
+        // Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+        // This is handled by ICompiler#correctSourceMap, so this error can be muted.
+        errors = errors.filter(function (item) { return item.code !== 6059; });
         if (errors.length === 0)
             errors = program.getSemanticDiagnostics();
         var emitOutput = program.emit();

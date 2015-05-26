@@ -143,7 +143,7 @@ var Output = (function () {
             base = file.original.gulp.base;
         }
         var fileJs = new gutil.File({
-            path: root + file.fileName + '.js',
+            path: path.join(root, file.fileName + '.js'),
             contents: new Buffer(contentJs),
             cwd: file.original.gulp.cwd,
             base: base
@@ -153,7 +153,7 @@ var Output = (function () {
         this.streamJs.push(fileJs);
         if (this.project.options.declaration) {
             var fileDts = new gutil.File({
-                path: root + file.fileName + '.d.ts',
+                path: path.join(root, file.fileName + '.d.ts'),
                 contents: new Buffer(file.content[OutputFileKind.Definitions]),
                 cwd: file.original.gulp.cwd,
                 base: base
@@ -183,11 +183,6 @@ var Output = (function () {
         this.streamDts.push(null);
     };
     Output.prototype.getError = function (info) {
-        if (info.code === 6059) {
-            // "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
-            // This is handled by ICompiler#correctSourceMap, so this error can be muted.
-            return undefined;
-        }
         var err = new Error();
         err.name = 'TypeScript error';
         err.diagnostic = info;

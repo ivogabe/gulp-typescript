@@ -108,12 +108,22 @@ var FileDictionary = (function () {
         }
         return fileNames;
     };
+    FileDictionary.prototype.getSourceFileNames = function (onlyGulp) {
+        var fileNames = this.getFileNames(onlyGulp);
+        var sourceFileNames = fileNames
+            .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; });
+        if (sourceFileNames.length === 0) {
+            // Only definition files, so we will calculate the common base path based on the
+            // paths of the definition files.
+            return fileNames;
+        }
+        return sourceFileNames;
+    };
     Object.defineProperty(FileDictionary.prototype, "commonBasePath", {
         get: function () {
             var _this = this;
-            var fileNames = this.getFileNames(true);
+            var fileNames = this.getSourceFileNames(true);
             return fileNames
-                .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; })
                 .map(function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
                 return path.resolve(file.gulp.cwd, file.gulp.base);
@@ -126,9 +136,8 @@ var FileDictionary = (function () {
     Object.defineProperty(FileDictionary.prototype, "commonSourceDirectory", {
         get: function () {
             var _this = this;
-            var fileNames = this.getFileNames();
+            var fileNames = this.getSourceFileNames();
             return fileNames
-                .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; })
                 .map(function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
                 return path.dirname(file.fileNameNormalized);
