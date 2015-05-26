@@ -1,17 +1,17 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import fs = require('fs');
-import gutil = require('gulp-util');
-import path = require('path');
-import stream = require('stream');
-import project = require('./project');
-import utils = require('./utils');
-import _filter = require('./filter');
-import _reporter = require('./reporter');
-import compiler = require('./compiler');
-import tsConfig = require('./tsconfig');
-import through2 = require('through2');
+import * as ts from 'typescript';
+import * as fs from 'fs';
+import * as gutil from 'gulp-util';
+import * as path from 'path';
+import * as stream from 'stream';
+import * as project from './project';
+import * as utils from './utils';
+import * as _filter from './filter';
+import * as _reporter from './reporter';
+import * as compiler from './compiler';
+import * as tsConfig from './tsconfig';
+import * as through2 from 'through2';
 
 const PLUGIN_NAME = 'gulp-typescript';
 

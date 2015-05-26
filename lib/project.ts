@@ -1,26 +1,25 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import stream = require('stream');
-import ts = require('typescript');
-import vfs = require('vinyl-fs');
-import path = require('path');
-import tsApi = require('./tsapi');
-import main = require('./main');
-import host = require('./host');
-import reporter = require('./reporter');
-import input = require('./input');
-import output = require('./output');
-import compiler = require('./compiler');
-import tsConfig = require('./tsconfig');
+import * as stream from 'stream';
+import * as ts from 'typescript';
+import * as vfs from 'vinyl-fs';
+import * as path from 'path';
+import * as tsApi from './tsapi';
+import { FilterSettings } from './main';
+import { Reporter } from './reporter';
+import { FileCache } from './input';
+import { Output } from './output';
+import { ICompiler } from './compiler';
+import { TsConfig } from './tsconfig';
 
 export class Project {
-	input: input.FileCache;
-	output: output.Output;
-	previousOutput: output.Output;
-	compiler: compiler.ICompiler;
+	input: FileCache;
+	output: Output;
+	previousOutput: Output;
+	compiler: ICompiler;
 	
 	configFileName: string;
-	config: tsConfig.TsConfig;
+	config: TsConfig;
 
 	// region settings
 
@@ -51,17 +50,17 @@ export class Project {
 	 */
 	sortOutput: boolean;
 
-	filterSettings: main.FilterSettings;
+	filterSettings: FilterSettings;
 
 	singleOutput: boolean;
 
-	reporter: reporter.Reporter;
+	reporter: Reporter;
 
 	// endregion
 
 	currentDirectory: string;
 
-	constructor(configFileName: string, config: tsConfig.TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+	constructor(configFileName: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.typescript = typescript;
 		this.configFileName = configFileName;
 		this.config = config;
@@ -71,7 +70,7 @@ export class Project {
 		this.sortOutput = sortOutput;
 		this.singleOutput = options.out !== undefined;
 
-		this.input = new input.FileCache(typescript, options);
+		this.input = new FileCache(typescript, options);
 	}
 
 	/**
@@ -81,7 +80,7 @@ export class Project {
 	reset(outputJs: stream.Readable, outputDts: stream.Readable) {
 		this.input.reset();
 		this.previousOutput = this.output;
-		this.output = new output.Output(this, outputJs, outputDts);
+		this.output = new Output(this, outputJs, outputDts);
 	}
 	
 	src() {

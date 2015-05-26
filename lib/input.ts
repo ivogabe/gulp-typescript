@@ -1,11 +1,11 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import gutil = require('gulp-util');
-import path = require('path');
-import tsApi = require('./tsapi');
-import utils = require('./utils');
-import VinylFile = require('./vinyl-file');
+import * as ts from 'typescript';
+import * as gutil from 'gulp-util';
+import * as path from 'path';
+import * as tsApi from './tsapi';
+import * as utils from './utils';
+import { VinylFile } from './vinyl-file';
 
 export enum FileChangeState {
 	New,

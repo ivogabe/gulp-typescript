@@ -1,13 +1,13 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import tsApi = require('./tsapi');
-import gutil = require('gulp-util');
-import project = require('./project');
-import input = require('./input');
-import utils = require('./utils');
-import fs = require('fs');
-import path = require('path');
+import * as ts from 'typescript';
+import * as tsApi from './tsapi';
+import * as gutil from 'gulp-util';
+import { Project } from './project';
+import { File, FileCache } from './input';
+import * as utils from './utils';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class Host implements ts.CompilerHost {
 	static libDefault: utils.Map<ts.SourceFile> = {};
@@ -37,10 +37,10 @@ export class Host implements ts.CompilerHost {
 	currentDirectory: string;
 	private externalResolve: boolean;
 	private libFileName: string;
-	input: input.FileCache;
+	input: FileCache;
 	output: utils.Map<string>;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: input.FileCache, externalResolve: boolean, libFileName: string) {
+	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, externalResolve: boolean, libFileName: string) {
 		this.typescript = typescript;
 
 		this.currentDirectory = currentDirectory;

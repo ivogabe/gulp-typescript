@@ -2,8 +2,6 @@
 
 import Vinyl = require('vinyl');
 
-interface File extends Vinyl {
+export interface VinylFile extends Vinyl {
 	sourceMap?: any;
 }
-
-export = File;

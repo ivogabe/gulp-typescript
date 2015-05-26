@@ -1,4 +1,4 @@
-import ts = require('typescript');
+import * as ts from 'typescript';
 
 export interface TypeScript14 {
 	createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string);

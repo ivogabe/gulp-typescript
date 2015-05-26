@@ -1,16 +1,16 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import stream = require('stream');
-import path = require('path');
-import ts = require('typescript');
-import sourceMap = require('source-map');
-import gutil = require('gulp-util');
-import utils = require('./utils');
-import input = require('./input');
-import tsApi = require('./tsapi');
-import reporter = require('./reporter');
-import project = require('./project');
-import VinylFile = require('./vinyl-file');
+import * as stream from 'stream';
+import * as path from 'path';
+import * as ts from 'typescript';
+import * as sourceMap from 'source-map';
+import * as gutil from 'gulp-util';
+import * as utils from './utils';
+import * as input from './input';
+import * as tsApi from './tsapi';
+import * as reporter from './reporter';
+import * as project from './project';
+import { VinylFile } from './vinyl-file';
 
 export interface OutputFile {
 	fileName: string;

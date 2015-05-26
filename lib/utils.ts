@@ -1,6 +1,6 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import path = require('path');
+import * as path from 'path';
 
 export interface Map<T> {
 	[key: string]: T;

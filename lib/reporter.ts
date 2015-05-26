@@ -1,8 +1,8 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import tsApi = require('./tsapi');
-import gutil = require('gulp-util');
+import * as ts from 'typescript';
+import * as tsApi from './tsapi';
+import * as gutil from 'gulp-util';
 
 export interface TypeScriptError extends Error {
 	fullFilename?: string;
