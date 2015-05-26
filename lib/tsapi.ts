@@ -55,7 +55,7 @@ export function getFileName(thing: { filename: string} | { fileName: string }): 
 	return (<any> thing).fileName; // TS 1.5
 }
 export function getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagnostic[] {
-	if ((<Program14> program).getDiagnostics) {
+	if ((<Program14> program).getDiagnostics) { // TS 1.4
 		let errors = (<Program14> program).getDiagnostics();
 
 		if (!errors.length) {
@@ -70,9 +70,14 @@ export function getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagno
 		}
 
 		return errors;
-	} else {
+	} else { // TS 1.5
 		let errors = (<Program15> program).getSyntacticDiagnostics();
 		if (errors.length === 0) errors = (<Program15> program).getGlobalDiagnostics();
+		
+		// Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+		// This is handled by ICompiler#correctSourceMap, so this error can be muted.
+		errors = errors.filter((item) => item.code !== 6059);
+		
 		if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
 
 		const emitOutput = (<Program15> program).emit();
