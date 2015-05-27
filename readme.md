@@ -46,9 +46,9 @@ You can use almost all other options that TypeScript supports too. Only these tw
 - `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
 - `rootDir` - Use `base` option of `gulp.src()` instead.
 
-Basis Usage
+Basic Usage
 ----------
-Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `output.js` in  `built/local`. To invoke, simple run `gulp`.
+Below is a minimal `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `output.js` in  `built/local`. To invoke, simple run `gulp`.
 
 ```javascript
 var gulp = require('gulp');
@@ -63,7 +63,7 @@ gulp.task('default', function () {
   return tsResult.js.pipe(gulp.dest('built/local'));
 });
 ```
-Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp script` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
+Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp scripts` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
 ```javascript
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
