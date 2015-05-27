@@ -17,7 +17,7 @@ const PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
 	constructor(proj: project.Project) {
-		super({ objectMode: true });
+		super({objectMode: true});
 
 		this.project = proj;
 
@@ -25,13 +25,13 @@ class CompileStream extends stream.Duplex {
 		this.js = this;
 
 		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
-		this.on('error', () => { });
+		this.on('error', () => {});
 	}
 
 	private project: project.Project;
 
 	_write(file: any, encoding, cb: (err?) => void);
-	_write(file: gutil.File, encoding, cb = (err?) => { }) {
+	_write(file: gutil.File, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
 
 		if (file.isNull()) {
@@ -68,7 +68,7 @@ class CompileStream extends stream.Duplex {
 }
 class CompileOutputStream extends stream.Readable {
 	constructor() {
-		super({ objectMode: true });
+		super({objectMode: true});
 	}
 
 	_read() {
