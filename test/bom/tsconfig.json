@@ -3,6 +3,6 @@
 		"module": "amd"
 	},
 	"files": [
-		"test-4.ts"
+		"test-bom.ts"
 	]
 }
