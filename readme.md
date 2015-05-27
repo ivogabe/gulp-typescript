@@ -253,3 +253,7 @@ If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in
 Build gulp-typescript
 ------------
 The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
+
+License
+-------
+gulp-typescript is licensed under the [MIT license](http://opensource.org/licenses/MIT).
