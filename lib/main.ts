@@ -17,7 +17,7 @@ const PLUGIN_NAME = 'gulp-typescript';
 
 class CompileStream extends stream.Duplex {
 	constructor(proj: project.Project) {
-		super({objectMode: true});
+		super({ objectMode: true });
 
 		this.project = proj;
 
@@ -25,13 +25,13 @@ class CompileStream extends stream.Duplex {
 		this.js = this;
 
 		// Prevent "Unhandled stream error in pipe" when compilation error occurs.
-		this.on('error', () => {});
+		this.on('error', () => { });
 	}
 
 	private project: project.Project;
 
 	_write(file: any, encoding, cb: (err?) => void);
-	_write(file: gutil.File, encoding, cb = (err?) => {}) {
+	_write(file: gutil.File, encoding, cb = (err?) => { }) {
 		if (!file) return cb();
 
 		if (file.isNull()) {
@@ -68,7 +68,7 @@ class CompileStream extends stream.Duplex {
 }
 class CompileOutputStream extends stream.Readable {
 	constructor() {
-		super({objectMode: true});
+		super({ objectMode: true });
 	}
 
 	_read() {
@@ -102,14 +102,14 @@ type Enum = utils.Map<number | string>;
 function createEnumMap(input: Enum): utils.Map<number> {
 	const map: utils.Map<number> = {};
 	const keys = Object.keys(input);
-	
+
 	for (const key of keys) {
 		let value = input[key];
 		if (typeof value === 'number') {
 			map[key.toLowerCase()] = value;
 		}
 	}
-	
+
 	return map;
 }
 
@@ -125,7 +125,7 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	const tsSettings: ts.CompilerOptions = {};
-	
+
 	var typescript = settings.typescript || ts;
 
 	for (const key in settings) {
@@ -163,7 +163,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 		// Same bug in TS 1.4 as previous comment.
 		tsSettings.module = ts.ModuleKind.None;
 	}
-	
+
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
@@ -206,7 +206,7 @@ module compile {
 		sortOutput?: boolean;
 
 		typescript?: typeof ts;
-		
+
 		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
 		
 		// Unsupported by gulp-typescript
@@ -217,7 +217,7 @@ module compile {
 	}
 	export import Project = project.Project;
 	export import reporter = _reporter;
-	
+
 	export function createProject(settings?: Settings);
 	export function createProject(tsConfigFileName: string, settings?: Settings);
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
@@ -226,7 +226,9 @@ module compile {
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				tsConfigFileName = fileNameOrSettings;
-				tsConfigContent = JSON.parse(fs.readFileSync(fileNameOrSettings).toString());
+				// load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
+				let tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
+				tsConfigContent = JSON.parse(tsConfigText.replace(/^\uFEFF/, ''));
 				let newSettings: any = {};
 				if (tsConfigContent.compilerOptions) {
 					for (const key of Object.keys(tsConfigContent.compilerOptions)) {
@@ -243,7 +245,7 @@ module compile {
 				settings = fileNameOrSettings;
 			}
 		}
-		
+
 		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 		project.compiler = new compiler.ProjectCompiler();
 		return project;
