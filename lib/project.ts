@@ -4,7 +4,10 @@ import * as stream from 'stream';
 import * as ts from 'typescript';
 import * as vfs from 'vinyl-fs';
 import * as path from 'path';
+import * as through2 from 'through2';
+import * as gutil from 'gulp-util';
 import * as tsApi from './tsapi';
+import * as utils from './utils';
 import { FilterSettings } from './main';
 import { Reporter } from './reporter';
 import { FileCache } from './input';
@@ -88,11 +91,35 @@ export class Project {
 			throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
 		}
 		
-		let base = path.dirname(this.configFileName);
+		let configPath = path.dirname(this.configFileName)
+		let base: string;
 		if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
-			base = path.resolve(base, this.config.compilerOptions.rootDir);
+			base = path.resolve(configPath, this.config.compilerOptions.rootDir);
+		} else {
+			base = configPath;
 		}
 		
-		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base });
+		const resolvedFiles: string[] = [];
+		const checkMissingFiles = through2.obj((file: gutil.File, enc, callback) => {
+			resolvedFiles.push(utils.normalizePath(file.path));
+			callback();
+		});
+		checkMissingFiles.on('finish', () => {
+			for (const fileName of this.config.files) {
+				const fullPaths = [
+					utils.normalizePath(path.join(configPath, fileName)),
+					utils.normalizePath(path.join(process.cwd(), configPath, fileName))
+				];
+				
+				if (resolvedFiles.indexOf(fullPaths[0]) === -1 && resolvedFiles.indexOf(fullPaths[1]) === -1) {
+					const error = new Error(`error TS6053: File '${ fileName }' not found.`);
+					console.error(error.message);
+					checkMissingFiles.emit('error', error);
+				}
+			}
+		});
+		
+		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base })
+			.pipe(checkMissingFiles);
 	}
 }
