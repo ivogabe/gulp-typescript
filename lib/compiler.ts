@@ -8,6 +8,7 @@ import { Output, OutputFileKind } from './output';
 import { Host } from './host';
 import { Project } from './project';
 import { Filter } from './filter';
+import { CompilationResult, emptyCompilationResult } from './reporter';
 import * as utils from './utils';
 
 export interface ICompiler {
@@ -38,7 +39,7 @@ export class ProjectCompiler implements ICompiler {
 
 	inputDone() {
 		if (!this.project.input.firstSourceFile) {
-			this.project.output.finish();
+			this.project.output.finish(emptyCompilationResult());
 			return;
 		}
 
@@ -58,6 +59,8 @@ export class ProjectCompiler implements ICompiler {
 					this.project.output.write(file.fileName + '.d.ts', file.content[OutputFileKind.Definitions]);
 				}
 			}
+			
+			this.project.output.finish(old.results);
 
 			return;
 		}
@@ -91,7 +94,7 @@ export class ProjectCompiler implements ICompiler {
 		// Creating a program to compile the sources
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
 
-		const errors = tsApi.getDiagnosticsAndEmit(this.program);
+		const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
 
 		for (let i = 0; i < errors.length; i++) {
 			this.project.output.diagnostic(errors[i]);
@@ -103,7 +106,7 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.write(fileName, this.host.output[fileName]);
 		}
 
-		this.project.output.finish();
+		this.project.output.finish(result);
 	}
 	
 	private _commonBaseDiff: [number, string];

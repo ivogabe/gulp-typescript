@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import { CompilationResult, emptyCompilationResult } from './reporter';
 
 export interface TypeScript14 {
 	createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string);
@@ -22,12 +23,12 @@ export interface Program15 {
 	getGlobalDiagnostics(): ts.Diagnostic[];
 	getSemanticDiagnostics(): ts.Diagnostic[];
 	getDeclarationDiagnostics(): ts.Diagnostic[];
-	emit(): { diagnostics: ts.Diagnostic[]; };
+	emit(): { diagnostics: ts.Diagnostic[]; emitSkipped: boolean; };
 }
 
 export interface TypeChecker14 {
 	getDiagnostics(sourceFile?: ts.SourceFile): ts.Diagnostic[];
-	emitFiles(): { diagnostics: ts.Diagnostic[] };
+	emitFiles(): { diagnostics: ts.Diagnostic[]; };
 }
 export interface DiagnosticMessageChain15 {
 	messageText: string;
@@ -54,9 +55,13 @@ export function getFileName(thing: { filename: string} | { fileName: string }): 
 	if ((<any> thing).filename) return (<any> thing).filename; // TS 1.4
 	return (<any> thing).fileName; // TS 1.5
 }
-export function getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagnostic[] {
+export function getDiagnosticsAndEmit(program: Program14 | Program15): [ts.Diagnostic[], CompilationResult] {
+	let result = emptyCompilationResult();
+	
 	if ((<Program14> program).getDiagnostics) { // TS 1.4
 		let errors = (<Program14> program).getDiagnostics();
+		
+		result.syntaxErrors = errors.length;
 
 		if (!errors.length) {
 			// If there are no syntax errors, check types
@@ -67,21 +72,34 @@ export function getDiagnosticsAndEmit(program: Program14 | Program15): ts.Diagno
 			const emitErrors = checker.emitFiles().diagnostics;
 
 			errors = semanticErrors.concat(emitErrors);
+			result.semanticErrors = errors.length;
+		} else {
+			result.emitSkipped = true;
 		}
 
-		return errors;
+		return [errors, result];
 	} else { // TS 1.5
 		let errors = (<Program15> program).getSyntacticDiagnostics();
-		if (errors.length === 0) errors = (<Program15> program).getGlobalDiagnostics();
+		result.syntaxErrors = errors.length;
+		if (errors.length === 0) {
+			errors = (<Program15> program).getGlobalDiagnostics();
+			
+			// Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+			// This is handled by ICompiler#correctSourceMap, so this error can be muted.
+			errors = errors.filter((item) => item.code !== 6059);
+			
+			result.globalErrors = errors.length;
+		}
 		
-		// Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
-		// This is handled by ICompiler#correctSourceMap, so this error can be muted.
-		errors = errors.filter((item) => item.code !== 6059);
-		
-		if (errors.length === 0) errors = (<Program15> program).getSemanticDiagnostics();
+		if (errors.length === 0) {
+			errors = (<Program15> program).getSemanticDiagnostics();
+			result.semanticErrors = errors.length;
+		}
 
 		const emitOutput = (<Program15> program).emit();
-		return errors.concat(emitOutput.diagnostics);
+		result.emitErrors = emitOutput.diagnostics.length;
+		result.emitSkipped = emitOutput.emitSkipped;
+		return [errors.concat(emitOutput.diagnostics), result];
 	}
 }
 export function getLineAndCharacterOfPosition(typescript: typeof ts, file: TSFile14 | TSFile15, position: number) {

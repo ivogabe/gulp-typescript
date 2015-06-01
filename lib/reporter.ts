@@ -23,9 +23,48 @@ export interface TypeScriptError extends Error {
 		character: number;
     };
 }
+export interface CompilationResult {
+	syntaxErrors: number;
+	globalErrors: number;
+	semanticErrors: number;
+	emitErrors: number;
+	
+	emitSkipped: boolean;
+}
+export function emptyCompilationResult() {
+	return {
+		syntaxErrors: 0,
+		globalErrors: 0,
+		semanticErrors: 0,
+		emitErrors: 0,
+		emitSkipped: false
+	}
+}
 
 export interface Reporter {
 	error?: (error: TypeScriptError, typescript: typeof ts) => void;
+	finish?: (results: CompilationResult) => void;
+}
+
+function defaultFinishHandler(results: CompilationResult) {
+	let hasError = false;
+	const showErrorCount = (count: number, type: string) => {
+		if (count === 0) return;
+		
+		gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), type + ' ' + (count === 1 ? 'error' : 'errors'));
+		hasError = true;
+	};
+	
+	showErrorCount(results.syntaxErrors, 'syntax');
+	showErrorCount(results.globalErrors, 'global');
+	showErrorCount(results.semanticErrors, 'semantic');
+	showErrorCount(results.emitErrors, 'emit');
+	
+	if (results.emitSkipped) {
+		gutil.log('TypeScript: emit', gutil.colors.red('failed'));
+	} else if (hasError) {
+		gutil.log('TypeScript: emit', gutil.colors.cyan('succeeded'), '(with errors)');
+	}
 }
 
 export function nullReporter(): Reporter {
@@ -35,7 +74,8 @@ export function defaultReporter(): Reporter {
 	return {
 		error: (error: TypeScriptError) => {
 			console.error(error.message);
-		}
+		},
+		finish: defaultFinishHandler
 	};
 }
 
@@ -63,7 +103,8 @@ export function longReporter(): Reporter {
 			} else {
 				console.error(error.message);
 			}
-		}
+		},
+		finish: defaultFinishHandler
 	}
 }
 export function fullReporter(fullFilename: boolean = false): Reporter {
@@ -95,6 +136,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 					);
 				}
 			}
-		}
+		},
+		finish: defaultFinishHandler
 	}
 }

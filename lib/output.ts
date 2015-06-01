@@ -42,6 +42,7 @@ export class Output {
 	project: project.Project;
 	files: utils.Map<OutputFile> = {};
 	errors: reporter.TypeScriptError[] = [];
+	results: reporter.CompilationResult;
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
 
@@ -196,7 +197,7 @@ export class Output {
 		}
 	}
 
-	finish() {
+	finish(results: reporter.CompilationResult) {
 		if (this.project.sortOutput) {
 			let sortedEmit = (fileName: string) => {
 				let file = this.files[fileName];
@@ -215,6 +216,9 @@ export class Output {
 				sortedEmit(fileName);
 			}
 		}
+		
+		this.results = results;
+		if (this.project.reporter.finish) this.project.reporter.finish(results);
 
 		this.streamJs.push(null);
 		this.streamDts.push(null);
