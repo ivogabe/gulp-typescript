@@ -2,11 +2,11 @@ var tsApi = require('./tsapi');
 var path = require('path');
 var utils = require('./utils');
 var Filter = (function () {
-    function Filter(_project, filters) {
+    function Filter(project, filters) {
         var _this = this;
         this.referencedFrom = undefined;
         this.referencedFromAll = undefined;
-        this.project = _project;
+        this.project = project;
         if (filters.referencedFrom !== undefined) {
             this.referencedFrom = this.mapFilenamesToFiles(filters.referencedFrom);
             this.referencedFromAll = [];

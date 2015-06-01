@@ -1,3 +1,4 @@
+var reporter_1 = require('./reporter');
 function isTS14(typescript) {
     return !('findConfigFile' in typescript);
 }
@@ -9,28 +10,41 @@ function getFileName(thing) {
 }
 exports.getFileName = getFileName;
 function getDiagnosticsAndEmit(program) {
+    var result = reporter_1.emptyCompilationResult();
     if (program.getDiagnostics) {
         var errors = program.getDiagnostics();
+        result.syntaxErrors = errors.length;
         if (!errors.length) {
             // If there are no syntax errors, check types
             var checker = program.getTypeChecker(true);
             var semanticErrors = checker.getDiagnostics();
             var emitErrors = checker.emitFiles().diagnostics;
             errors = semanticErrors.concat(emitErrors);
+            result.semanticErrors = errors.length;
         }
-        return errors;
+        else {
+            result.emitSkipped = true;
+        }
+        return [errors, result];
     }
     else {
         var errors = program.getSyntacticDiagnostics();
-        if (errors.length === 0)
+        result.syntaxErrors = errors.length;
+        if (errors.length === 0) {
             errors = program.getGlobalDiagnostics();
-        // Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
-        // This is handled by ICompiler#correctSourceMap, so this error can be muted.
-        errors = errors.filter(function (item) { return item.code !== 6059; });
-        if (errors.length === 0)
+            // Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
+            // This is handled by ICompiler#correctSourceMap, so this error can be muted.
+            errors = errors.filter(function (item) { return item.code !== 6059; });
+            result.globalErrors = errors.length;
+        }
+        if (errors.length === 0) {
             errors = program.getSemanticDiagnostics();
+            result.semanticErrors = errors.length;
+        }
         var emitOutput = program.emit();
-        return errors.concat(emitOutput.diagnostics);
+        result.emitErrors = emitOutput.diagnostics.length;
+        result.emitSkipped = emitOutput.emitSkipped;
+        return [errors.concat(emitOutput.diagnostics), result];
     }
 }
 exports.getDiagnosticsAndEmit = getDiagnosticsAndEmit;

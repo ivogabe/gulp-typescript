@@ -161,7 +161,7 @@ var Output = (function () {
             this.streamDts.push(fileDts);
         }
     };
-    Output.prototype.finish = function () {
+    Output.prototype.finish = function (results) {
         var _this = this;
         if (this.project.sortOutput) {
             var sortedEmit = function (fileName) {
@@ -179,6 +179,9 @@ var Output = (function () {
                 sortedEmit(fileName);
             }
         }
+        this.results = results;
+        if (this.project.reporter.finish)
+            this.project.reporter.finish(results);
         this.streamJs.push(null);
         this.streamDts.push(null);
     };
