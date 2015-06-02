@@ -42,6 +42,7 @@ var Project = (function () {
         }
         var resolvedFiles = [];
         var checkMissingFiles = through2.obj(function (file, enc, callback) {
+            this.push(file);
             resolvedFiles.push(utils.normalizePath(file.path));
             callback();
         });

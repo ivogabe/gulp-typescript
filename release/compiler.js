@@ -170,7 +170,6 @@ var FileCompiler = (function () {
         }
         var diagnostics = [];
         var outputString = tsApi.transpile(this.project.typescript, file.content, this.project.options, file.fileNameOriginal, diagnostics);
-        console.log('errors', diagnostics.length);
         for (var _d = 0; _d < diagnostics.length; _d++) {
             var diagnostic = diagnostics[_d];
             this.project.output.diagnostic(diagnostic);
