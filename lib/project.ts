@@ -100,7 +100,8 @@ export class Project {
 		}
 		
 		const resolvedFiles: string[] = [];
-		const checkMissingFiles = through2.obj((file: gutil.File, enc, callback) => {
+		const checkMissingFiles = through2.obj(function (file: gutil.File, enc, callback) {
+			this.push(file);
 			resolvedFiles.push(utils.normalizePath(file.path));
 			callback();
 		});
