@@ -80,3 +80,10 @@ function flattenDiagnosticMessageText(typescript, messageText) {
     }
 }
 exports.flattenDiagnosticMessageText = flattenDiagnosticMessageText;
+function transpile(typescript, input, compilerOptions, fileName, diagnostics) {
+    if (!typescript.transpile) {
+        throw new Error('gulp-typescript: Single file compilation is not supported using TypeScript 1.4');
+    }
+    return typescript.transpile(input, compilerOptions, fileName, diagnostics);
+}
+exports.transpile = transpile;

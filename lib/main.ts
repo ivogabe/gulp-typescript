@@ -11,6 +11,7 @@ import * as _filter from './filter';
 import * as _reporter from './reporter';
 import * as compiler from './compiler';
 import * as tsConfig from './tsconfig';
+import * as tsApi from './tsapi';
 import * as through2 from 'through2';
 
 const PLUGIN_NAME = 'gulp-typescript';
@@ -207,6 +208,8 @@ module compile {
 
 		typescript?: typeof ts;
 
+		isolatedModules?: boolean;
+
 		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
 		
 		// Unsupported by gulp-typescript
@@ -247,7 +250,17 @@ module compile {
 		}
 
 		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
-		project.compiler = new compiler.ProjectCompiler();
+		
+		// Isolated modules are only supported when using TS1.5+
+		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
+			project.options.sourceMap = false;
+			project.options.declaration = false;
+			project.options['inlineSourceMap'] = true;
+			project.compiler = new compiler.FileCompiler();
+		} else {
+			project.compiler = new compiler.ProjectCompiler();
+		}
+		
 		return project;
 	}
 

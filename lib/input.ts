@@ -166,6 +166,7 @@ export class FileCache {
 	previous: FileDictionary = undefined;
 	current: FileDictionary;
 	options: ts.CompilerOptions;
+	noParse: boolean = false; // true when using a file based compiler.
 
 	typescript: typeof ts;
 	version: number = 0;
@@ -195,6 +196,7 @@ export class FileCache {
 	}
 
 	private initTypeScriptSourceFile(file: File) {
+		if (this.noParse) return;
 		if (this.previous) {
 			let previous = this.previous.getFile(file.fileNameOriginal);
 			if (File.equal(previous, file)) {

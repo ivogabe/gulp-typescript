@@ -68,7 +68,8 @@
     "gulp-concat": "~2.5.2",
     "gulp-header": "~1.2.2",
     "gulp-diff": "~0.3.1",
-    "yargs": "~3.9.0"
+    "yargs": "~3.9.0",
+    "gulp-plumber": "^1.0.1"
   },
   "scripts": {
     "test": "gulp"
