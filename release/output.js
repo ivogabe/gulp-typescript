@@ -134,7 +134,7 @@ var Output = (function () {
             base = file.original.gulp.base;
         }
         var fileJs = new gutil.File({
-            path: root + file.fileName + '.js',
+            path: path.join(root, file.fileName + '.js'),
             contents: new Buffer(file.content[OutputFileKind.JavaScript]),
             cwd: file.original.gulp.cwd,
             base: base
@@ -144,7 +144,7 @@ var Output = (function () {
         this.streamJs.push(fileJs);
         if (this.project.options.declaration) {
             var fileDts = new gutil.File({
-                path: root + file.fileName + '.d.ts',
+                path: path.join(root, file.fileName + '.d.ts'),
                 contents: new Buffer(file.content[OutputFileKind.Definitions]),
                 cwd: file.original.gulp.cwd,
                 base: base
@@ -152,7 +152,7 @@ var Output = (function () {
             this.streamDts.push(fileDts);
         }
     };
-    Output.prototype.finish = function () {
+    Output.prototype.finish = function (results) {
         var _this = this;
         if (this.project.sortOutput) {
             var sortedEmit = function (fileName) {
@@ -170,15 +170,13 @@ var Output = (function () {
                 sortedEmit(fileName);
             }
         }
+        this.results = results;
+        if (this.project.reporter.finish)
+            this.project.reporter.finish(results);
         this.streamJs.push(null);
         this.streamDts.push(null);
     };
     Output.prototype.getError = function (info) {
-        if (info.code === 6059) {
-            // "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
-            // This is handled by ICompiler#correctSourceMap, so this error can be muted.
-            return undefined;
-        }
         var err = new Error();
         err.name = 'TypeScript error';
         err.diagnostic = info;

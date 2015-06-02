@@ -1,44 +1,45 @@
-import ts = require('typescript');
-import path = require('path');
-import gutil = require('gulp-util');
-import sourceMap = require('source-map');
-import tsApi = require('./tsapi');
-import input = require('./input');
-import output = require('./output');
-import host = require('./host');
-import project = require('./project');
-import filter = require('./filter');
-import utils = require('./utils');
+import * as ts from 'typescript';
+import * as path from 'path';
+import * as gutil from 'gulp-util';
+import { RawSourceMap } from 'source-map';
+import * as tsApi from './tsapi';
+import { File, FileChangeState } from './input';
+import { Output, OutputFileKind } from './output';
+import { Host } from './host';
+import { Project } from './project';
+import { Filter } from './filter';
+import { CompilationResult, emptyCompilationResult } from './reporter';
+import * as utils from './utils';
 
 export interface ICompiler {
-	prepare(_project: project.Project): void;
-	inputFile(file: input.File);
+	prepare(_project: Project): void;
+	inputFile(file: File);
 	inputDone();
 	/**
 	 * Corrects the paths in the sourcemap.
 	 * Returns true when the file is located
 	 * under the base path.
 	 */
-	correctSourceMap(map: sourceMap.RawSourceMap): boolean;
+	correctSourceMap(map: RawSourceMap): boolean;
 }
 
 /**
  * Compiles a whole project, with full type checking
  */
 export class ProjectCompiler implements ICompiler {
-	host: host.Host;
-	project: project.Project;
+	host: Host;
+	project: Project;
 	program: ts.Program;
 
-	prepare(_project: project.Project) {
+	prepare(_project: Project) {
 		this.project = _project;
 	}
 
-	inputFile(file: input.File) { }
+	inputFile(file: File) { }
 
 	inputDone() {
 		if (!this.project.input.firstSourceFile) {
-			this.project.output.finish();
+			this.project.output.finish(emptyCompilationResult());
 			return;
 		}
 
@@ -52,12 +53,14 @@ export class ProjectCompiler implements ICompiler {
 
 			for (const fileName of Object.keys(old.files)) {
 				const file = old.files[fileName];
-				this.project.output.write(file.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
-				this.project.output.write(file.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
-				if (file.content[output.OutputFileKind.Definitions] !== undefined) {
-					this.project.output.write(file.fileName + '.d.ts', file.content[output.OutputFileKind.Definitions]);
+				this.project.output.write(file.fileName + '.js', file.content[OutputFileKind.JavaScript]);
+				this.project.output.write(file.fileName + '.js.map', file.content[OutputFileKind.SourceMap]);
+				if (file.content[OutputFileKind.Definitions] !== undefined) {
+					this.project.output.write(file.fileName + '.d.ts', file.content[OutputFileKind.Definitions]);
 				}
 			}
+			
+			this.project.output.finish(old.results);
 
 			return;
 		}
@@ -66,7 +69,7 @@ export class ProjectCompiler implements ICompiler {
 		this.project.options.sourceRoot = root;
 		(<any> this.project.options).rootDir = root; // rootDir was added in 1.5 & not available in 1.4
 		
-		this.host = new host.Host(
+		this.host = new Host(
 			this.project.typescript,
 			this.project.currentDirectory,
 			this.project.input,
@@ -77,8 +80,8 @@ export class ProjectCompiler implements ICompiler {
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
 
 		if (this.project.filterSettings !== undefined) {
-			let _filter = new filter.Filter(this.project, this.project.filterSettings);
-			rootFilenames = rootFilenames.filter((fileName) => _filter.match(fileName));
+			let filter = new Filter(this.project, this.project.filterSettings);
+			rootFilenames = rootFilenames.filter((fileName) => filter.match(fileName));
 		}
 		
 		if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
@@ -91,7 +94,7 @@ export class ProjectCompiler implements ICompiler {
 		// Creating a program to compile the sources
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
 
-		const errors = tsApi.getDiagnosticsAndEmit(this.program);
+		const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
 
 		for (let i = 0; i < errors.length; i++) {
 			this.project.output.diagnostic(errors[i]);
@@ -109,7 +112,7 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.write(fileName, content);
 		}
 
-		this.project.output.finish();
+		this.project.output.finish(result);
 	}
 	
 	private _commonBaseDiff: [number, string];
@@ -140,7 +143,7 @@ export class ProjectCompiler implements ICompiler {
 		return this._commonBaseDiff;
 	}
 	
-	correctSourceMap(map: sourceMap.RawSourceMap) {
+	correctSourceMap(map: RawSourceMap) {
 		const [diffLength, diff] = this.commonBaseDiff;
 		
 		if (this.project.singleOutput) return true;
@@ -179,24 +182,24 @@ export class ProjectCompiler implements ICompiler {
 }
 
 export class FileCompiler implements ICompiler {
-	host: host.Host;
-	project: project.Project;
+	host: Host;
+	project: Project;
 	program: ts.Program;
 	
 	private errorsPerFile: utils.Map<ts.Diagnostic[]> = {};
 	private previousErrorsPerFile: utils.Map<ts.Diagnostic[]> = {};
 
-	prepare(_project: project.Project) {
+	prepare(_project: Project) {
 		this.project = _project;
 		this.project.input.noParse = true;
 	}
 
-	inputFile(file: input.File) {
+	inputFile(file: File) {
 		if (file.fileNameNormalized.substr(file.fileNameNormalized.length - 5) === '.d.ts') {
 			return; // Don't compile definition files
 		}
 		
-		if (this.project.input.getFileChange(file.fileNameOriginal).state === input.FileChangeState.Equal) {
+		if (this.project.input.getFileChange(file.fileNameOriginal).state === FileChangeState.Equal) {
 			// Not changed, re-use old file.
 			
 			const old = this.project.previousOutput;
@@ -210,8 +213,8 @@ export class FileCompiler implements ICompiler {
 				const oldFile = old.files[fileName];
 				if (oldFile.original.fileNameNormalized !== file.fileNameNormalized) continue;
 				
-				this.project.output.write(oldFile.fileName + '.js', oldFile.content[output.OutputFileKind.JavaScript]);
-				this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[output.OutputFileKind.SourceMap]);
+				this.project.output.write(oldFile.fileName + '.js', oldFile.content[OutputFileKind.JavaScript]);
+				this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[OutputFileKind.SourceMap]);
 			}
 
 			return;
@@ -225,7 +228,6 @@ export class FileCompiler implements ICompiler {
 			file.fileNameOriginal,
 			diagnostics
 		);
-		
 		for (const diagnostic of diagnostics) {
 			this.project.output.diagnostic(diagnostic);
 		}
@@ -242,7 +244,7 @@ export class FileCompiler implements ICompiler {
 		
 		mapString = mapString.substring(start.length);
 		
-		let map: sourceMap.RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
+		let map: RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
 		map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base)
 		map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
 		
@@ -255,13 +257,13 @@ export class FileCompiler implements ICompiler {
 	}
 
 	inputDone() {
-		this.project.output.finish();
+		this.project.output.finish(undefined);
 		
 		this.previousErrorsPerFile = this.errorsPerFile;
 		this.errorsPerFile = {};
 	}
 	
-	correctSourceMap(map: sourceMap.RawSourceMap) {
+	correctSourceMap(map: RawSourceMap) {
 		return true;
 	}
 }

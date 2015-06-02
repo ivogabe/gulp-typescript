@@ -1,26 +1,28 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import stream = require('stream');
-import ts = require('typescript');
-import vfs = require('vinyl-fs');
-import path = require('path');
-import tsApi = require('./tsapi');
-import main = require('./main');
-import host = require('./host');
-import reporter = require('./reporter');
-import input = require('./input');
-import output = require('./output');
-import compiler = require('./compiler');
-import tsConfig = require('./tsconfig');
+import * as stream from 'stream';
+import * as ts from 'typescript';
+import * as vfs from 'vinyl-fs';
+import * as path from 'path';
+import * as through2 from 'through2';
+import * as gutil from 'gulp-util';
+import * as tsApi from './tsapi';
+import * as utils from './utils';
+import { FilterSettings } from './main';
+import { Reporter } from './reporter';
+import { FileCache } from './input';
+import { Output } from './output';
+import { ICompiler } from './compiler';
+import { TsConfig } from './tsconfig';
 
 export class Project {
-	input: input.FileCache;
-	output: output.Output;
-	previousOutput: output.Output;
-	compiler: compiler.ICompiler;
+	input: FileCache;
+	output: Output;
+	previousOutput: Output;
+	compiler: ICompiler;
 	
 	configFileName: string;
-	config: tsConfig.TsConfig;
+	config: TsConfig;
 
 	// region settings
 
@@ -51,17 +53,17 @@ export class Project {
 	 */
 	sortOutput: boolean;
 
-	filterSettings: main.FilterSettings;
+	filterSettings: FilterSettings;
 
 	singleOutput: boolean;
 
-	reporter: reporter.Reporter;
+	reporter: Reporter;
 
 	// endregion
 
 	currentDirectory: string;
 
-	constructor(configFileName: string, config: tsConfig.TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+	constructor(configFileName: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.typescript = typescript;
 		this.configFileName = configFileName;
 		this.config = config;
@@ -71,7 +73,7 @@ export class Project {
 		this.sortOutput = sortOutput;
 		this.singleOutput = options.out !== undefined;
 
-		this.input = new input.FileCache(typescript, options);
+		this.input = new FileCache(typescript, options);
 	}
 
 	/**
@@ -81,7 +83,7 @@ export class Project {
 	reset(outputJs: stream.Readable, outputDts: stream.Readable) {
 		this.input.reset();
 		this.previousOutput = this.output;
-		this.output = new output.Output(this, outputJs, outputDts);
+		this.output = new Output(this, outputJs, outputDts);
 	}
 	
 	src() {
@@ -89,11 +91,35 @@ export class Project {
 			throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
 		}
 		
-		let base = path.dirname(this.configFileName);
+		let configPath = path.dirname(this.configFileName)
+		let base: string;
 		if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
-			base = path.resolve(base, this.config.compilerOptions.rootDir);
+			base = path.resolve(configPath, this.config.compilerOptions.rootDir);
+		} else {
+			base = configPath;
 		}
 		
-		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base });
+		const resolvedFiles: string[] = [];
+		const checkMissingFiles = through2.obj((file: gutil.File, enc, callback) => {
+			resolvedFiles.push(utils.normalizePath(file.path));
+			callback();
+		});
+		checkMissingFiles.on('finish', () => {
+			for (const fileName of this.config.files) {
+				const fullPaths = [
+					utils.normalizePath(path.join(configPath, fileName)),
+					utils.normalizePath(path.join(process.cwd(), configPath, fileName))
+				];
+				
+				if (resolvedFiles.indexOf(fullPaths[0]) === -1 && resolvedFiles.indexOf(fullPaths[1]) === -1) {
+					const error = new Error(`error TS6053: File '${ fileName }' not found.`);
+					console.error(error.message);
+					checkMissingFiles.emit('error', error);
+				}
+			}
+		});
+		
+		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base })
+			.pipe(checkMissingFiles);
 	}
 }

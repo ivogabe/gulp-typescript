@@ -1,22 +1,22 @@
-import ts = require('typescript');
-import tsApi = require('./tsapi');
-import path = require('path');
-import project = require('./project');
-import main = require('./main');
-import input = require('./input');
-import utils = require('./utils');
+import * as ts from 'typescript';
+import * as tsApi from './tsapi';
+import * as path from 'path';
+import { Project } from './project';
+import * as main from './main';
+import { File } from './input';
+import * as utils from './utils';
 
 export class Filter {
-	project: project.Project;
-	constructor(_project: project.Project, filters: main.FilterSettings) {
-		this.project = _project;
+	project: Project;
+	constructor(project: Project, filters: main.FilterSettings) {
+		this.project = project;
 
 		if (filters.referencedFrom !== undefined) {
 			this.referencedFrom = this.mapFilenamesToFiles(filters.referencedFrom);
 
 			this.referencedFromAll = [];
 
-			const addReference = (file: input.File) => {
+			const addReference = (file: File) => {
 				if (this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1) return;
 
 				this.referencedFromAll.push(file.fileNameNormalized);
@@ -37,7 +37,7 @@ export class Filter {
 	}
 
 	private mapFilenamesToFiles(filenames: string[]) {
-		const files: input.File[] = [];
+		const files: File[] = [];
 		for (let i = 0; i < filenames.length; i++) {
 			const file = this.getFile(filenames[i]);
 			if (file === undefined) {
@@ -49,7 +49,7 @@ export class Filter {
 		return files;
 	}
 
-	private getFile(searchFileName: string): input.File {
+	private getFile(searchFileName: string): File {
 		const fileNames = this.project.input.getFileNames(true);
 		for (const fileName of fileNames) {
 			const file = this.project.input.getFile(fileName);
@@ -65,7 +65,7 @@ export class Filter {
 		return undefined;
 	}
 
-	private referencedFrom: input.File[] = undefined;
+	private referencedFrom: File[] = undefined;
 	private referencedFromAll: string[] = undefined;
 
 	match(fileName: string) {
@@ -88,7 +88,7 @@ export class Filter {
 		return true;
 	}
 
-	private matchReferencedFrom(filename: string, file: input.File) {
+	private matchReferencedFrom(filename: string, file: File) {
 		return this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1;
 	}
 }

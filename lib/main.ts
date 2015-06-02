@@ -1,18 +1,18 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import fs = require('fs');
-import gutil = require('gulp-util');
-import path = require('path');
-import stream = require('stream');
-import project = require('./project');
-import utils = require('./utils');
-import _filter = require('./filter');
-import _reporter = require('./reporter');
-import compiler = require('./compiler');
-import tsConfig = require('./tsconfig');
-import tsApi = require('./tsapi');
-import through2 = require('through2');
+import * as ts from 'typescript';
+import * as fs from 'fs';
+import * as gutil from 'gulp-util';
+import * as path from 'path';
+import * as stream from 'stream';
+import * as project from './project';
+import * as utils from './utils';
+import * as _filter from './filter';
+import * as _reporter from './reporter';
+import * as compiler from './compiler';
+import * as tsConfig from './tsconfig';
+import * as tsApi from './tsapi';
+import * as through2 from 'through2';
 
 const PLUGIN_NAME = 'gulp-typescript';
 
@@ -103,14 +103,14 @@ type Enum = utils.Map<number | string>;
 function createEnumMap(input: Enum): utils.Map<number> {
 	const map: utils.Map<number> = {};
 	const keys = Object.keys(input);
-	
+
 	for (const key of keys) {
 		let value = input[key];
 		if (typeof value === 'number') {
 			map[key.toLowerCase()] = value;
 		}
 	}
-	
+
 	return map;
 }
 
@@ -126,7 +126,7 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	const tsSettings: ts.CompilerOptions = {};
-	
+
 	var typescript = settings.typescript || ts;
 
 	for (const key in settings) {
@@ -164,7 +164,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 		// Same bug in TS 1.4 as previous comment.
 		tsSettings.module = ts.ModuleKind.None;
 	}
-	
+
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
@@ -207,9 +207,9 @@ module compile {
 		sortOutput?: boolean;
 
 		typescript?: typeof ts;
-		
+
 		isolatedModules?: boolean;
-		
+
 		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
 		
 		// Unsupported by gulp-typescript
@@ -220,7 +220,7 @@ module compile {
 	}
 	export import Project = project.Project;
 	export import reporter = _reporter;
-	
+
 	export function createProject(settings?: Settings);
 	export function createProject(tsConfigFileName: string, settings?: Settings);
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
@@ -229,7 +229,9 @@ module compile {
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				tsConfigFileName = fileNameOrSettings;
-				tsConfigContent = JSON.parse(fs.readFileSync(fileNameOrSettings).toString());
+				// load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
+				let tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
+				tsConfigContent = JSON.parse(tsConfigText.replace(/^\uFEFF/, ''));
 				let newSettings: any = {};
 				if (tsConfigContent.compilerOptions) {
 					for (const key of Object.keys(tsConfigContent.compilerOptions)) {
@@ -246,7 +248,7 @@ module compile {
 				settings = fileNameOrSettings;
 			}
 		}
-		
+
 		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 		
 		// Isolated modules are only supported when using TS1.5+

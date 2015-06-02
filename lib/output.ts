@@ -1,16 +1,16 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import stream = require('stream');
-import path = require('path');
-import ts = require('typescript');
-import sourceMap = require('source-map');
-import gutil = require('gulp-util');
-import utils = require('./utils');
-import input = require('./input');
-import tsApi = require('./tsapi');
-import reporter = require('./reporter');
-import project = require('./project');
-import VinylFile = require('./vinyl-file');
+import * as stream from 'stream';
+import * as path from 'path';
+import * as ts from 'typescript';
+import * as sourceMap from 'source-map';
+import * as gutil from 'gulp-util';
+import * as utils from './utils';
+import * as input from './input';
+import * as tsApi from './tsapi';
+import * as reporter from './reporter';
+import * as project from './project';
+import { VinylFile } from './vinyl-file';
 
 export interface OutputFile {
 	fileName: string;
@@ -42,6 +42,7 @@ export class Output {
 	project: project.Project;
 	files: utils.Map<OutputFile> = {};
 	errors: reporter.TypeScriptError[] = [];
+	results: reporter.CompilationResult;
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
 
@@ -166,7 +167,7 @@ export class Output {
 		}
 
 		const fileJs = <VinylFile> new gutil.File({
-			path: root + file.fileName + '.js',
+			path: path.join(root, file.fileName + '.js'),
 			contents: new Buffer(file.content[OutputFileKind.JavaScript]),
 			cwd: file.original.gulp.cwd,
 			base
@@ -176,7 +177,7 @@ export class Output {
 
 		if (this.project.options.declaration) {
 			const fileDts = new gutil.File({
-				path: root + file.fileName + '.d.ts',
+				path: path.join(root, file.fileName + '.d.ts'),
 				contents: new Buffer(file.content[OutputFileKind.Definitions]),
 				cwd: file.original.gulp.cwd,
 				base
@@ -185,7 +186,7 @@ export class Output {
 		}
 	}
 
-	finish() {
+	finish(results: reporter.CompilationResult) {
 		if (this.project.sortOutput) {
 			let sortedEmit = (fileName: string) => {
 				let file = this.files[fileName];
@@ -204,18 +205,15 @@ export class Output {
 				sortedEmit(fileName);
 			}
 		}
+		
+		this.results = results;
+		if (this.project.reporter.finish) this.project.reporter.finish(results);
 
 		this.streamJs.push(null);
 		this.streamDts.push(null);
 	}
 
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
-		if (info.code === 6059) {
-			// "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
-			// This is handled by ICompiler#correctSourceMap, so this error can be muted.
-			return undefined;
-		}
-		
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
 		err.diagnostic = info;

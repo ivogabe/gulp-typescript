@@ -1,5 +1,34 @@
 ///<reference path='../typings/tsd.d.ts'/>
 var gutil = require('gulp-util');
+function emptyCompilationResult() {
+    return {
+        syntaxErrors: 0,
+        globalErrors: 0,
+        semanticErrors: 0,
+        emitErrors: 0,
+        emitSkipped: false
+    };
+}
+exports.emptyCompilationResult = emptyCompilationResult;
+function defaultFinishHandler(results) {
+    var hasError = false;
+    var showErrorCount = function (count, type) {
+        if (count === 0)
+            return;
+        gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), type + ' ' + (count === 1 ? 'error' : 'errors'));
+        hasError = true;
+    };
+    showErrorCount(results.syntaxErrors, 'syntax');
+    showErrorCount(results.globalErrors, 'global');
+    showErrorCount(results.semanticErrors, 'semantic');
+    showErrorCount(results.emitErrors, 'emit');
+    if (results.emitSkipped) {
+        gutil.log('TypeScript: emit', gutil.colors.red('failed'));
+    }
+    else if (hasError) {
+        gutil.log('TypeScript: emit', gutil.colors.cyan('succeeded'), '(with errors)');
+    }
+}
 function nullReporter() {
     return {};
 }
@@ -8,7 +37,8 @@ function defaultReporter() {
     return {
         error: function (error) {
             console.error(error.message);
-        }
+        },
+        finish: defaultFinishHandler
     };
 }
 exports.defaultReporter = defaultReporter;
@@ -40,7 +70,8 @@ function longReporter() {
             else {
                 console.error(error.message);
             }
-        }
+        },
+        finish: defaultFinishHandler
     };
 }
 exports.longReporter = longReporter;
@@ -67,7 +98,8 @@ function fullReporter(fullFilename) {
                     logLine(i, i === error.startPosition.line ? error.startPosition.character - 1 : 0, i === error.endPosition.line ? error.endPosition.character - 1 : undefined);
                 }
             }
-        }
+        },
+        finish: defaultFinishHandler
     };
 }
 exports.fullReporter = fullReporter;

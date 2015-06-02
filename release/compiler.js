@@ -1,10 +1,11 @@
 var ts = require('typescript');
 var path = require('path');
 var tsApi = require('./tsapi');
-var input = require('./input');
-var output = require('./output');
-var host = require('./host');
-var filter = require('./filter');
+var input_1 = require('./input');
+var output_1 = require('./output');
+var host_1 = require('./host');
+var filter_1 = require('./filter');
+var reporter_1 = require('./reporter');
 var utils = require('./utils');
 /**
  * Compiles a whole project, with full type checking
@@ -18,7 +19,7 @@ var ProjectCompiler = (function () {
     ProjectCompiler.prototype.inputFile = function (file) { };
     ProjectCompiler.prototype.inputDone = function () {
         if (!this.project.input.firstSourceFile) {
-            this.project.output.finish();
+            this.project.output.finish(reporter_1.emptyCompilationResult());
             return;
         }
         if (!this.project.input.isChanged(true)) {
@@ -31,22 +32,23 @@ var ProjectCompiler = (function () {
             for (var _b = 0, _c = Object.keys(old.files); _b < _c.length; _b++) {
                 var fileName = _c[_b];
                 var file = old.files[fileName];
-                this.project.output.write(file.fileName + '.js', file.content[output.OutputFileKind.JavaScript]);
-                this.project.output.write(file.fileName + '.js.map', file.content[output.OutputFileKind.SourceMap]);
-                if (file.content[output.OutputFileKind.Definitions] !== undefined) {
-                    this.project.output.write(file.fileName + '.d.ts', file.content[output.OutputFileKind.Definitions]);
+                this.project.output.write(file.fileName + '.js', file.content[output_1.OutputFileKind.JavaScript]);
+                this.project.output.write(file.fileName + '.js.map', file.content[output_1.OutputFileKind.SourceMap]);
+                if (file.content[output_1.OutputFileKind.Definitions] !== undefined) {
+                    this.project.output.write(file.fileName + '.d.ts', file.content[output_1.OutputFileKind.Definitions]);
                 }
             }
+            this.project.output.finish(old.results);
             return;
         }
         var root = this.project.input.commonBasePath;
         this.project.options.sourceRoot = root;
         this.project.options.rootDir = root; // rootDir was added in 1.5 & not available in 1.4
-        this.host = new host.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');
+        this.host = new host_1.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');
         var rootFilenames = this.project.input.getFileNames(true);
         if (this.project.filterSettings !== undefined) {
-            var _filter = new filter.Filter(this.project, this.project.filterSettings);
-            rootFilenames = rootFilenames.filter(function (fileName) { return _filter.match(fileName); });
+            var filter = new filter_1.Filter(this.project, this.project.filterSettings);
+            rootFilenames = rootFilenames.filter(function (fileName) { return filter.match(fileName); });
         }
         if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
             // Add an empty file under the root, as the rootDir option is not supported in TS1.4.
@@ -56,7 +58,7 @@ var ProjectCompiler = (function () {
         }
         // Creating a program to compile the sources
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
-        var errors = tsApi.getDiagnosticsAndEmit(this.program);
+        var _d = tsApi.getDiagnosticsAndEmit(this.program), errors = _d[0], result = _d[1];
         for (var i = 0; i < errors.length; i++) {
             this.project.output.diagnostic(errors[i]);
         }
@@ -64,13 +66,13 @@ var ProjectCompiler = (function () {
             if (!this.host.output.hasOwnProperty(fileName))
                 continue;
             var content = this.host.output[fileName];
-            var _d = utils.splitExtension(fileName), extension = _d[1];
+            var _e = utils.splitExtension(fileName), extension = _e[1];
             if (extension === 'js') {
                 content = this.removeSourceMapComment(content);
             }
             this.project.output.write(fileName, content);
         }
-        this.project.output.finish();
+        this.project.output.finish(result);
     };
     Object.defineProperty(ProjectCompiler.prototype, "commonBaseDiff", {
         /**
@@ -148,7 +150,7 @@ var FileCompiler = (function () {
         if (file.fileNameNormalized.substr(file.fileNameNormalized.length - 5) === '.d.ts') {
             return; // Don't compile definition files
         }
-        if (this.project.input.getFileChange(file.fileNameOriginal).state === input.FileChangeState.Equal) {
+        if (this.project.input.getFileChange(file.fileNameOriginal).state === input_1.FileChangeState.Equal) {
             // Not changed, re-use old file.
             var old = this.project.previousOutput;
             for (var _i = 0, _a = this.previousErrorsPerFile[file.fileNameNormalized]; _i < _a.length; _i++) {
@@ -161,13 +163,14 @@ var FileCompiler = (function () {
                 var oldFile = old.files[fileName];
                 if (oldFile.original.fileNameNormalized !== file.fileNameNormalized)
                     continue;
-                this.project.output.write(oldFile.fileName + '.js', oldFile.content[output.OutputFileKind.JavaScript]);
-                this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[output.OutputFileKind.SourceMap]);
+                this.project.output.write(oldFile.fileName + '.js', oldFile.content[output_1.OutputFileKind.JavaScript]);
+                this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[output_1.OutputFileKind.SourceMap]);
             }
             return;
         }
         var diagnostics = [];
         var outputString = tsApi.transpile(this.project.typescript, file.content, this.project.options, file.fileNameOriginal, diagnostics);
+        console.log('errors', diagnostics.length);
         for (var _d = 0; _d < diagnostics.length; _d++) {
             var diagnostic = diagnostics[_d];
             this.project.output.diagnostic(diagnostic);
@@ -191,7 +194,7 @@ var FileCompiler = (function () {
         this.errorsPerFile[file.fileNameNormalized] = diagnostics;
     };
     FileCompiler.prototype.inputDone = function () {
-        this.project.output.finish();
+        this.project.output.finish(undefined);
         this.previousErrorsPerFile = this.errorsPerFile;
         this.errorsPerFile = {};
     };

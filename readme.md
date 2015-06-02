@@ -47,9 +47,9 @@ You can use almost all other options that TypeScript supports too. Only these tw
 - `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
 - `rootDir` - Use `base` option of `gulp.src()` instead.
 
-Basis Usage
+Basic Usage
 ----------
-Below is a minimalist `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `out.js` in  `built/local`. To invoke, simple run `gulp`.
+Below is a minimal `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `output.js` in  `built/local`. To invoke, simple run `gulp`.
 
 ```javascript
 var gulp = require('gulp');
@@ -64,7 +64,7 @@ gulp.task('default', function () {
   return tsResult.js.pipe(gulp.dest('built/local'));
 });
 ```
-Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp script` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
+Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp scripts` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
 ```javascript
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
@@ -254,3 +254,7 @@ If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in
 Build gulp-typescript
 ------------
 The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
+
+License
+-------
+gulp-typescript is licensed under the [MIT license](http://opensource.org/licenses/MIT).

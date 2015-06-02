@@ -156,7 +156,9 @@ var compile;
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
                 tsConfigFileName = fileNameOrSettings;
-                tsConfigContent = JSON.parse(fs.readFileSync(fileNameOrSettings).toString());
+                // load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
+                var tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
+                tsConfigContent = JSON.parse(tsConfigText.replace(/^\uFEFF/, ''));
                 var newSettings = {};
                 if (tsConfigContent.compilerOptions) {
                     for (var _i = 0, _a = Object.keys(tsConfigContent.compilerOptions); _i < _a.length; _i++) {

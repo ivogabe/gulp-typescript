@@ -1,11 +1,11 @@
 ///<reference path='../typings/tsd.d.ts'/>
 
-import ts = require('typescript');
-import gutil = require('gulp-util');
-import path = require('path');
-import tsApi = require('./tsapi');
-import utils = require('./utils');
-import VinylFile = require('./vinyl-file');
+import * as ts from 'typescript';
+import * as gutil from 'gulp-util';
+import * as path from 'path';
+import * as tsApi from './tsapi';
+import * as utils from './utils';
+import { VinylFile } from './vinyl-file';
 
 export enum FileChangeState {
 	New,
@@ -129,25 +129,36 @@ export class FileDictionary {
 		return fileNames;
 	}
 	
+	private getSourceFileNames(onlyGulp?: boolean) {
+		const fileNames = this.getFileNames(onlyGulp);
+		const sourceFileNames = fileNames
+			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts');
+		
+		if (sourceFileNames.length === 0) {
+			// Only definition files, so we will calculate the common base path based on the
+			// paths of the definition files.
+			return fileNames;
+		}
+		return sourceFileNames;
+	}
+	
 	get commonBasePath() {
-		const fileNames = this.getFileNames(true);
+		const fileNames = this.getSourceFileNames(true);
 		return fileNames
-			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts')
 			.map(fileName => {
 				const file = this.files[utils.normalizePath(fileName)];
 				return path.resolve(file.gulp.cwd, file.gulp.base);
 			})
-			.reduce(getCommonBasePath)
+			.reduce(getCommonBasePath);
 	}
 	get commonSourceDirectory() {
-		const fileNames = this.getFileNames();
+		const fileNames = this.getSourceFileNames();
 		return fileNames
-			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts')
 			.map(fileName => {
 				const file = this.files[utils.normalizePath(fileName)];
 				return path.dirname(file.fileNameNormalized);
 			})
-			.reduce(getCommonBasePath)
+			.reduce(getCommonBasePath);
 	}
 }
 
