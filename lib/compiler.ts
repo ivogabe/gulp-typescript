@@ -67,7 +67,6 @@ export class ProjectCompiler implements ICompiler {
 		
 		let root = this.project.input.commonBasePath;
 		this.project.options.sourceRoot = root;
-		(<any> this.project.options).rootDir = root; // rootDir was added in 1.5 & not available in 1.4
 		
 		this.host = new Host(
 			this.project.typescript,
@@ -84,8 +83,12 @@ export class ProjectCompiler implements ICompiler {
 			rootFilenames = rootFilenames.filter((fileName) => filter.match(fileName));
 		}
 		
-		if (tsApi.isTS14(this.project.typescript) && !this.project.singleOutput) {
-			// Add an empty file under the root, as the rootDir option is not supported in TS1.4.
+		if (!this.project.singleOutput) {
+			// Add an empty file under the root.
+			// This will make sure the commonSourceDirectory, calculated by TypeScript, won't point to a subdirectory of the root.
+			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
+			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
+			// The empty file is filtered out later on.
 			let emptyFileName = path.join(root, '________________empty.ts')
 			rootFilenames.push(emptyFileName);
 			this.project.input.addContent(emptyFileName, '');
