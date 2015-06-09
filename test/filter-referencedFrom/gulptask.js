@@ -15,6 +15,6 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(newTS(project, undefined, reporter))
 		.pipe(newTS.filter(project, { referencedFrom: ['test-1.ts'] }))
 		.pipe(concat('concat.js'))
-		.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../filter-referencedFrom/' }))
+		.pipe(sourcemaps.write('.', { sourceRoot: '../../../../filter-referencedFrom/' }))
 		.pipe(gulp.dest(output + 'js'));
 }

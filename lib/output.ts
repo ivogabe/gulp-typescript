@@ -139,10 +139,18 @@ export class Output {
 		map.sources = map.sources.map((path) => path.replace(/\\/g, '/'));
 
 		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
-		for (const fileName in file.sourceMapOrigins) {
-			const sourceFile = this.project.input.getFile(fileName);
+		for (const sourceFile of file.sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
-			generator.applySourceMap(new sourceMap.SourceMapConsumer(sourceFile.gulp.sourceMap));
+			
+			const inputOriginalMap = sourceFile.gulp.sourceMap;
+			const inputMap: sourceMap.RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
+			const consumer = new sourceMap.SourceMapConsumer(inputMap);
+			generator.applySourceMap(consumer);
+			
+			if (!inputMap.sources || !inputMap.sourcesContent) continue;
+			for (const i in inputMap.sources) {
+				generator.setSourceContent(inputMap.sources[i], inputMap.sourcesContent[i]);
+			}
 		}
 		file.sourceMapString = generator.toString();
 	}

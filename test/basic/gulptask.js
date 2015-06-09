@@ -12,9 +12,8 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(sourcemaps.init())
 		.pipe(newTS(tsProject, undefined, reporter));
 
-	// tsResult.map.pipe(gulp.dest('test/output/test-3/map'));
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
-		.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../basic/' }))
+		.pipe(sourcemaps.write('.', { sourceRoot: '../../../../basic/' }))
 		.pipe(gulp.dest(output + 'js'));
 }

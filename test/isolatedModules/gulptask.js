@@ -14,6 +14,6 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
-		.pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../../../isolatedModules/' }))
+		.pipe(sourcemaps.write('.', { sourceRoot: '../../../../isolatedModules/' }))
 		.pipe(gulp.dest(output + 'js'));
 }
