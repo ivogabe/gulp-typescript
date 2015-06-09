@@ -105,11 +105,19 @@ var Output = (function () {
         delete map.sourceRoot;
         map.sources = map.sources.map(function (path) { return path.replace(/\\/g, '/'); });
         var generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
-        for (var fileName in file.sourceMapOrigins) {
-            var sourceFile = this.project.input.getFile(fileName);
+        for (var _i = 0, _a = file.sourceMapOrigins; _i < _a.length; _i++) {
+            var sourceFile = _a[_i];
             if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap)
                 continue;
-            generator.applySourceMap(new sourceMap.SourceMapConsumer(sourceFile.gulp.sourceMap));
+            var inputOriginalMap = sourceFile.gulp.sourceMap;
+            var inputMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
+            var consumer = new sourceMap.SourceMapConsumer(inputMap);
+            generator.applySourceMap(consumer);
+            if (!inputMap.sources || !inputMap.sourcesContent)
+                continue;
+            for (var i in inputMap.sources) {
+                generator.setSourceContent(inputMap.sources[i], inputMap.sourcesContent[i]);
+            }
         }
         file.sourceMapString = generator.toString();
     };

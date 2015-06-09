@@ -29,9 +29,6 @@ var Project = (function () {
     };
     Project.prototype.src = function () {
         var _this = this;
-        if (!this.config.files) {
-            throw new Error('gulp-typescript: You can only use src() if the \'files\' property exists in your tsconfig.json. Use gulp.src(\'**/**.ts\') instead.');
-        }
         var configPath = path.dirname(this.configFileName);
         var base;
         if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
@@ -39,6 +36,13 @@ var Project = (function () {
         }
         else {
             base = configPath;
+        }
+        if (!this.config.files) {
+            var files = [path.join(base, '**/*.ts')];
+            if (this.config.excludes instanceof Array) {
+                files = files.concat(this.config.excludes.map(function (file) { return '!' + path.resolve(base, file); }));
+            }
+            return vfs.src(files);
         }
         var resolvedFiles = [];
         var checkMissingFiles = through2.obj(function (file, enc, callback) {
