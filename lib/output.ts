@@ -102,6 +102,10 @@ export class Output {
 						file.skipPush = !file.original.gulp;
 						file.sourceMapOrigins = [file.original];
 					}
+					// Fix the output filename in the source map, which must be relative
+					// to the source root or it won't work correctly in gulp-sourcemaps if
+					// there are more transformations down in the pipeline.
+					file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.js');
 				}
 
 				this.applySourceMaps(file);
