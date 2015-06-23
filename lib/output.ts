@@ -71,7 +71,7 @@ export class Output {
 	 * @param fileName The extensionless filename.
 	 */
 	private addOrMergeFile(fileName: string, kind: OutputFileKind, content: string) {
-		let file = this.files[fileName];
+		let file = this.files[utils.normalizePath(fileName)];
 		if (file) {
 			file.content[kind] = content;
 
@@ -201,7 +201,7 @@ export class Output {
 	finish(results: reporter.CompilationResult) {
 		if (this.project.sortOutput) {
 			let sortedEmit = (fileName: string) => {
-				let file = this.files[fileName];
+				let file = this.files[utils.normalizePath(fileName)];
 				if (!file || file.skipPush || file.pushed) return;
 
 				let references = file.original.ts.referencedFiles.map(file => tsApi.getFileName(file));

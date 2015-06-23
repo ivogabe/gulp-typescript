@@ -70,7 +70,7 @@ export class Filter {
 
 	match(fileName: string) {
 		let fileNameExtensionless = utils.splitExtension(fileName)[0];
-		let outputFile = this.project.output.files[fileNameExtensionless];
+		let outputFile = this.project.output.files[utils.normalizePath(fileNameExtensionless)];
 
 		if (!outputFile) {
 			console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
