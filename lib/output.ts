@@ -148,8 +148,14 @@ export class Output {
 			
 			const inputOriginalMap = sourceFile.gulp.sourceMap;
 			const inputMap: sourceMap.RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
-			const consumer = new sourceMap.SourceMapConsumer(inputMap);
-			generator.applySourceMap(consumer);
+			
+			/* We should only apply the input mappings if the input mapping isn't empty,
+			 * since `generator.applySourceMap` has a really bad performance on big inputs.
+			 */
+			if (inputMap.mappings !== '') {
+				const consumer = new sourceMap.SourceMapConsumer(inputMap);
+				generator.applySourceMap(consumer);
+			}
 			
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
 			for (const i in inputMap.sources) {
