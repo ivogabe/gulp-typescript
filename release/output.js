@@ -43,7 +43,7 @@ var Output = (function () {
      */
     Output.prototype.addOrMergeFile = function (fileName, kind, content) {
         var _this = this;
-        var file = this.files[fileName];
+        var file = this.files[utils.normalizePath(fileName)];
         if (file) {
             file.content[kind] = content;
             if (file.content[OutputFileKind.JavaScript] !== undefined
@@ -72,6 +72,10 @@ var Output = (function () {
                         file.skipPush = !file.original.gulp;
                         file.sourceMapOrigins = [file.original];
                     }
+                    // Fix the output filename in the source map, which must be relative
+                    // to the source root or it won't work correctly in gulp-sourcemaps if
+                    // there are more transformations down in the pipeline.
+                    file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.js');
                 }
                 this.applySourceMaps(file);
                 if (!this.project.sortOutput) {
@@ -80,7 +84,7 @@ var Output = (function () {
             }
             return;
         }
-        this.files[fileName] = {
+        this.files[utils.normalizePath(fileName)] = {
             fileName: fileName,
             original: undefined,
             sourceMapOrigins: undefined,
@@ -111,8 +115,13 @@ var Output = (function () {
                 continue;
             var inputOriginalMap = sourceFile.gulp.sourceMap;
             var inputMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
-            var consumer = new sourceMap.SourceMapConsumer(inputMap);
-            generator.applySourceMap(consumer);
+            /* We should only apply the input mappings if the input mapping isn't empty,
+             * since `generator.applySourceMap` has a really bad performance on big inputs.
+             */
+            if (inputMap.mappings !== '') {
+                var consumer = new sourceMap.SourceMapConsumer(inputMap);
+                generator.applySourceMap(consumer);
+            }
             if (!inputMap.sources || !inputMap.sourcesContent)
                 continue;
             for (var i in inputMap.sources) {
@@ -164,7 +173,7 @@ var Output = (function () {
         var _this = this;
         if (this.project.sortOutput) {
             var sortedEmit = function (fileName) {
-                var file = _this.files[fileName];
+                var file = _this.files[utils.normalizePath(fileName)];
                 if (!file || file.skipPush || file.pushed)
                     return;
                 var references = file.original.ts.referencedFiles.map(function (file) { return tsApi.getFileName(file); });

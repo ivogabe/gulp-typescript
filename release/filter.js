@@ -56,7 +56,7 @@ var Filter = (function () {
     };
     Filter.prototype.match = function (fileName) {
         var fileNameExtensionless = utils.splitExtension(fileName)[0];
-        var outputFile = this.project.output.files[fileNameExtensionless];
+        var outputFile = this.project.output.files[utils.normalizePath(fileNameExtensionless)];
         if (!outputFile) {
             console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
             return false;
