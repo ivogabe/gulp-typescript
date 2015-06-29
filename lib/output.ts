@@ -118,7 +118,7 @@ export class Output {
 			return;
 		}
 
-		this.files[fileName] = {
+		this.files[utils.normalizePath(fileName)] = {
 			fileName,
 			original: undefined,
 			sourceMapOrigins: undefined,
