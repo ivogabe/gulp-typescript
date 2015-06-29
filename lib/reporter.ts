@@ -16,12 +16,12 @@ export interface TypeScriptError extends Error {
 		position: number;
 		line: number;
 		character: number;
-    };
+	};
 	endPosition?: {
 		position: number;
 		line: number;
 		character: number;
-    };
+	};
 }
 export interface CompilationResult {
 	syntaxErrors: number;
