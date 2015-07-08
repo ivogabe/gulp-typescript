@@ -53,10 +53,10 @@ export class ProjectCompiler implements ICompiler {
 
 			for (const fileName of Object.keys(old.files)) {
 				const file = old.files[fileName];
-				this.project.output.write(file.fileName + '.js', file.content[OutputFileKind.JavaScript]);
-				this.project.output.write(file.fileName + '.js.map', file.content[OutputFileKind.SourceMap]);
+				this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.JavaScript], file.content[OutputFileKind.JavaScript]);
+				this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.SourceMap], file.content[OutputFileKind.SourceMap]);
 				if (file.content[OutputFileKind.Definitions] !== undefined) {
-					this.project.output.write(file.fileName + '.d.ts', file.content[OutputFileKind.Definitions]);
+					this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.Definitions], file.content[OutputFileKind.Definitions]);
 				}
 			}
 			
@@ -108,7 +108,7 @@ export class ProjectCompiler implements ICompiler {
 			
 			let content = this.host.output[fileName]
 			const [, extension] = utils.splitExtension(fileName);
-			if (extension === 'js') {
+			if (extension === 'js' || extension === 'jsx') {
 				content = this.removeSourceMapComment(content);
 			}
 
@@ -216,8 +216,8 @@ export class FileCompiler implements ICompiler {
 				const oldFile = old.files[fileName];
 				if (oldFile.original.fileNameNormalized !== file.fileNameNormalized) continue;
 				
-				this.project.output.write(oldFile.fileName + '.js', oldFile.content[OutputFileKind.JavaScript]);
-				this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[OutputFileKind.SourceMap]);
+				this.project.output.write(oldFile.fileName + '.' + oldFile.extension[OutputFileKind.JavaScript], oldFile.content[OutputFileKind.JavaScript]);
+				this.project.output.write(oldFile.fileName + '.' + oldFile.extension[OutputFileKind.SourceMap], oldFile.content[OutputFileKind.SourceMap]);
 			}
 
 			return;
@@ -252,9 +252,10 @@ export class FileCompiler implements ICompiler {
 		map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
 		
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
+		const [, extension] = utils.splitExtension(map.file); // js or jsx
 		
-		this.project.output.write(fileNameExtensionless + '.js', outputString.substring(0, index));
-		this.project.output.write(fileNameExtensionless + '.js.map', JSON.stringify(map));
+		this.project.output.write(fileNameExtensionless + '.' + extension, outputString.substring(0, index));
+		this.project.output.write(fileNameExtensionless + '.' + extension + '.map', JSON.stringify(map));
 		
 		this.errorsPerFile[file.fileNameNormalized] = diagnostics;
 	}

@@ -16,6 +16,7 @@ export interface OutputFile {
 	fileName: string;
 	original: input.File;
 	sourceMapOrigins: input.File[];
+	extension: { [ kind: number /* OutputFileKind */ ]: string };
 	content: { [ kind: number /* OutputFileKind */ ]: string };
 	pushed: boolean;
 	skipPush: boolean;
@@ -31,7 +32,7 @@ export enum OutputFileKind {
 }
 
 export class Output {
-	static knownExtensions: string[] = ['js', 'js.map', 'd.ts'];
+	static knownExtensions: string[] = ['js', 'jsx', 'js.map', 'jsx.map', 'd.ts'];
 
 	constructor(_project: project.Project, streamJs: stream.Readable, streamDts: stream.Readable) {
 		this.project = _project;
@@ -52,16 +53,18 @@ export class Output {
 
 		switch (extension) {
 			case 'js':
+			case 'jsx':
 				kind = OutputFileKind.JavaScript;
 				break;
 			case 'js.map':
+			case 'jsx.map':
 				kind = OutputFileKind.SourceMap;
 				break;
 			case 'd.ts': // .d.ts
 				kind = OutputFileKind.Definitions;
 				break;
 		}
-		this.addOrMergeFile(fileNameExtensionless, kind, content);
+		this.addOrMergeFile(fileNameExtensionless, extension, kind, content);
 	}
 
 	/**
@@ -70,9 +73,10 @@ export class Output {
 	 * This method should be called 3 times, 1 time for each `OutputFileKind`.
 	 * @param fileName The extensionless filename.
 	 */
-	private addOrMergeFile(fileName: string, kind: OutputFileKind, content: string) {
+	private addOrMergeFile(fileName: string, extension: string, kind: OutputFileKind, content: string) {
 		let file = this.files[utils.normalizePath(fileName)];
 		if (file) {
+			file.extension[kind] = extension;
 			file.content[kind] = content;
 
 			if (file.content[OutputFileKind.JavaScript] !== undefined
@@ -102,10 +106,11 @@ export class Output {
 						file.skipPush = !file.original.gulp;
 						file.sourceMapOrigins = [file.original];
 					}
+					const [, jsExtension] = utils.splitExtension(file.sourceMap.file); // js or jsx
 					// Fix the output filename in the source map, which must be relative
 					// to the source root or it won't work correctly in gulp-sourcemaps if
 					// there are more transformations down in the pipeline.
-					file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.js');
+					file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.' + jsExtension);
 				}
 
 				this.applySourceMaps(file);
@@ -122,6 +127,9 @@ export class Output {
 			fileName,
 			original: undefined,
 			sourceMapOrigins: undefined,
+			extension: {
+				[ kind ]: extension
+			},
 			content: {
 				[ kind ]: content
 			},
