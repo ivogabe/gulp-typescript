@@ -58,7 +58,7 @@
     "gulp-util": "~3.0.5",
     "source-map": "~0.4.2",
     "through2": "~0.6.5",
-    "typescript": "1.4.1",
+    "typescript": "1.5.3",
     "vinyl-fs": "~1.0.0"
   },
   "devDependencies": {
