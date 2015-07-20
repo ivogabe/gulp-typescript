@@ -99,7 +99,7 @@ function getModuleKind(typescript, moduleName) {
     return map[moduleName.toLowerCase()];
 }
 function getJsxEmit(typescript, jsx) {
-    if (typescript['JsxEmit'] === undefined) {
+    if (typescript.JsxEmit === undefined) {
         return undefined; // Not supported in TS1.4 & 1.5
     }
     var map = createEnumMap(typescript.JsxEmit);

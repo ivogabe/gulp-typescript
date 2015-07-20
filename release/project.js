@@ -64,7 +64,7 @@ var Project = (function () {
                 }
             }
         });
-        return vfs.src(this.config.files.map(function (file) { return path.resolve(base, file); }), { base: base })
+        return vfs.src(this.config.files.map(function (file) { return path.resolve(configPath, file); }), { base: base })
             .pipe(checkMissingFiles);
     };
     return Project;

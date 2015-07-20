@@ -159,7 +159,7 @@ var Output = (function () {
             base = file.original.gulp.base;
         }
         var fileJs = new gutil.File({
-            path: path.join(root, file.fileName + '.js'),
+            path: path.join(root, file.fileName + '.' + file.extension[OutputFileKind.JavaScript]),
             contents: new Buffer(file.content[OutputFileKind.JavaScript]),
             cwd: file.original.gulp.cwd,
             base: base
@@ -169,7 +169,7 @@ var Output = (function () {
         this.streamJs.push(fileJs);
         if (this.project.options.declaration) {
             var fileDts = new gutil.File({
-                path: path.join(root, file.fileName + '.d.ts'),
+                path: path.join(root, file.fileName + '.' + file.extension[OutputFileKind.Definitions]),
                 contents: new Buffer(file.content[OutputFileKind.Definitions]),
                 cwd: file.original.gulp.cwd,
                 base: base
