@@ -1,3 +1,7 @@
-[submodule "node_modules/typescript-dev"]
-	path = node_modules/typescript-dev
+[submodule "typescript/dev"]
+	path = typescript/dev
 	url = https://github.com/Microsoft/TypeScript.git
+[submodule "typescript/1-4"]
+	path = typescript/1-4
+	url = https://github.com/Microsoft/TypeScript.git
+	branch = release-1.4

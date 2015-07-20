@@ -37,6 +37,7 @@ Options
 - ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
+- ```jsx``` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```isolatedCompilation``` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumer and TypeScript 1.5 (or higher, 1.5-beta is not fully working).
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
@@ -137,11 +138,11 @@ Note: you can only use `tsProject.src()` if your `tsconfig.json` file has a `fil
 
 TypeScript version
 ------------------
-You can use a custom version of TypeScript. Add the version you want (1.4+) to your package.json file as a devDependency. You can also use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
+gulp-typescript uses TypeScript 1.5 by default. You can also use 1.4 or a nighty version of TypeScript instead.
+You should add the version you want (1.4+) to your package.json file as a devDependency. You can use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
 ```javascript
 {
 	"devDependencies": {
-		"gulp-typescript": "*",
 		"typescript": "Microsoft/TypeScript"
 	}
 }
@@ -152,7 +153,12 @@ And add this to your gulpfile:
 	typescript: require('typescript')
 }));
 ```
-You can use 1.5.0-beta of TypeScript if you write this in your `package.json` file: `"typescript": "1.5.0-beta"`
+Or in combination with a `tsconfig` file:
+```javascript
+var tsProject = ts.createProject('tsconfig.json', {
+	typescript: require('typescript')
+}));
+```
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
 ```javascript

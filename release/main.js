@@ -98,6 +98,13 @@ function getModuleKind(typescript, moduleName) {
     var map = createEnumMap(typescript.ModuleKind);
     return map[moduleName.toLowerCase()];
 }
+function getJsxEmit(typescript, jsx) {
+    if (typescript.JsxEmit === undefined) {
+        return undefined; // Not supported in TS1.4 & 1.5
+    }
+    var map = createEnumMap(typescript.JsxEmit);
+    return map[jsx.toLowerCase()];
+}
 function getCompilerOptions(settings) {
     var tsSettings = {};
     var typescript = settings.typescript || ts;
@@ -110,6 +117,7 @@ function getCompilerOptions(settings) {
             key === 'typescript' ||
             key === 'target' ||
             key === 'module' ||
+            key === 'jsx' ||
             key === 'sourceRoot' ||
             key === 'rootDir')
             continue;
@@ -126,6 +134,13 @@ function getCompilerOptions(settings) {
     }
     else if (typeof settings.module === 'number') {
         tsSettings.module = settings.module;
+    }
+    if (typeof settings.jsx === 'string') {
+        // jsx is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.jsx = `, but we have to use brackets.
+        tsSettings['jsx'] = getJsxEmit(typescript, settings.jsx);
+    }
+    else if (typeof settings.target === 'number') {
+        tsSettings['jsx'] = settings.jsx;
     }
     if (tsSettings.target === undefined) {
         // TS 1.4 has a bug that the target needs to be set.
