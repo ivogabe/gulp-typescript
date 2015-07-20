@@ -126,7 +126,7 @@ export class Project {
 			}
 		});
 		
-		return vfs.src(this.config.files.map(file => path.resolve(base, file)), { base })
+		return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), { base })
 			.pipe(checkMissingFiles);
 	}
 }
