@@ -125,7 +125,7 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 }
 
 function getJsxEmit(typescript: typeof ts, jsx: string) {
-	if (typescript['JsxEmit'] === undefined) {
+	if ((<any> typescript).JsxEmit === undefined) {
 		return undefined; // Not supported in TS1.4 & 1.5
 	}
 	const map: utils.Map<number> = createEnumMap((<any> typescript).JsxEmit);
