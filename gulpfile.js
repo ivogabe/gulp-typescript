@@ -129,7 +129,7 @@ function compareTest(name, callback) {
 	function onError(error) {
 		console.error('Test "' + name + '" failed: ' + error.message);
 		failed = true;
-		//throw error;
+		throw error;
 	}
 	gulp.src('test/output/' + name + '/**/**.**')
 		.pipe(diff('test/baselines/' + name + '/'))
