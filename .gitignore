@@ -1,5 +1,4 @@
 node_modules/*
-!node_modules/typescript-dev
 .DS_Store
 release-2
 test/output
