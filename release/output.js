@@ -24,16 +24,18 @@ var Output = (function () {
         var kind;
         switch (extension) {
             case 'js':
+            case 'jsx':
                 kind = OutputFileKind.JavaScript;
                 break;
             case 'js.map':
+            case 'jsx.map':
                 kind = OutputFileKind.SourceMap;
                 break;
             case 'd.ts':
                 kind = OutputFileKind.Definitions;
                 break;
         }
-        this.addOrMergeFile(fileNameExtensionless, kind, content);
+        this.addOrMergeFile(fileNameExtensionless, extension, kind, content);
     };
     /**
      * Adds the file to the `this.files`.
@@ -41,10 +43,11 @@ var Output = (function () {
      * This method should be called 3 times, 1 time for each `OutputFileKind`.
      * @param fileName The extensionless filename.
      */
-    Output.prototype.addOrMergeFile = function (fileName, kind, content) {
+    Output.prototype.addOrMergeFile = function (fileName, extension, kind, content) {
         var _this = this;
         var file = this.files[utils.normalizePath(fileName)];
         if (file) {
+            file.extension[kind] = extension;
             file.content[kind] = content;
             if (file.content[OutputFileKind.JavaScript] !== undefined
                 && file.content[OutputFileKind.SourceMap] !== undefined
@@ -72,10 +75,11 @@ var Output = (function () {
                         file.skipPush = !file.original.gulp;
                         file.sourceMapOrigins = [file.original];
                     }
+                    var _a = utils.splitExtension(file.sourceMap.file), jsExtension = _a[1]; // js or jsx
                     // Fix the output filename in the source map, which must be relative
                     // to the source root or it won't work correctly in gulp-sourcemaps if
                     // there are more transformations down in the pipeline.
-                    file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.js');
+                    file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.' + jsExtension);
                 }
                 this.applySourceMaps(file);
                 if (!this.project.sortOutput) {
@@ -88,9 +92,13 @@ var Output = (function () {
             fileName: fileName,
             original: undefined,
             sourceMapOrigins: undefined,
-            content: (_a = {},
-                _a[kind] = content,
-                _a
+            extension: (_b = {},
+                _b[kind] = extension,
+                _b
+            ),
+            content: (_c = {},
+                _c[kind] = content,
+                _c
             ),
             pushed: false,
             skipPush: undefined,
@@ -98,7 +106,7 @@ var Output = (function () {
             sourceMap: undefined,
             sourceMapString: undefined
         };
-        var _a;
+        var _b, _c;
     };
     Output.prototype.applySourceMaps = function (file) {
         if (file.sourceMapsApplied || file.skipPush || !file.original.gulp.sourceMap)
@@ -254,7 +262,7 @@ var Output = (function () {
         // & emit the error on the stream.
         this.streamJs.emit('error', error);
     };
-    Output.knownExtensions = ['js', 'js.map', 'd.ts'];
+    Output.knownExtensions = ['js', 'jsx', 'js.map', 'jsx.map', 'd.ts'];
     return Output;
 })();
 exports.Output = Output;
