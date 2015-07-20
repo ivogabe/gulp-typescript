@@ -32,10 +32,10 @@ var ProjectCompiler = (function () {
             for (var _b = 0, _c = Object.keys(old.files); _b < _c.length; _b++) {
                 var fileName = _c[_b];
                 var file = old.files[fileName];
-                this.project.output.write(file.fileName + '.js', file.content[output_1.OutputFileKind.JavaScript]);
-                this.project.output.write(file.fileName + '.js.map', file.content[output_1.OutputFileKind.SourceMap]);
+                this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.JavaScript], file.content[output_1.OutputFileKind.JavaScript]);
+                this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.SourceMap], file.content[output_1.OutputFileKind.SourceMap]);
                 if (file.content[output_1.OutputFileKind.Definitions] !== undefined) {
-                    this.project.output.write(file.fileName + '.d.ts', file.content[output_1.OutputFileKind.Definitions]);
+                    this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.Definitions], file.content[output_1.OutputFileKind.Definitions]);
                 }
             }
             this.project.output.finish(old.results);
@@ -70,7 +70,7 @@ var ProjectCompiler = (function () {
                 continue;
             var content = this.host.output[fileName];
             var _e = utils.splitExtension(fileName), extension = _e[1];
-            if (extension === 'js') {
+            if (extension === 'js' || extension === 'jsx') {
                 content = this.removeSourceMapComment(content);
             }
             this.project.output.write(fileName, content);
@@ -166,8 +166,8 @@ var FileCompiler = (function () {
                 var oldFile = old.files[fileName];
                 if (oldFile.original.fileNameNormalized !== file.fileNameNormalized)
                     continue;
-                this.project.output.write(oldFile.fileName + '.js', oldFile.content[output_1.OutputFileKind.JavaScript]);
-                this.project.output.write(oldFile.fileName + '.js.map', oldFile.content[output_1.OutputFileKind.SourceMap]);
+                this.project.output.write(oldFile.fileName + '.' + oldFile.extension[output_1.OutputFileKind.JavaScript], oldFile.content[output_1.OutputFileKind.JavaScript]);
+                this.project.output.write(oldFile.fileName + '.' + oldFile.extension[output_1.OutputFileKind.SourceMap], oldFile.content[output_1.OutputFileKind.SourceMap]);
             }
             return;
         }
@@ -191,8 +191,9 @@ var FileCompiler = (function () {
         map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
         map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
         var fileNameExtensionless = utils.splitExtension(file.fileNameOriginal)[0];
-        this.project.output.write(fileNameExtensionless + '.js', outputString.substring(0, index));
-        this.project.output.write(fileNameExtensionless + '.js.map', JSON.stringify(map));
+        var _e = utils.splitExtension(map.file), extension = _e[1]; // js or jsx
+        this.project.output.write(fileNameExtensionless + '.' + extension, outputString.substring(0, index));
+        this.project.output.write(fileNameExtensionless + '.' + extension + '.map', JSON.stringify(map));
         this.errorsPerFile[file.fileNameNormalized] = diagnostics;
     };
     FileCompiler.prototype.inputDone = function () {

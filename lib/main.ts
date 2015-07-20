@@ -124,6 +124,14 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 	return map[moduleName.toLowerCase()];
 }
 
+function getJsxEmit(typescript: typeof ts, jsx: string) {
+	if (typescript['JsxEmit'] === undefined) {
+		return undefined; // Not supported in TS1.4 & 1.5
+	}
+	const map: utils.Map<number> = createEnumMap((<any> typescript).JsxEmit);
+	return map[jsx.toLowerCase()];
+}
+
 function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	const tsSettings: ts.CompilerOptions = {};
 
@@ -135,8 +143,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 			key === 'declarationFiles' ||
 			key === 'sortOutput' ||
 			key === 'typescript' ||
-			key === 'target' || // Target, module & sourceRoot are added below
+			key === 'target' || // Target, module, sourceRoot & jsx are added below
 			key === 'module' ||
+			key === 'jsx' ||
 			key === 'sourceRoot' ||
 			key === 'rootDir') continue;
 
@@ -152,6 +161,12 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 		tsSettings.module = getModuleKind(typescript, <string> settings.module);
 	} else if (typeof settings.module === 'number') {
 		tsSettings.module = <number> settings.module;
+	}
+	if (typeof settings.jsx === 'string') {
+		// jsx is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.jsx = `, but we have to use brackets.
+		tsSettings['jsx'] = getJsxEmit(typescript, <string> settings.jsx);
+	} else if (typeof settings.target === 'number') {
+		tsSettings['jsx'] = <number> settings.jsx;
 	}
 
 	if (tsSettings.target === undefined) {
@@ -200,6 +215,7 @@ module compile {
 
 		target: string | ts.ScriptTarget;
 		module: string | ts.ModuleKind;
+		jsx: string | number;
 
 		declarationFiles?: boolean;
 

@@ -37,6 +37,7 @@ Options
 - ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
+- ```jsx``` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
 - ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
 - ```isolatedCompilation``` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumer and TypeScript 1.5 (or higher, 1.5-beta is not fully working).
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
