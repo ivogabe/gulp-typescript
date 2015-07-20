@@ -1,0 +1,5 @@
+TypeScript error: [31mtest/errorReporting/test-4.ts(2,1): [39merror TS2304: Cannot find name 'asdf'.
+TypeScript error: [31mtest/errorReporting/test-4.ts(7,1): [39merror TS2322: Type '{ y: string; }[][]' is not assignable to type '{ x: number; }[][]'.
+  Type '{ y: string; }[]' is not assignable to type '{ x: number; }[]'.
+    Type '{ y: string; }' is not assignable to type '{ x: number; }'.
+      Property 'x' is missing in type '{ y: string; }'.
