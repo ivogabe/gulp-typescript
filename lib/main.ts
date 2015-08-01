@@ -147,7 +147,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 			key === 'module' ||
 			key === 'jsx' ||
 			key === 'sourceRoot' ||
-			key === 'rootDir') continue;
+			key === 'rootDir' ||
+			key === 'sourceMap' ||
+			key === 'inlineSourceMap') continue;
 
 		tsSettings[key] = settings[key];
 	}
