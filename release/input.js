@@ -126,7 +126,7 @@ var FileDictionary = (function () {
             return fileNames
                 .map(function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
-                return path.resolve(file.gulp.cwd, file.gulp.base);
+                return path.resolve(process.cwd(), file.gulp.base);
             })
                 .reduce(getCommonBasePath);
         },
