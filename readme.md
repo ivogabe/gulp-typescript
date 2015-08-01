@@ -120,8 +120,8 @@ gulp.task('watch', ['scripts'], function() {
 ```
 When you run ```gulp watch```, the source will be compiled as usual. Then, when you make a change and save the file, your TypeScript files will be compiled in about half the time.
 
-Make sure you create the project outside of a task! Otherwise it won't work.
-
+You must create the project outside of the task. You can't use the same project in multiple tasks.
+Instead, create multiple projects or use a single task to compile your sources.
 
 Using `tsconfig.json`
 -------------
