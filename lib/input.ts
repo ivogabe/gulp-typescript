@@ -147,7 +147,7 @@ export class FileDictionary {
 		return fileNames
 			.map(fileName => {
 				const file = this.files[utils.normalizePath(fileName)];
-				return path.resolve(file.gulp.cwd, file.gulp.base);
+				return path.resolve(process.cwd(), file.gulp.base);
 			})
 			.reduce(getCommonBasePath);
 	}
