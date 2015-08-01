@@ -29,6 +29,7 @@ npm install gulp-typescript
 
 Options
 -------
+Allmost all options from TypeScript are supported.
 - ```out``` (string) - Generate one javascript and one definition file. Only works when no module system is used.
 - ```outDir``` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
 - ```removeComments``` (boolean) - Do not emit comments to output.
@@ -38,15 +39,22 @@ Options
 - ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
 - ```jsx``` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
-- ```declarationFiles``` (boolean) - Generates corresponding .d.ts files.
-- ```isolatedCompilation``` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumer and TypeScript 1.5 (or higher, 1.5-beta is not fully working).
+- ```declaration``` (boolean) - Generates corresponding .d.ts files.
+- ```isolatedCompilation``` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
+
+See the [TypeScript wiki](https://github.com/Microsoft/TypeScript/wiki/Compiler-Options) for a complete list.
+These options are not supported:
+- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use `gulp-sourcemaps` instead.
+- `rootDir` - Use `base` option of `gulp.src()` instead.
+- `watch` - Use `gulp.watch` instead. See the paragraph "Incremental compilation".
+- `project` - See "Using `tsconfig.json`".
+- Obvious: `help`, `version`
+
+## Unofficial options
+Besides the official options options, gulp-typescript supports the following options:
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
 - ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
 - ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
-
-You can use almost all other options that TypeScript supports too. Only these two are not supported:
-- `sourceRoot` - Use `sourceRoot` option of `gulp-sourcemaps` instead.
-- `rootDir` - Use `base` option of `gulp.src()` instead.
 
 Basic Usage
 ----------
