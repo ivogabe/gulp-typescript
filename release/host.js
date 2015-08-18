@@ -77,6 +77,43 @@ var Host = (function () {
     Host.prototype.getDefaultLibFileName = function () {
         return '__lib.d.ts';
     };
+    Host.prototype.fileExists = function (fileName) {
+        if (fileName === '__lib.d.ts') {
+            return true;
+        }
+        var sourceFile = this.input.getFile(fileName);
+        if (sourceFile)
+            return true;
+        if (this.externalResolve) {
+            try {
+                var stat = fs.statSync(fileName);
+                if (!stat)
+                    return false;
+                return stat.isFile();
+            }
+            catch (ex) {
+            }
+        }
+        return false;
+    };
+    Host.prototype.readFile = function (fileName) {
+        var normalizedFileName = utils.normalizePath(fileName);
+        var sourceFile = this.input.getFile(fileName);
+        if (sourceFile)
+            return sourceFile.content;
+        if (this.externalResolve) {
+            // Read the whole file (and cache contents) to prevent race conditions.
+            var text;
+            try {
+                text = fs.readFileSync(fileName).toString('utf8');
+            }
+            catch (ex) {
+                return undefined;
+            }
+            return text;
+        }
+        return undefined;
+    };
     Host.libDefault = {};
     return Host;
 })();
