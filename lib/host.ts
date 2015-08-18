@@ -79,6 +79,45 @@ export class Host implements ts.CompilerHost {
 	writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
 		this.output[fileName] = data;
 	}
+	
+	fileExists(fileName: string) {
+		if (fileName === '__lib.d.ts') {
+			return true;
+		}
+
+		let sourceFile = this.input.getFile(fileName);
+		if (sourceFile) return true;
+		
+		if (this.externalResolve) {
+			try {
+				const stat = fs.statSync(fileName);
+				if (!stat) return false;
+				return stat.isFile();
+			} catch (ex) {
+				
+			}
+		}
+		return false;
+	}
+	
+	readFile(fileName: string) {
+		const normalizedFileName = utils.normalizePath(fileName);
+		
+		let sourceFile = this.input.getFile(fileName);
+		if (sourceFile) return sourceFile.content;
+		
+		if (this.externalResolve) {
+			// Read the whole file (and cache contents) to prevent race conditions.
+			let text: string;
+			try {
+				text = fs.readFileSync(fileName).toString('utf8');
+			} catch (ex) {
+				return undefined;
+			}
+			return text;
+		}
+		return undefined;
+	}
 
 	getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
 		if (fileName === '__lib.d.ts') {
