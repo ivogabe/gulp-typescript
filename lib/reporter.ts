@@ -24,6 +24,10 @@ export interface TypeScriptError extends Error {
 	};
 }
 export interface CompilationResult {
+	/**
+	 * Only used when using isolatedModules.
+	 */
+	transpileErrors: number;
 	syntaxErrors: number;
 	globalErrors: number;
 	semanticErrors: number;
@@ -31,8 +35,9 @@ export interface CompilationResult {
 	
 	emitSkipped: boolean;
 }
-export function emptyCompilationResult() {
+export function emptyCompilationResult(): CompilationResult {
 	return {
+		transpileErrors: 0,
 		syntaxErrors: 0,
 		globalErrors: 0,
 		semanticErrors: 0,
@@ -51,10 +56,11 @@ function defaultFinishHandler(results: CompilationResult) {
 	const showErrorCount = (count: number, type: string) => {
 		if (count === 0) return;
 		
-		gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), type + ' ' + (count === 1 ? 'error' : 'errors'));
+		gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), (type !== '' ? type + ' ' : '') + (count === 1 ? 'error' : 'errors'));
 		hasError = true;
 	};
 	
+	showErrorCount(results.transpileErrors, '');
 	showErrorCount(results.syntaxErrors, 'syntax');
 	showErrorCount(results.globalErrors, 'global');
 	showErrorCount(results.semanticErrors, 'semantic');

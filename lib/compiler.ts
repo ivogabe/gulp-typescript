@@ -191,10 +191,12 @@ export class FileCompiler implements ICompiler {
 	
 	private errorsPerFile: utils.Map<ts.Diagnostic[]> = {};
 	private previousErrorsPerFile: utils.Map<ts.Diagnostic[]> = {};
-
+	private compilationResult: CompilationResult = undefined;
+	
 	prepare(_project: Project) {
 		this.project = _project;
 		this.project.input.noParse = true;
+		this.compilationResult = emptyCompilationResult();
 	}
 
 	inputFile(file: File) {
@@ -207,9 +209,11 @@ export class FileCompiler implements ICompiler {
 			
 			const old = this.project.previousOutput;
 
-			for (const error of this.previousErrorsPerFile[file.fileNameNormalized]) {
+			const diagnostics = this.previousErrorsPerFile[file.fileNameNormalized]
+			for (const error of diagnostics) {
 				this.project.output.diagnostic(error);
 			}
+			this.compilationResult.transpileErrors += diagnostics.length;
 			this.errorsPerFile[file.fileNameNormalized] = this.previousErrorsPerFile[file.fileNameNormalized];
 
 			for (const fileName of Object.keys(old.files)) {
@@ -234,6 +238,7 @@ export class FileCompiler implements ICompiler {
 		for (const diagnostic of diagnostics) {
 			this.project.output.diagnostic(diagnostic);
 		}
+		this.compilationResult.transpileErrors += diagnostics.length;
 		
 		let index = outputString.lastIndexOf('\n')
 		let mapString = outputString.substring(index + 1);
@@ -261,7 +266,7 @@ export class FileCompiler implements ICompiler {
 	}
 
 	inputDone() {
-		this.project.output.finish(undefined);
+		this.project.output.finish(this.compilationResult);
 		
 		this.previousErrorsPerFile = this.errorsPerFile;
 		this.errorsPerFile = {};
