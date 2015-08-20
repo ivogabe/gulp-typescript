@@ -109,14 +109,18 @@ function runTest(name, callback) {
 			var lib = libs[i];
 			var output = 'test/output/' + name + '/' + lib[0] + '/';
 			var errors = [];
+			var finishInfo;
 			var reporter = {
 				error: function(err) {
 					errors.push(err);
+				},
+				finish: function(info) {
+					finishInfo = info;
 				}
 			};
 			fs.mkdirSync(output);
 			test(newTS, lib[1], output, reporter).on('finish', function() {
-				fs.writeFileSync(output + 'errors.txt', errors.join('\n'));
+				fs.writeFileSync(output + 'errors.txt', errors.join('\n') + '\n' + JSON.stringify(finishInfo, null, 4));
 				done++;
 
 				if (done === libs.length) compareTest(name, callback);
