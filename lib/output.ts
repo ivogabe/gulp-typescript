@@ -220,8 +220,8 @@ export class Output {
 
 				let references = file.original.ts.referencedFiles.map(file => tsApi.getFileName(file));
 
-				for (const ref in references) {
-					sortedEmit(utils.splitExtension(ref)[0]);
+				for (const reference of references) {
+					sortedEmit(utils.splitExtension(reference)[0]);
 				}
 
 				this.emit(file);
