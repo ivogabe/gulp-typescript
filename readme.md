@@ -81,7 +81,7 @@ var merge = require('merge2');  // Require separate installation
 gulp.task('scripts', function() {
   var tsResult = gulp.src('lib/**/*.ts')
     .pipe(ts({
-        declarationFiles: true,
+        declaration: true,
         noExternalResolve: true
       }));
 
@@ -101,7 +101,7 @@ var ts = require('gulp-typescript');
 var merge = require('merge2');
 
 var tsProject = ts.createProject({
-	declarationFiles: true,
+	declaration: true,
 	noExternalResolve: true
 });
 
