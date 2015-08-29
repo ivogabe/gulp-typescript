@@ -288,6 +288,10 @@ module compile {
 		
 		// Isolated modules are only supported when using TS1.5+
 		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
+			if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
+				console.warn('You cannot combine option `isolatedModules` with `out`, `outFile` or `sortOutput`');
+			}
+			
 			project.options.sourceMap = false;
 			project.options.declaration = false;
 			project.options['inlineSourceMap'] = true;
