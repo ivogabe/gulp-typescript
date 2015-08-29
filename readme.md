@@ -30,17 +30,25 @@ npm install gulp-typescript
 Options
 -------
 Allmost all options from TypeScript are supported.
-- ```out``` (string) - Generate one javascript and one definition file. Only works when no module system is used.
-- ```outDir``` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
-- ```removeComments``` (boolean) - Do not emit comments to output.
-- ```noImplicitAny``` (boolean) - Warn on expressions and declarations with an implied 'any' type.
-- ```noLib``` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
-- ```noEmitOnError``` (boolean) - Do not emit outputs if any type checking errors were reported.
-- ```target``` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
-- ```module``` (string) - Specify module code generation: 'commonjs' or 'amd'.
-- ```jsx``` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
-- ```declaration``` (boolean) - Generates corresponding .d.ts files.
-- ```isolatedCompilation``` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
+- `out` (TS1.5-), `outFile` (TS1.6+) (string) - Generate one javascript and one definition file. Only works when no module system is used.
+- `outDir` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
+- `removeComments` (boolean) - Do not emit comments to output.
+- `noImplicitAny` (boolean) - Warn on expressions and declarations with an implied 'any' type.
+- `suppressImplicitAnyIndexErrors` (boolean) - Suppress --noImplicitAny errors for indexing objects lacking index signatures.
+- `noLib` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
+- `noEmitOnError` (boolean) - Do not emit outputs if any type checking errors were reported.
+- `target` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
+- `module` (string) - Specify module code generation: 'commonjs', 'amd', 'umd' or 'system'.
+- `jsx` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
+- `declaration` (boolean) - Generates corresponding .d.ts files.
+- `removeComments` (boolean) - Do not emit comments to output.
+- `emitDecoratorMetadata` (boolean) - Emit design-time metadate for decorated declarations in source.
+- `experimentalAsyncFunctions` (boolean) - Support for ES7-proposed asynchronous functions using the `async`/`await` keywords (TS1.6+).
+- `moduleResolution` (string) - Determine how modules get resolved. Either 'node' for Node.js/io.js style resolution, or 'classic' (default) (TS1.6+).
+- `noEmitOnError` (boolean) - Do not emit outputs if any type checking errors were reported.
+- `noEmitHelpers` (boolean) - Do not generate custom helper functions like __extends in compiled output.
+- `preserveConstEnums` (boolean) - Do not erase const enum declarations in generated code. 
+- `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
 
 See the [TypeScript wiki](https://github.com/Microsoft/TypeScript/wiki/Compiler-Options) for a complete list.
 These options are not supported:
