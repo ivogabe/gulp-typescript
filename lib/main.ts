@@ -124,6 +124,14 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 	return map[moduleName.toLowerCase()];
 }
 
+function getModuleResolution(typescript: typeof ts, kind: string) {
+	if ((<any> typescript).ModuleResolution === undefined) {
+		return undefined; // Not supported in TS1.4 & 1.5
+	}
+	const map: utils.Map<number> = createEnumMap((<any> typescript).ModuleResolution);
+	return map[kind.toLowerCase()];
+}
+
 function getJsxEmit(typescript: typeof ts, jsx: string) {
 	if ((<any> typescript).JsxEmit === undefined) {
 		return undefined; // Not supported in TS1.4 & 1.5
@@ -143,8 +151,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 			key === 'declarationFiles' ||
 			key === 'sortOutput' ||
 			key === 'typescript' ||
-			key === 'target' || // Target, module, sourceRoot & jsx are added below
+			key === 'target' || // Target, module, moduleResolution, sourceRoot & jsx are added below
 			key === 'module' ||
+			key === 'moduleResolution' ||
 			key === 'jsx' ||
 			key === 'sourceRoot' ||
 			key === 'rootDir' ||
@@ -167,8 +176,14 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	if (typeof settings.jsx === 'string') {
 		// jsx is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.jsx = `, but we have to use brackets.
 		tsSettings['jsx'] = getJsxEmit(typescript, <string> settings.jsx);
-	} else if (typeof settings.target === 'number') {
+	} else if (typeof settings.jsx === 'number') {
 		tsSettings['jsx'] = <number> settings.jsx;
+	}
+	if (typeof settings.moduleResolution === 'string') {
+		// moduleResolution is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.moduleResolution = `, but we have to use brackets.
+		tsSettings['moduleResolution'] = getModuleResolution(typescript, <string> settings.moduleResolution);
+	} else if (typeof settings.moduleResolution === 'number') {
+		tsSettings['moduleResolution'] = <number> settings.moduleResolution;
 	}
 
 	if (tsSettings.target === undefined) {
@@ -217,6 +232,7 @@ module compile {
 
 		target: string | ts.ScriptTarget;
 		module: string | ts.ModuleKind;
+		moduleResolution: string | number;
 		jsx: string | number;
 
 		declarationFiles?: boolean;
