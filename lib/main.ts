@@ -213,6 +213,7 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 module compile {
 	export interface Settings {
 		out?: string;
+		outFile?: string;
 		outDir?: string;
 
 		allowNonTsExtensions?: boolean;

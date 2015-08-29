@@ -71,7 +71,7 @@ export class Project {
 
 		this.noExternalResolve = noExternalResolve;
 		this.sortOutput = sortOutput;
-		this.singleOutput = options.out !== undefined;
+		this.singleOutput = options.out !== undefined || options['outFile'] !== undefined;
 
 		this.input = new FileCache(typescript, options);
 	}
