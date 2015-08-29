@@ -12,6 +12,13 @@ export interface TypeScript15 {
 }
 
 /*
+ * In TS1.6+ ts.createProgram has an extra argument, `oldProgram`.
+ * TS will reuse the old program if possible, which speeds up incremental
+ * compilation
+ */
+export type CreateProgram = (rootNames: string[], options: ts.CompilerOptions, host?: ts.CompilerHost, oldProgram?: ts.Program) => ts.Program;
+
+/*
  * TS1.4 had a simple getDiagnostics method, in 1.5 that method doens't exist,
  * but instead there are now 4 methods which (combined) return all diagnostics.
  */

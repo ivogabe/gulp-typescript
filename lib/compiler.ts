@@ -95,7 +95,9 @@ export class ProjectCompiler implements ICompiler {
 		}
 
 		// Creating a program to compile the sources
-		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
+		// We cast to `tsApi.CreateProgram` so we can pass the old program as an extra argument.
+		// TS 1.6+ will try to reuse program structure (if possible)
+		this.program = (<tsApi.CreateProgram> this.project.typescript.createProgram)(rootFilenames, this.project.options, this.host, this.program);
 
 		const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
 
