@@ -71,13 +71,17 @@ export class Filter {
 	match(fileName: string) {
 		let fileNameExtensionless = utils.splitExtension(fileName)[0];
 		let outputFile = this.project.output.files[utils.normalizePath(fileNameExtensionless)];
+		let file: File;
 
 		if (!outputFile) {
-			console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
-			return false;
+			file = this.project.input.getFile(fileName);
+			if (!file) {
+				console.log('gulp-typescript: Could not find file ' + fileName + '. Make sure you don\'t rename a file before you pass it to ts.filter()');
+				return false;
+			}
+		} else {
+			file = outputFile.original;
 		}
-
-		let file = outputFile.original;
 
 		if (this.referencedFrom !== undefined) {
 			if (!this.matchReferencedFrom(fileName, file)) {
