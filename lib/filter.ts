@@ -55,7 +55,7 @@ export class Filter {
 			const file = this.project.input.getFile(fileName);
 			if (!file || !file.gulp) continue;
 			const base = path.resolve(
-				file.gulp.cwd,
+				process.cwd(),
 				file.gulp.base
 			) + '/';
 			if (file.gulp.path.substring(base.length) === searchFileName) {
