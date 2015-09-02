@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
 import { CompilationResult, emptyCompilationResult } from './reporter';
+import { normalizePath } from './utils';
 
 export interface TypeScript14 {
 	createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string);
@@ -141,5 +142,5 @@ export function transpile(typescript: TypeScript14 | TypeScript15, input: string
 		throw new Error('gulp-typescript: Single file compilation is not supported using TypeScript 1.4');
 	}
 	
-	return (<TypeScript15> typescript).transpile(input, compilerOptions, fileName, diagnostics);
+	return (<TypeScript15> typescript).transpile(input, compilerOptions, normalizePath(fileName), diagnostics);
 }
