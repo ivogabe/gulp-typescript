@@ -218,12 +218,13 @@ export class Output {
 				let file = this.files[utils.normalizePath(fileName)];
 				if (!file || file.skipPush || file.pushed) return;
 
-				let references = file.original.ts.referencedFiles.map(file => tsApi.getFileName(file));
-
-				for (const reference of references) {
-					sortedEmit(utils.splitExtension(reference)[0]);
+				if (file.original && file.original.ts) {
+					let references = file.original.ts.referencedFiles.map(file => tsApi.getFileName(file));
+	
+					for (const reference of references) {
+						sortedEmit(utils.splitExtension(reference)[0]);
+					}
 				}
-
 				this.emit(file);
 			};
 
