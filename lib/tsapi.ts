@@ -142,5 +142,5 @@ export function transpile(typescript: TypeScript14 | TypeScript15, input: string
 		throw new Error('gulp-typescript: Single file compilation is not supported using TypeScript 1.4');
 	}
 	
-	return (<TypeScript15> typescript).transpile(input, compilerOptions, normalizePath(fileName), diagnostics);
+	return (<TypeScript15> typescript).transpile(input, compilerOptions, fileName.replace(/\\/g, '/'), diagnostics);
 }
