@@ -53,10 +53,10 @@ export class ProjectCompiler implements ICompiler {
 
 			for (const fileName of Object.keys(old.files)) {
 				const file = old.files[fileName];
-				this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.JavaScript], file.content[OutputFileKind.JavaScript]);
-				this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.SourceMap], file.content[OutputFileKind.SourceMap]);
+				this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.JavaScript], file.content[OutputFileKind.JavaScript]);
+				this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.SourceMap], file.content[OutputFileKind.SourceMap]);
 				if (file.content[OutputFileKind.Definitions] !== undefined) {
-					this.project.output.write(file.fileName + '.' + file.content[OutputFileKind.Definitions], file.content[OutputFileKind.Definitions]);
+					this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.Definitions], file.content[OutputFileKind.Definitions]);
 				}
 			}
 			
