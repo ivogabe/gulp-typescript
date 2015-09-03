@@ -63,12 +63,12 @@
   },
   "devDependencies": {
     "gulp": "~3.9.0",
-    "rimraf": "~2.4.2",
+    "rimraf": "~2.4.3",
     "gulp-sourcemaps": "~1.5.2",
     "gulp-concat": "~2.6.0",
-    "gulp-header": "~1.2.2",
-    "gulp-diff": "~0.3.1",
-    "yargs": "~3.15.0",
+    "gulp-header": "~1.7.1",
+    "gulp-diff": "~1.0.0",
+    "yargs": "~3.23.0",
     "gulp-plumber": "~1.0.1"
   },
   "scripts": {
