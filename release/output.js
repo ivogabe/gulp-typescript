@@ -184,9 +184,12 @@ var Output = (function () {
                 var file = _this.files[utils.normalizePath(fileName)];
                 if (!file || file.skipPush || file.pushed)
                     return;
-                var references = file.original.ts.referencedFiles.map(function (file) { return tsApi.getFileName(file); });
-                for (var ref in references) {
-                    sortedEmit(utils.splitExtension(ref)[0]);
+                if (file.original && file.original.ts) {
+                    var references = file.original.ts.referencedFiles.map(function (file) { return tsApi.getFileName(file); });
+                    for (var _i = 0; _i < references.length; _i++) {
+                        var reference = references[_i];
+                        sortedEmit(utils.splitExtension(reference)[0]);
+                    }
                 }
                 _this.emit(file);
             };

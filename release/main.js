@@ -98,6 +98,13 @@ function getModuleKind(typescript, moduleName) {
     var map = createEnumMap(typescript.ModuleKind);
     return map[moduleName.toLowerCase()];
 }
+function getModuleResolution(typescript, kind) {
+    if (typescript.ModuleResolution === undefined) {
+        return undefined; // Not supported in TS1.4 & 1.5
+    }
+    var map = createEnumMap(typescript.ModuleResolution);
+    return map[kind.toLowerCase()];
+}
 function getJsxEmit(typescript, jsx) {
     if (typescript.JsxEmit === undefined) {
         return undefined; // Not supported in TS1.4 & 1.5
@@ -117,6 +124,7 @@ function getCompilerOptions(settings) {
             key === 'typescript' ||
             key === 'target' ||
             key === 'module' ||
+            key === 'moduleResolution' ||
             key === 'jsx' ||
             key === 'sourceRoot' ||
             key === 'rootDir' ||
@@ -141,8 +149,15 @@ function getCompilerOptions(settings) {
         // jsx is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.jsx = `, but we have to use brackets.
         tsSettings['jsx'] = getJsxEmit(typescript, settings.jsx);
     }
-    else if (typeof settings.target === 'number') {
+    else if (typeof settings.jsx === 'number') {
         tsSettings['jsx'] = settings.jsx;
+    }
+    if (typeof settings.moduleResolution === 'string') {
+        // moduleResolution is not supported in TS1.4 & 1.5, so we cannot do `tsSettings.moduleResolution = `, but we have to use brackets.
+        tsSettings['moduleResolution'] = getModuleResolution(typescript, settings.moduleResolution);
+    }
+    else if (typeof settings.moduleResolution === 'number') {
+        tsSettings['moduleResolution'] = settings.moduleResolution;
     }
     if (tsSettings.target === undefined) {
         // TS 1.4 has a bug that the target needs to be set.
@@ -198,6 +213,9 @@ var compile;
         var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
         // Isolated modules are only supported when using TS1.5+
         if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
+            if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
+                console.warn('You cannot combine option `isolatedModules` with `out`, `outFile` or `sortOutput`');
+            }
             project.options.sourceMap = false;
             project.options.declaration = false;
             project.options['inlineSourceMap'] = true;

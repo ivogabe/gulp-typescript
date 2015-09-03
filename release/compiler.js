@@ -32,10 +32,10 @@ var ProjectCompiler = (function () {
             for (var _b = 0, _c = Object.keys(old.files); _b < _c.length; _b++) {
                 var fileName = _c[_b];
                 var file = old.files[fileName];
-                this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.JavaScript], file.content[output_1.OutputFileKind.JavaScript]);
-                this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.SourceMap], file.content[output_1.OutputFileKind.SourceMap]);
+                this.project.output.write(file.fileName + '.' + file.extension[output_1.OutputFileKind.JavaScript], file.content[output_1.OutputFileKind.JavaScript]);
+                this.project.output.write(file.fileName + '.' + file.extension[output_1.OutputFileKind.SourceMap], file.content[output_1.OutputFileKind.SourceMap]);
                 if (file.content[output_1.OutputFileKind.Definitions] !== undefined) {
-                    this.project.output.write(file.fileName + '.' + file.content[output_1.OutputFileKind.Definitions], file.content[output_1.OutputFileKind.Definitions]);
+                    this.project.output.write(file.fileName + '.' + file.extension[output_1.OutputFileKind.Definitions], file.content[output_1.OutputFileKind.Definitions]);
                 }
             }
             this.project.output.finish(old.results);
@@ -60,7 +60,9 @@ var ProjectCompiler = (function () {
             this.project.input.addContent(emptyFileName, '');
         }
         // Creating a program to compile the sources
-        this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host);
+        // We cast to `tsApi.CreateProgram` so we can pass the old program as an extra argument.
+        // TS 1.6+ will try to reuse program structure (if possible)
+        this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
         var _d = tsApi.getDiagnosticsAndEmit(this.program), errors = _d[0], result = _d[1];
         for (var i = 0; i < errors.length; i++) {
             this.project.output.diagnostic(errors[i]);
@@ -144,10 +146,12 @@ var FileCompiler = (function () {
     function FileCompiler() {
         this.errorsPerFile = {};
         this.previousErrorsPerFile = {};
+        this.compilationResult = undefined;
     }
     FileCompiler.prototype.prepare = function (_project) {
         this.project = _project;
         this.project.input.noParse = true;
+        this.compilationResult = reporter_1.emptyCompilationResult();
     };
     FileCompiler.prototype.inputFile = function (file) {
         if (file.fileNameNormalized.substr(file.fileNameNormalized.length - 5) === '.d.ts') {
@@ -156,13 +160,15 @@ var FileCompiler = (function () {
         if (this.project.input.getFileChange(file.fileNameOriginal).state === input_1.FileChangeState.Equal) {
             // Not changed, re-use old file.
             var old = this.project.previousOutput;
-            for (var _i = 0, _a = this.previousErrorsPerFile[file.fileNameNormalized]; _i < _a.length; _i++) {
-                var error = _a[_i];
+            var diagnostics_1 = this.previousErrorsPerFile[file.fileNameNormalized];
+            for (var _i = 0; _i < diagnostics_1.length; _i++) {
+                var error = diagnostics_1[_i];
                 this.project.output.diagnostic(error);
             }
+            this.compilationResult.transpileErrors += diagnostics_1.length;
             this.errorsPerFile[file.fileNameNormalized] = this.previousErrorsPerFile[file.fileNameNormalized];
-            for (var _b = 0, _c = Object.keys(old.files); _b < _c.length; _b++) {
-                var fileName = _c[_b];
+            for (var _a = 0, _b = Object.keys(old.files); _a < _b.length; _a++) {
+                var fileName = _b[_a];
                 var oldFile = old.files[fileName];
                 if (oldFile.original.fileNameNormalized !== file.fileNameNormalized)
                     continue;
@@ -173,10 +179,11 @@ var FileCompiler = (function () {
         }
         var diagnostics = [];
         var outputString = tsApi.transpile(this.project.typescript, file.content, this.project.options, file.fileNameOriginal, diagnostics);
-        for (var _d = 0; _d < diagnostics.length; _d++) {
-            var diagnostic = diagnostics[_d];
+        for (var _c = 0; _c < diagnostics.length; _c++) {
+            var diagnostic = diagnostics[_c];
             this.project.output.diagnostic(diagnostic);
         }
+        this.compilationResult.transpileErrors += diagnostics.length;
         var index = outputString.lastIndexOf('\n');
         var mapString = outputString.substring(index + 1);
         if (mapString.substring(0, 1) === '\r')
@@ -191,13 +198,13 @@ var FileCompiler = (function () {
         map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
         map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
         var fileNameExtensionless = utils.splitExtension(file.fileNameOriginal)[0];
-        var _e = utils.splitExtension(map.file), extension = _e[1]; // js or jsx
+        var _d = utils.splitExtension(map.file), extension = _d[1]; // js or jsx
         this.project.output.write(fileNameExtensionless + '.' + extension, outputString.substring(0, index));
         this.project.output.write(fileNameExtensionless + '.' + extension + '.map', JSON.stringify(map));
         this.errorsPerFile[file.fileNameNormalized] = diagnostics;
     };
     FileCompiler.prototype.inputDone = function () {
-        this.project.output.finish(undefined);
+        this.project.output.finish(this.compilationResult);
         this.previousErrorsPerFile = this.errorsPerFile;
         this.errorsPerFile = {};
     };

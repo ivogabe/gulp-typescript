@@ -15,7 +15,7 @@ var Project = (function () {
         this.options = options;
         this.noExternalResolve = noExternalResolve;
         this.sortOutput = sortOutput;
-        this.singleOutput = options.out !== undefined;
+        this.singleOutput = options.out !== undefined || options['outFile'] !== undefined;
         this.input = new input_1.FileCache(typescript, options);
     }
     /**

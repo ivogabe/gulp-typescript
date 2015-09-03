@@ -2,6 +2,7 @@
 var gutil = require('gulp-util');
 function emptyCompilationResult() {
     return {
+        transpileErrors: 0,
         syntaxErrors: 0,
         globalErrors: 0,
         semanticErrors: 0,
@@ -15,9 +16,10 @@ function defaultFinishHandler(results) {
     var showErrorCount = function (count, type) {
         if (count === 0)
             return;
-        gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), type + ' ' + (count === 1 ? 'error' : 'errors'));
+        gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), (type !== '' ? type + ' ' : '') + (count === 1 ? 'error' : 'errors'));
         hasError = true;
     };
+    showErrorCount(results.transpileErrors, '');
     showErrorCount(results.syntaxErrors, 'syntax');
     showErrorCount(results.globalErrors, 'global');
     showErrorCount(results.semanticErrors, 'semantic');
