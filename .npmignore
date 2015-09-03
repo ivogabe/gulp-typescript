@@ -3,5 +3,6 @@ gulpfile.js
 lib
 release-2
 test
+typescript
 typings
 .settings
