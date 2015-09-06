@@ -98,8 +98,13 @@ export class Project {
 		if (!this.config.files) {
 			let files = [path.join(base, '**/*.ts')];
 			
-			if (this.config.excludes instanceof Array) {
-				files = files.concat(this.config.excludes.map(file => '!' + path.resolve(base, file)));
+			if (this.config.exclude instanceof Array) {
+				files = files.concat(
+					// Exclude files
+					this.config.exclude.map(file => '!' + path.resolve(base, file)),
+					// Exclude directories
+					this.config.exclude.map(file => '!' + path.resolve(base, file) + '/**/*')
+				);
 			}
 			
 			return vfs.src(files);

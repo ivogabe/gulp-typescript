@@ -1,5 +1,5 @@
 export interface TsConfig {
 	files?: string[];
-	excludes?: string[];
+	exclude?: string[];
 	compilerOptions?: any;
 }
