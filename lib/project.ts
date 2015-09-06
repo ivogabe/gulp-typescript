@@ -98,6 +98,10 @@ export class Project {
 		if (!this.config.files) {
 			let files = [path.join(base, '**/*.ts')];
 			
+			if (tsApi.isTS16OrNewer(this.typescript)) {
+				files.push(path.join(base, '**/*.tsx'));
+			}
+			
 			if (this.config.exclude instanceof Array) {
 				files = files.concat(
 					// Exclude files
