@@ -61,7 +61,7 @@ These options are not supported:
 ## Unofficial options
 Besides the official options options, gulp-typescript supports the following options:
 - ```noExternalResolve``` (boolean) - Do not resolve files that are not in the input. Explanation below.
-- ```sortOutput``` (boolean) - Sort output files. Usefull if you want to concatenate files (see below).
+- ```sortOutput``` (boolean) - Sort output files. Useful if you want to concatenate files (see below).
 - ```typescript``` (object) - Use a different version / fork of TypeScript (see below). Use it like: `typescript: require('typescript')` or `typescript: require('my-fork-of-typescript')`
 
 Basic Usage
