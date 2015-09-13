@@ -5,4 +5,4 @@ release-2
 test
 typescript
 typings
-.settings
+.vscode
