@@ -3,6 +3,7 @@ var ts = require('typescript');
 var vfs = require('vinyl-fs');
 var path = require('path');
 var through2 = require('through2');
+var tsApi = require('./tsapi');
 var utils = require('./utils');
 var input_1 = require('./input');
 var output_1 = require('./output');
@@ -39,8 +40,15 @@ var Project = (function () {
         }
         if (!this.config.files) {
             var files = [path.join(base, '**/*.ts')];
-            if (this.config.excludes instanceof Array) {
-                files = files.concat(this.config.excludes.map(function (file) { return '!' + path.resolve(base, file); }));
+            if (tsApi.isTS16OrNewer(this.typescript)) {
+                files.push(path.join(base, '**/*.tsx'));
+            }
+            if (this.config.exclude instanceof Array) {
+                files = files.concat(
+                // Exclude files
+                this.config.exclude.map(function (file) { return '!' + path.resolve(base, file); }), 
+                // Exclude directories
+                this.config.exclude.map(function (file) { return '!' + path.resolve(base, file) + '/**/*'; }));
             }
             return vfs.src(files);
         }

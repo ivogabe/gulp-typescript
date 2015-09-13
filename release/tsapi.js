@@ -3,6 +3,10 @@ function isTS14(typescript) {
     return !('findConfigFile' in typescript);
 }
 exports.isTS14 = isTS14;
+function isTS16OrNewer(typescript) {
+    return !('ModuleResolution' in typescript);
+}
+exports.isTS16OrNewer = isTS16OrNewer;
 function getFileName(thing) {
     if (thing.filename)
         return thing.filename; // TS 1.4
