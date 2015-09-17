@@ -128,6 +128,8 @@ function getModuleResolution(typescript: typeof ts, kind: string) {
 	if ((<any> typescript).ModuleResolution === undefined) {
 		return undefined; // Not supported in TS1.4 & 1.5
 	}
+	// Enum member name is NodeJs, while option name is `node`
+	if (kind === 'node') kind = 'nodejs';
 	const map: utils.Map<number> = createEnumMap((<any> typescript).ModuleResolution);
 	return map[kind.toLowerCase()];
 }
