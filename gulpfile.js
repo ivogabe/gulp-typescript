@@ -13,7 +13,7 @@ var diff = require('gulp-diff');
 var tsVersions = {
 	dev: './typescript/dev',
 	release14: './typescript/1-4',
-	release15: 'typescript'
+	release15: './typescript/1-5'
 };
 
 function findTSDefinition(location) {
@@ -60,14 +60,18 @@ gulp.task('scripts', ['clean'], function() {
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
-// Type checking against multiple versions of TypeScript:
-// - master of TypeScript (typescript-dev)
-// - jsx-typescript (a fork of TypeScript with JSX support, currently disabled, see below)
+// Type checking against multiple versions of TypeScript
 // Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
 gulp.task('typecheck-1.4', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.release14)
+	])).pipe(ts(tsOptions));
+});
+gulp.task('typecheck-1.5', function() {
+	return gulp.src(paths.scripts.concat([
+		'!definitions/typescript.d.ts',
+		findTSDefinition(tsVersions.release15)
 	])).pipe(ts(tsOptions));
 });
 gulp.task('typecheck-dev', function() {
@@ -94,9 +98,10 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	// We run every test on multiple typescript versions:
 	var libs = [
-		['1.5', undefined],
+		['1.6', undefined],
 		['dev', require(tsVersions.dev)],
-		['1.4', require(tsVersions.release14)]
+		['1.4', require(tsVersions.release14)],
+		['1.5', require(tsVersions.release15)]
 		// ['jsx', require('jsx-typescript')] // TODO: Add jsx-typescript here. It currently throws an error when adding it.
 	];
 	var test = require('./test/' + name + '/gulptask.js');
