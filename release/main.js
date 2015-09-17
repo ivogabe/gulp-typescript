@@ -2,8 +2,7 @@
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var ts = require('typescript');
 var fs = require('fs');
@@ -102,6 +101,9 @@ function getModuleResolution(typescript, kind) {
     if (typescript.ModuleResolution === undefined) {
         return undefined; // Not supported in TS1.4 & 1.5
     }
+    // Enum member name is NodeJs, while option name is `node`
+    if (kind === 'node')
+        kind = 'nodejs';
     var map = createEnumMap(typescript.ModuleResolution);
     return map[kind.toLowerCase()];
 }
