@@ -23,7 +23,6 @@ function findTSDefinition(location) {
 var tsOptions = {
 	target: 'es5',
 	module: 'commonjs',
-	noExternalResolve: true,
 	preserveConstEnums: true,
 	typescript: require('typescript')
 };
