@@ -81,14 +81,6 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
-// Disabled typechecking for jsx since jsx is currently based on an older, unsupported version of the typescript api
-/* gulp.task('typecheck-jsx', function() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		path.join(path.dirname(require.resolve('jsx-typescript')), './typescript.d.ts')
-	])).pipe(ts(tsOptions));
-}); */
-
 gulp.task('typecheck', ['typecheck-1.4', 'typecheck-dev']);
 
 // Tests
@@ -102,7 +94,6 @@ function runTest(name, callback) {
 		['dev', require(tsVersions.dev)],
 		['1.4', require(tsVersions.release14)],
 		['1.5', require(tsVersions.release15)]
-		// ['jsx', require('jsx-typescript')] // TODO: Add jsx-typescript here. It currently throws an error when adding it.
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
