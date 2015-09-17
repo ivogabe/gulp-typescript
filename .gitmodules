@@ -5,3 +5,7 @@
 	path = typescript/1-4
 	url = https://github.com/Microsoft/TypeScript.git
 	branch = release-1.4
+[submodule "typescript/1-5"]
+	path = typescript/1-5
+	url = https://github.com/Microsoft/TypeScript.git
+	branch = release-1.5
