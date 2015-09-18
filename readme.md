@@ -173,7 +173,7 @@ Or in combination with a `tsconfig` file:
 ```javascript
 var tsProject = ts.createProject('tsconfig.json', {
 	typescript: require('typescript')
-}));
+});
 ```
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
