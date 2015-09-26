@@ -125,12 +125,12 @@ function getModuleKind(typescript: typeof ts, moduleName: string) {
 }
 
 function getModuleResolution(typescript: typeof ts, kind: string) {
-	if ((<any> typescript).ModuleResolution === undefined) {
+	if ((<any> typescript).ModuleResolutionKind === undefined) {
 		return undefined; // Not supported in TS1.4 & 1.5
 	}
 	// Enum member name is NodeJs, while option name is `node`
 	if (kind === 'node') kind = 'nodejs';
-	const map: utils.Map<number> = createEnumMap((<any> typescript).ModuleResolution);
+	const map: utils.Map<number> = createEnumMap((<any> typescript).ModuleResolutionKind);
 	return map[kind.toLowerCase()];
 }
 
@@ -248,7 +248,7 @@ module compile {
 		isolatedModules?: boolean;
 
 		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
-		
+
 		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
 	}
@@ -287,13 +287,13 @@ module compile {
 		}
 
 		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
-		
+
 		// Isolated modules are only supported when using TS1.5+
 		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
 			if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
 				console.warn('You cannot combine option `isolatedModules` with `out`, `outFile` or `sortOutput`');
 			}
-			
+
 			project.options.sourceMap = false;
 			project.options.declaration = false;
 			project.options['inlineSourceMap'] = true;
@@ -301,7 +301,7 @@ module compile {
 		} else {
 			project.compiler = new compiler.ProjectCompiler();
 		}
-		
+
 		return project;
 	}
 

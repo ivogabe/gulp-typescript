@@ -60,7 +60,7 @@ export function isTS14(typescript: typeof ts) {
 	return !('findConfigFile' in typescript);
 }
 export function isTS16OrNewer(typescript: typeof ts) {
-	return !('ModuleResolution' in typescript);
+	return !('ModuleResolutionKind' in typescript);
 }
 
 export function getFileName(thing: { filename: string} | { fileName: string }): string {
@@ -69,10 +69,10 @@ export function getFileName(thing: { filename: string} | { fileName: string }): 
 }
 export function getDiagnosticsAndEmit(program: Program14 | Program15): [ts.Diagnostic[], CompilationResult] {
 	let result = emptyCompilationResult();
-	
+
 	if ((<Program14> program).getDiagnostics) { // TS 1.4
 		let errors = (<Program14> program).getDiagnostics();
-		
+
 		result.syntaxErrors = errors.length;
 
 		if (!errors.length) {
@@ -95,14 +95,14 @@ export function getDiagnosticsAndEmit(program: Program14 | Program15): [ts.Diagn
 		result.syntaxErrors = errors.length;
 		if (errors.length === 0) {
 			errors = (<Program15> program).getGlobalDiagnostics();
-			
+
 			// Remove error: "File '...' is not under 'rootDir' '...'. 'rootDir' is expected to contain all source files."
 			// This is handled by ICompiler#correctSourceMap, so this error can be muted.
 			errors = errors.filter((item) => item.code !== 6059);
-			
+
 			result.globalErrors = errors.length;
 		}
-		
+
 		if (errors.length === 0) {
 			errors = (<Program15> program).getSemanticDiagnostics();
 			result.semanticErrors = errors.length;
@@ -144,6 +144,6 @@ export function transpile(typescript: TypeScript14 | TypeScript15, input: string
 	if (!(<TypeScript15> typescript).transpile) {
 		throw new Error('gulp-typescript: Single file compilation is not supported using TypeScript 1.4');
 	}
-	
+
 	return (<TypeScript15> typescript).transpile(input, compilerOptions, fileName.replace(/\\/g, '/'), diagnostics);
 }
