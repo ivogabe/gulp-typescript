@@ -73,32 +73,33 @@ var gulp = require('gulp');
 var ts = require('gulp-typescript');
 
 gulp.task('default', function () {
-  var tsResult = gulp.src('src/**/*.ts')
-    .pipe(ts({
-        noImplicitAny: true,
-        out: 'output.js'
-      }));
-  return tsResult.js.pipe(gulp.dest('built/local'));
+	return gulp.src('src/**/*.ts')
+		.pipe(ts({
+			noImplicitAny: true,
+			out: 'output.js'
+		})
+		.pipe(gulp.dest('built/local'));
 });
 ```
-Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp scripts` instead of `gulp`. As a result, the task will generate both javascript files and typescript definition files.
+Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp scripts` instead of `gulp`. As a result, the task will generate both JavaScript files and TypeScript definition files (.d.ts).
 ```javascript
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');  // Require separate installation
 gulp.task('scripts', function() {
-  var tsResult = gulp.src('lib/**/*.ts')
-    .pipe(ts({
-        declaration: true,
-        noExternalResolve: true
-      }));
+	var tsResult = gulp.src('lib/**/*.ts')
+		.pipe(ts({
+			declaration: true,
+			noExternalResolve: true
+		}));
 
-  return merge([
-    tsResult.dts.pipe(gulp.dest('release/definitions')),
-    tsResult.js.pipe(gulp.dest('release/js'))
-    ]);
+	return merge([
+		tsResult.dts.pipe(gulp.dest('release/definitions')),
+		tsResult.js.pipe(gulp.dest('release/js'))
+	]);
 });
 ```
+`tsResult` is a object that has a JavaScript stream (`.js`) and a definition file stream (`.dts`). If you don't need the definition files, you can use a configuration as seen in the first example.
 
 Incremental compilation
 -----------------------
@@ -154,13 +155,9 @@ gulp.task('scripts', function() {
 TypeScript version
 ------------------
 gulp-typescript uses TypeScript 1.6 by default. You can also use 1.4 or a nighty version of TypeScript instead.
-You should add the version you want (1.4+) to your package.json file as a devDependency. You can use the master from GitHub to get the latest features. You can use this in your `package.json` to get the master from GitHub:
-```javascript
-{
-	"devDependencies": {
-		"typescript": "Microsoft/TypeScript"
-	}
-}
+You should add the version you want (1.4+) to your package.json file as a devDependency. You can use the a nightly build to get the latest features:
+```
+npm install typescript@next
 ```
 And add this to your gulpfile:
 ```javascript
