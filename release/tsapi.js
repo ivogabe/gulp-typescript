@@ -4,7 +4,7 @@ function isTS14(typescript) {
 }
 exports.isTS14 = isTS14;
 function isTS16OrNewer(typescript) {
-    return !('ModuleResolutionKind' in typescript);
+    return ('ModuleResolutionKind' in typescript);
 }
 exports.isTS16OrNewer = isTS16OrNewer;
 function getFileName(thing) {
