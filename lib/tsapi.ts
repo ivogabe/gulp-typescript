@@ -60,7 +60,7 @@ export function isTS14(typescript: typeof ts) {
 	return !('findConfigFile' in typescript);
 }
 export function isTS16OrNewer(typescript: typeof ts) {
-	return !('ModuleResolutionKind' in typescript);
+	return ('ModuleResolutionKind' in typescript);
 }
 
 export function getFileName(thing: { filename: string} | { fileName: string }): string {
