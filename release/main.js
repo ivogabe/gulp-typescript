@@ -98,13 +98,13 @@ function getModuleKind(typescript, moduleName) {
     return map[moduleName.toLowerCase()];
 }
 function getModuleResolution(typescript, kind) {
-    if (typescript.ModuleResolution === undefined) {
+    if (typescript.ModuleResolutionKind === undefined) {
         return undefined; // Not supported in TS1.4 & 1.5
     }
     // Enum member name is NodeJs, while option name is `node`
     if (kind === 'node')
         kind = 'nodejs';
-    var map = createEnumMap(typescript.ModuleResolution);
+    var map = createEnumMap(typescript.ModuleResolutionKind);
     return map[kind.toLowerCase()];
 }
 function getJsxEmit(typescript, jsx) {
