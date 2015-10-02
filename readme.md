@@ -200,7 +200,7 @@ gulp.task('scripts', function() {
 	var tsResult = gulp.src('lib/*.ts')
 					   .pipe(ts(tsProject));
 	
-	tsResult.pipe(ts.filter(filterSettings)) ... ;
+	tsResult.pipe(ts.filter(tsProject, filterSettings));
 });
 ```
 The first example doesn't add files (that don't pass the filter) to the compiler, the second one does add them to the compiler,
