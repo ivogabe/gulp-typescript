@@ -3,8 +3,8 @@ var rimraf = require('rimraf');
 var fs = require('fs');
 var path = require('path');
 var ts = require('./release/main');
-var argv = require('yargs').argv;
 
+var plumber = require('gulp-plumber');
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat');
 var header = require('gulp-header');
@@ -117,50 +117,24 @@ function runTest(name, callback) {
 			test(newTS, lib[1], output, reporter).on('finish', function() {
 				fs.writeFileSync(output + 'errors.txt', errors.join('\n') + '\n' + JSON.stringify(finishInfo, null, 4));
 				done++;
-
-				if (done === libs.length) compareTest(name, callback);
+				callback();
 			});
 		})(i);
 	}
 }
-function compareTest(name, callback) {
-	var failed = false;
-	function onError(error) {
-		console.error('Test "' + name + '" failed: ' + error.message);
-		failed = true;
-		throw error;
-	}
-	gulp.src('test/output/' + name + '/**/**.**')
-		.pipe(diff('test/baselines/' + name + '/'))
-		.on('error', onError)
-		.pipe(diff.reporter({ fail: true }))
-		.on('error', onError)
-		.on('finish', function() {
-			callback(failed);
-		});
-}
 
-gulp.task('test', ['clean-test', 'scripts'], function(cb) {
-	// Use `gulp test --tests [...]` to run specific test(s).
-	// Example: `gulp test --tests basic,errorReporting`
-
+gulp.task('test-run', ['clean-test', 'scripts'], function(cb) {
 	fs.mkdirSync('test/output/');
 
-	var currentTests = tests;
-	if (argv.tests !== undefined) {
-		currentTests = argv.tests.split(',');
-	}
-
-	var pending = currentTests.length;
+	var pending = tests.length;
 	if (pending === 0) {
 		cb();
 		return;
 	}
 	
 	var isFailed = false;
-
-	for (var i = 0; i < currentTests.length; i++) {
-		runTest(currentTests[i], function(failed) {
+	for (var i = 0; i < tests.length; i++) {
+		runTest(tests[i], function(failed) {
 			isFailed = isFailed || failed;
 			pending--;
 			if (pending === 0) {
@@ -172,6 +146,24 @@ gulp.task('test', ['clean-test', 'scripts'], function(cb) {
 			}
 		});
 	}
+})
+
+gulp.task('test', ['test-run'], function(cb) {
+	var failed = false;
+	function onError(error) {
+		failed = true;
+	}
+	return gulp.src('test/output/**/*.*')
+		.pipe(plumber())
+		.pipe(diff('test/baselines/'))
+		.on('error', onError)
+		.pipe(diff.reporter({ fail: true }))
+		.on('error', onError)
+		.on('finish', function() {
+			if (failed) {
+				throw new Error('Tests failed');
+			}
+		});
 });
 
 // Accept new baselines
