@@ -36,7 +36,6 @@ Allmost all options from TypeScript are supported.
 - `noImplicitAny` (boolean) - Warn on expressions and declarations with an implied 'any' type.
 - `suppressImplicitAnyIndexErrors` (boolean) - Suppress --noImplicitAny errors for indexing objects lacking index signatures.
 - `noLib` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
-- `noEmitOnError` (boolean) - Do not emit outputs if any type checking errors were reported.
 - `target` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - `module` (string) - Specify module code generation: 'commonjs', 'amd', 'umd' or 'system'.
 - `jsx` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
