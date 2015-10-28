@@ -76,7 +76,7 @@ gulp.task('default', function () {
 		.pipe(ts({
 			noImplicitAny: true,
 			out: 'output.js'
-		})
+		}))
 		.pipe(gulp.dest('built/local'));
 });
 ```
