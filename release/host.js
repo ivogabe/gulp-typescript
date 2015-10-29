@@ -16,19 +16,20 @@ var Host = (function () {
             if (fileName === '__lib.d.ts') {
                 return Host.getLibDefault(_this.typescript, _this.libFileName);
             }
-            var sourceFile = _this.input.getFile(fileName);
+            var normalizedFilename = tsApi.getNormalizedAbsolutePath(_this.typescript, fileName, _this.getCurrentDirectory());
+            var sourceFile = _this.input.getFile(normalizedFilename);
             if (sourceFile)
                 return sourceFile.ts;
             if (_this.externalResolve) {
                 var text;
                 try {
-                    text = fs.readFileSync(fileName).toString('utf8');
+                    text = fs.readFileSync(normalizedFilename).toString('utf8');
                 }
                 catch (ex) {
                     return undefined;
                 }
-                _this.input.addContent(fileName, text);
-                var sourceFile_1 = _this.input.getFile(fileName);
+                _this.input.addContent(normalizedFilename, text);
+                var sourceFile_1 = _this.input.getFile(normalizedFilename);
                 if (sourceFile_1)
                     return sourceFile_1.ts;
             }
