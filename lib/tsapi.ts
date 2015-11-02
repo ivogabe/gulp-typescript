@@ -159,5 +159,5 @@ export function getNormalizedAbsolutePath(typescript: TypeScript18 | TypeScript1
 		return fileName;
 	}
 
-    return (<TypeScript18> typescript).getNormalizedAbsolutePath(fileName, currentDirectory);
+	return (<TypeScript18> typescript).getNormalizedAbsolutePath(fileName, currentDirectory);
 }
