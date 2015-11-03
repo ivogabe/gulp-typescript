@@ -135,7 +135,8 @@ export class Project {
 			}
 		});
 		
-		return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), { base })
+		const vinylOptions = { base, allowEmpty: true };
+		return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), vinylOptions)
 			.pipe(checkMissingFiles);
 	}
 }
