@@ -124,19 +124,21 @@ export class Host implements ts.CompilerHost {
 			return Host.getLibDefault(this.typescript, this.libFileName);
 		}
 
-		let sourceFile = this.input.getFile(fileName);
+		let normalizedFilename = tsApi.getNormalizedAbsolutePath(this.typescript, fileName, this.getCurrentDirectory());
+
+		let sourceFile = this.input.getFile(normalizedFilename);
 		if (sourceFile) return sourceFile.ts;
 
 		if (this.externalResolve) {
 			let text: string;
 			try {
-				text = fs.readFileSync(fileName).toString('utf8');
+				text = fs.readFileSync(normalizedFilename).toString('utf8');
 			} catch (ex) {
 				return undefined;
 			}
-			this.input.addContent(fileName, text);
+			this.input.addContent(normalizedFilename, text);
 
-			let sourceFile = this.input.getFile(fileName);
+			let sourceFile = this.input.getFile(normalizedFilename);
 			if (sourceFile) return sourceFile.ts;
 		}
 	}

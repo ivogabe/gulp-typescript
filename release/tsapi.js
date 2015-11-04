@@ -91,3 +91,11 @@ function transpile(typescript, input, compilerOptions, fileName, diagnostics) {
     return typescript.transpile(input, compilerOptions, fileName.replace(/\\/g, '/'), diagnostics);
 }
 exports.transpile = transpile;
+function getNormalizedAbsolutePath(typescript, fileName, currentDirectory) {
+    // Prior to Typescript 1.8.0-dev.20151028, this method did not exist, so whatever is passed in from fileName is passed through.
+    if (!typescript.getNormalizedAbsolutePath) {
+        return fileName;
+    }
+    return typescript.getNormalizedAbsolutePath(fileName, currentDirectory);
+}
+exports.getNormalizedAbsolutePath = getNormalizedAbsolutePath;

@@ -12,6 +12,10 @@ export interface TypeScript15 {
 	transpile(input: string, compilerOptions?: ts.CompilerOptions, fileName?: string, diagnostics?: ts.Diagnostic[]): string;
 }
 
+export interface TypeScript18 {
+	getNormalizedAbsolutePath(fileName: string, currentDirectory: string);
+}
+
 /*
  * In TS1.6+ ts.createProgram has an extra argument, `oldProgram`.
  * TS will reuse the old program if possible, which speeds up incremental
@@ -146,4 +150,14 @@ export function transpile(typescript: TypeScript14 | TypeScript15, input: string
 	}
 
 	return (<TypeScript15> typescript).transpile(input, compilerOptions, fileName.replace(/\\/g, '/'), diagnostics);
+}
+
+
+export function getNormalizedAbsolutePath(typescript: TypeScript18 | TypeScript14 | TypeScript15, fileName: string, currentDirectory: string) {
+	// Prior to Typescript 1.8.0-dev.20151028, this method did not exist, so whatever is passed in from fileName is passed through.
+	if (!(<TypeScript18> typescript).getNormalizedAbsolutePath) {
+		return fileName;
+	}
+
+	return (<TypeScript18> typescript).getNormalizedAbsolutePath(fileName, currentDirectory);
 }
