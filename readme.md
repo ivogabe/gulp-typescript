@@ -51,7 +51,7 @@ Allmost all options from TypeScript are supported.
 
 See the [TypeScript wiki](https://github.com/Microsoft/TypeScript/wiki/Compiler-Options) for a complete list.
 These options are not supported:
-- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use `gulp-sourcemaps` instead.
+- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use [`gulp-sourcemaps`](https://github.com/floridoo/gulp-sourcemaps) instead.
 - `rootDir` - Use `base` option of `gulp.src()` instead.
 - `watch` - Use `gulp.watch` instead. See the paragraph "Incremental compilation".
 - `project` - See "Using `tsconfig.json`".
