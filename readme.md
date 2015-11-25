@@ -32,7 +32,6 @@ Options
 Allmost all options from TypeScript are supported.
 - `out` (TS1.5-), `outFile` (TS1.6+) (string) - Generate one javascript and one definition file. Only works when no module system is used.
 - `outDir` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
-- `removeComments` (boolean) - Do not emit comments to output.
 - `noImplicitAny` (boolean) - Warn on expressions and declarations with an implied 'any' type.
 - `suppressImplicitAnyIndexErrors` (boolean) - Suppress --noImplicitAny errors for indexing objects lacking index signatures.
 - `noLib` (boolean) - Don't include the default lib (with definitions for - Array, Date etc)
