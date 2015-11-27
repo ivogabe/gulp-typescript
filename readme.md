@@ -42,6 +42,7 @@ Allmost all options from TypeScript are supported.
 - `removeComments` (boolean) - Do not emit comments to output.
 - `emitDecoratorMetadata` (boolean) - Emit design-time metadate for decorated declarations in source.
 - `experimentalAsyncFunctions` (boolean) - Support for ES7-proposed asynchronous functions using the `async`/`await` keywords (TS1.6+).
+- `experimentalDecorators` (boolean) - Enables experimental support for ES7 decorators.
 - `moduleResolution` (string) - Determine how modules get resolved. Either 'node' for Node.js/io.js style resolution, or 'classic' (default) (TS1.6+).
 - `noEmitOnError` (boolean) - Do not emit outputs if any type checking errors were reported.
 - `noEmitHelpers` (boolean) - Do not generate custom helper functions like __extends in compiled output.
