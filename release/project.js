@@ -72,7 +72,8 @@ var Project = (function () {
                 }
             }
         });
-        return vfs.src(this.config.files.map(function (file) { return path.resolve(configPath, file); }), { base: base })
+        var vinylOptions = { base: base, allowEmpty: true };
+        return vfs.src(this.config.files.map(function (file) { return path.resolve(configPath, file); }), vinylOptions)
             .pipe(checkMissingFiles);
     };
     return Project;
