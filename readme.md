@@ -38,7 +38,7 @@ Allmost all options from TypeScript are supported.
 - `target` (string) - Specify ECMAScript target version: 'ES3' (default), 'ES5' or 'ES6'.
 - `module` (string) - Specify module code generation: 'commonjs', 'amd', 'umd' or 'system'.
 - `jsx` (string) - Specify jsx code generation: 'react' or 'preserve' (TS1.6+).
-- `declaration` (boolean) - Generates corresponding .d.ts files.
+- `declaration` (boolean) - Generates corresponding .d.ts files. You need to pipe the `dts` streams to save these files.
 - `removeComments` (boolean) - Do not emit comments to output.
 - `emitDecoratorMetadata` (boolean) - Emit design-time metadate for decorated declarations in source.
 - `experimentalAsyncFunctions` (boolean) - Support for ES7-proposed asynchronous functions using the `async`/`await` keywords (TS1.6+).
@@ -98,7 +98,9 @@ gulp.task('scripts', function() {
 	]);
 });
 ```
-`tsResult` is a object that has a JavaScript stream (`.js`) and a definition file stream (`.dts`). If you don't need the definition files, you can use a configuration as seen in the first example.
+`tsResult` is a object that has a JavaScript stream (`.js`) and a definition file stream (`.dts`). 
+You need to set the `declaration` option to get definition files in the `dts` stream.
+If you don't need the definition files, you can use a configuration as seen in the first example.
 
 Incremental compilation
 -----------------------
