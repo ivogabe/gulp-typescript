@@ -55,15 +55,15 @@
   ],
   "main": "release/main.js",
   "dependencies": {
-    "gulp-util": "~3.0.6",
-    "source-map": "~0.5.1",
+    "gulp-util": "~3.0.7",
+    "source-map": "~0.5.3",
     "through2": "~2.0.0",
-    "typescript": "1.6.2",
-    "vinyl-fs": "~2.1.1"
+    "typescript": "1.7.3",
+    "vinyl-fs": "~2.2.1"
   },
   "devDependencies": {
     "gulp": "~3.9.0",
-    "rimraf": "~2.4.3",
+    "rimraf": "~2.4.4",
     "gulp-sourcemaps": "~1.6.0",
     "gulp-concat": "~2.6.0",
     "gulp-header": "~1.7.1",

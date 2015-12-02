@@ -153,7 +153,7 @@ gulp.task('scripts', function() {
 
 TypeScript version
 ------------------
-gulp-typescript uses TypeScript 1.6 by default. You can also use 1.4 or a nighty version of TypeScript instead.
+gulp-typescript uses TypeScript 1.7 by default. You can also use 1.4+ or a nighty version of TypeScript instead.
 You should add the version you want (1.4+) to your package.json file as a devDependency. You can use the a nightly build to get the latest features:
 ```
 npm install typescript@next
