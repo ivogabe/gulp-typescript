@@ -4,7 +4,7 @@ var utils = require('./utils');
 var fs = require('fs');
 var path = require('path');
 var Host = (function () {
-    function Host(typescript, currentDirectory, input, externalResolve, libFileName) {
+    function Host(typescript, currentDirectory, input, externalResolve, libFileName, shouldUseCaseSensitiveFileNames) {
         var _this = this;
         this.getCurrentDirectory = function () {
             return _this.currentDirectory;
@@ -38,6 +38,7 @@ var Host = (function () {
         this.input = input;
         this.externalResolve = externalResolve;
         this.libFileName = libFileName;
+        this.shouldUseCaseSensitiveFileNames = shouldUseCaseSensitiveFileNames;
         this.reset();
     }
     Host.getLibDefault = function (typescript, libFileName) {
@@ -66,7 +67,7 @@ var Host = (function () {
         return '\n';
     };
     Host.prototype.useCaseSensitiveFileNames = function () {
-        return false;
+        return this.shouldUseCaseSensitiveFileNames;
     };
     Host.prototype.getCanonicalFileName = function (filename) {
         return utils.normalizePath(filename);

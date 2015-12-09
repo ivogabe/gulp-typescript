@@ -63,7 +63,16 @@ export class Project {
 
 	currentDirectory: string;
 
-	constructor(configFileName: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+	useCaseSensitiveFileNames: boolean;
+
+		constructor(
+				configFileName: string,
+				config: TsConfig,
+				options: ts.CompilerOptions,
+				noExternalResolve: boolean,
+				sortOutput: boolean,
+				typescript = ts,
+				useCaseSensitiveFileNames: boolean = false) {
 		this.typescript = typescript;
 		this.configFileName = configFileName;
 		this.config = config;
@@ -74,6 +83,8 @@ export class Project {
 		this.singleOutput = options.out !== undefined || options['outFile'] !== undefined;
 
 		this.input = new FileCache(typescript, options);
+
+		this.useCaseSensitiveFileNames = useCaseSensitiveFileNames;
 	}
 
 	/**

@@ -40,7 +40,9 @@ export class Host implements ts.CompilerHost {
 	input: FileCache;
 	output: utils.Map<string>;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, externalResolve: boolean, libFileName: string) {
+	private shouldUseCaseSensitiveFileNames: boolean;
+
+	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, externalResolve: boolean, libFileName: string, shouldUseCaseSensitiveFileNames: boolean) {
 		this.typescript = typescript;
 
 		this.currentDirectory = currentDirectory;
@@ -48,6 +50,8 @@ export class Host implements ts.CompilerHost {
 
 		this.externalResolve = externalResolve;
 		this.libFileName = libFileName;
+
+		this.shouldUseCaseSensitiveFileNames = shouldUseCaseSensitiveFileNames;
 
 		this.reset();
 	}
@@ -59,8 +63,9 @@ export class Host implements ts.CompilerHost {
 	getNewLine() {
 		return '\n';
 	}
+
 	useCaseSensitiveFileNames() {
-		return false;
+		return this.shouldUseCaseSensitiveFileNames;
 	}
 
 	getCurrentDirectory = () => {
