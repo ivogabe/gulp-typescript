@@ -160,7 +160,8 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 			key === 'sourceRoot' ||
 			key === 'rootDir' ||
 			key === 'sourceMap' ||
-			key === 'inlineSourceMap') continue;
+			key === 'inlineSourceMap' ||
+			key === 'useCaseSensitiveFileNames') continue;
 
 		tsSettings[key] = settings[key];
 	}
@@ -251,6 +252,8 @@ module compile {
 
 		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
+
+		useCaseSensitiveFileNames?: boolean;
 	}
 	export interface FilterSettings {
 		referencedFrom: string[];
@@ -286,7 +289,7 @@ module compile {
 			}
 		}
 
-		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript, settings.useCaseSensitiveFileNames);
 
 		// Isolated modules are only supported when using TS1.5+
 		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {

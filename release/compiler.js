@@ -43,7 +43,7 @@ var ProjectCompiler = (function () {
         }
         var root = this.project.input.commonBasePath;
         this.project.options.sourceRoot = root;
-        this.host = new host_1.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');
+        this.host = new host_1.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts', this.project.useCaseSensitiveFileNames);
         var rootFilenames = this.project.input.getFileNames(true);
         if (this.project.filterSettings !== undefined) {
             var filter = new filter_1.Filter(this.project, this.project.filterSettings);
