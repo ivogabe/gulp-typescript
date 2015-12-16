@@ -296,6 +296,7 @@ module compile {
 
 			project.options.sourceMap = false;
 			project.options.declaration = false;
+			delete project.options.outDir;
 			project.options['inlineSourceMap'] = true;
 			project.compiler = new compiler.FileCompiler();
 		} else {
