@@ -58,7 +58,7 @@ export class Filter {
 				process.cwd(),
 				file.gulp.base
 			) + '/';
-			if (file.gulp.path.substring(base.length) === searchFileName) {
+			if (path.resolve(base, searchFileName) === file.gulp.path) {
 				return file;
 			}
 		}
