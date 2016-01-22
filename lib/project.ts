@@ -126,7 +126,7 @@ export class Project {
 					utils.normalizePath(path.join(configPath, fileName)),
 					utils.normalizePath(path.join(process.cwd(), configPath, fileName))
 				];
-				
+
 				if (resolvedFiles.indexOf(fullPaths[0]) === -1 && resolvedFiles.indexOf(fullPaths[1]) === -1) {
 					const error = new Error(`error TS6053: File '${ fileName }' not found.`);
 					console.error(error.message);
