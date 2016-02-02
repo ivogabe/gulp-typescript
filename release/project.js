@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+var stream = require('stream');
 var ts = require('typescript');
 var vfs = require('vinyl-fs');
 var path = require('path');
@@ -35,23 +36,42 @@ var Project = (function () {
         if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
             base = path.resolve(configPath, this.config.compilerOptions.rootDir);
         }
-        else {
-            base = configPath;
-        }
         if (!this.config.files) {
-            var files = [path.join(base, '**/*.ts')];
+            var files_1 = [path.join(configPath, '**/*.ts')];
             if (tsApi.isTS16OrNewer(this.typescript)) {
-                files.push(path.join(base, '**/*.tsx'));
+                files_1.push(path.join(configPath, '**/*.tsx'));
             }
             if (this.config.exclude instanceof Array) {
-                files = files.concat(
+                files_1 = files_1.concat(
                 // Exclude files
-                this.config.exclude.map(function (file) { return '!' + path.resolve(base, file); }), 
+                this.config.exclude.map(function (file) { return '!' + path.resolve(configPath, file); }), 
                 // Exclude directories
-                this.config.exclude.map(function (file) { return '!' + path.resolve(base, file) + '/**/*'; }));
+                this.config.exclude.map(function (file) { return '!' + path.resolve(configPath, file) + '/**/*'; }));
             }
-            return vfs.src(files);
+            if (base !== undefined) {
+                return vfs.src(files_1, { base: base });
+            }
+            var srcStream = vfs.src(files_1);
+            var sources = new stream.Readable({ objectMode: true });
+            sources._read = function () { };
+            var resolvedFiles_1 = [];
+            srcStream.on('data', function (file) {
+                resolvedFiles_1.push(file);
+            });
+            srcStream.on('finish', function () {
+                var base = utils.getCommonBasePathOfArray(resolvedFiles_1.map(function (file) { return path.dirname(file.path); }));
+                for (var _i = 0; _i < resolvedFiles_1.length; _i++) {
+                    var file = resolvedFiles_1[_i];
+                    file.base = base;
+                    sources.push(file);
+                }
+                sources.emit('finish');
+            });
+            return srcStream;
         }
+        var files = this.config.files.map(function (file) { return path.resolve(configPath, file); });
+        if (base === undefined)
+            base = utils.getCommonBasePathOfArray(files.map(function (file) { return path.dirname(file); }));
         var resolvedFiles = [];
         var checkMissingFiles = through2.obj(function (file, enc, callback) {
             this.push(file);

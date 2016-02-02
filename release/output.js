@@ -201,6 +201,8 @@ var Output = (function () {
         this.results = results;
         if (this.project.reporter.finish)
             this.project.reporter.finish(results);
+        this.streamJs.emit('finish');
+        this.streamDts.emit('finish');
         this.streamJs.push(null);
         this.streamDts.push(null);
     };
