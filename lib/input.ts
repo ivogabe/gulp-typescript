@@ -72,22 +72,6 @@ export module File {
 	}
 }
 
-/**
- * Finds the common base path of two directories
- */
-function getCommonBasePath(a: string, b: string) {
-	const aSplit = a.split(/\\|\//); // Split on '/' or '\'.
-	const bSplit = b.split(/\\|\//);
-	let commonLength = 0;
-	for (let i = 0; i < aSplit.length && i < bSplit.length; i++) {
-		if (aSplit[i] !== bSplit[i]) break;
-		
-		commonLength += aSplit[i].length + 1;
-	}
-	
-	return a.substr(0, commonLength);
-}
-
 export class FileDictionary {
 	files: utils.Map<File> = {};
 	firstSourceFile: File = undefined;
@@ -144,21 +128,21 @@ export class FileDictionary {
 	
 	get commonBasePath() {
 		const fileNames = this.getSourceFileNames(true);
-		return fileNames
-			.map(fileName => {
+		return utils.getCommonBasePathOfArray(
+			fileNames.map(fileName => {
 				const file = this.files[utils.normalizePath(fileName)];
 				return path.resolve(process.cwd(), file.gulp.base);
 			})
-			.reduce(getCommonBasePath);
+		);
 	}
 	get commonSourceDirectory() {
 		const fileNames = this.getSourceFileNames();
-		return fileNames
-			.map(fileName => {
+		return utils.getCommonBasePathOfArray(
+			fileNames.map(fileName => {
 				const file = this.files[utils.normalizePath(fileName)];
 				return path.dirname(file.fileNameNormalized);
 			})
-			.reduce(getCommonBasePath);
+		);
 	}
 }
 
