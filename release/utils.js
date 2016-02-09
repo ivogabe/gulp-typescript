@@ -25,3 +25,24 @@ function splitExtension(fileName, knownExtensions) {
     return [fileName.substr(0, index - 1), ext];
 }
 exports.splitExtension = splitExtension;
+/**
+ * Finds the common base path of two directories
+ */
+function getCommonBasePath(a, b) {
+    var aSplit = a.split(/\\|\//); // Split on '/' or '\'.
+    var bSplit = b.split(/\\|\//);
+    var commonLength = 0;
+    for (var i = 0; i < aSplit.length && i < bSplit.length; i++) {
+        if (aSplit[i] !== bSplit[i])
+            break;
+        commonLength += aSplit[i].length + 1;
+    }
+    return a.substr(0, commonLength);
+}
+exports.getCommonBasePath = getCommonBasePath;
+function getCommonBasePathOfArray(paths) {
+    if (paths.length === 0)
+        return '';
+    return paths.reduce(getCommonBasePath);
+}
+exports.getCommonBasePathOfArray = getCommonBasePathOfArray;

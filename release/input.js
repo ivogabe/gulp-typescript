@@ -57,20 +57,6 @@ var File;
     }
     File.getChangeState = getChangeState;
 })(File = exports.File || (exports.File = {}));
-/**
- * Finds the common base path of two directories
- */
-function getCommonBasePath(a, b) {
-    var aSplit = a.split(/\\|\//); // Split on '/' or '\'.
-    var bSplit = b.split(/\\|\//);
-    var commonLength = 0;
-    for (var i = 0; i < aSplit.length && i < bSplit.length; i++) {
-        if (aSplit[i] !== bSplit[i])
-            break;
-        commonLength += aSplit[i].length + 1;
-    }
-    return a.substr(0, commonLength);
-}
 var FileDictionary = (function () {
     function FileDictionary(typescript) {
         this.files = {};
@@ -123,12 +109,10 @@ var FileDictionary = (function () {
         get: function () {
             var _this = this;
             var fileNames = this.getSourceFileNames(true);
-            return fileNames
-                .map(function (fileName) {
+            return utils.getCommonBasePathOfArray(fileNames.map(function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
                 return path.resolve(process.cwd(), file.gulp.base);
-            })
-                .reduce(getCommonBasePath);
+            }));
         },
         enumerable: true,
         configurable: true
@@ -137,12 +121,10 @@ var FileDictionary = (function () {
         get: function () {
             var _this = this;
             var fileNames = this.getSourceFileNames();
-            return fileNames
-                .map(function (fileName) {
+            return utils.getCommonBasePathOfArray(fileNames.map(function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
                 return path.dirname(file.fileNameNormalized);
-            })
-                .reduce(getCommonBasePath);
+            }));
         },
         enumerable: true,
         configurable: true
