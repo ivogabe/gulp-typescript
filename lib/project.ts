@@ -91,28 +91,47 @@ export class Project {
 		let base: string;
 		if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
 			base = path.resolve(configPath, this.config.compilerOptions.rootDir);
-		} else {
-			base = configPath;
 		}
 		
 		if (!this.config.files) {
-			let files = [path.join(base, '**/*.ts')];
+			let files = [path.join(configPath, '**/*.ts')];
 			
 			if (tsApi.isTS16OrNewer(this.typescript)) {
-				files.push(path.join(base, '**/*.tsx'));
+				files.push(path.join(configPath, '**/*.tsx'));
 			}
 			
 			if (this.config.exclude instanceof Array) {
 				files = files.concat(
 					// Exclude files
-					this.config.exclude.map(file => '!' + path.resolve(base, file)),
+					this.config.exclude.map(file => '!' + path.resolve(configPath, file)),
 					// Exclude directories
-					this.config.exclude.map(file => '!' + path.resolve(base, file) + '/**/*')
+					this.config.exclude.map(file => '!' + path.resolve(configPath, file) + '/**/*')
 				);
 			}
-			
-			return vfs.src(files);
+			if (base !== undefined) {
+				return vfs.src(files, { base });
+			}
+			const srcStream = vfs.src(files);
+			const sources = new stream.Readable({ objectMode: true });
+			sources._read = () => {};
+			const resolvedFiles: gutil.File[] = [];
+			srcStream.on('data', (file: gutil.File) => {
+				resolvedFiles.push(file);
+			});
+			srcStream.on('finish', () => {
+				const base = utils.getCommonBasePathOfArray(
+					resolvedFiles.map(file => path.dirname(file.path))
+				);
+				for (const file of resolvedFiles) {
+					file.base = base;
+					sources.push(file);
+				}
+				sources.emit('finish');
+			});
+			return srcStream;
 		}
+		const files = this.config.files.map(file => path.resolve(configPath, file));
+		if (base === undefined) base = utils.getCommonBasePathOfArray(files.map(file => path.dirname(file)));
 		
 		const resolvedFiles: string[] = [];
 		const checkMissingFiles = through2.obj(function (file: gutil.File, enc, callback) {
