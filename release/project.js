@@ -9,8 +9,9 @@ var utils = require('./utils');
 var input_1 = require('./input');
 var output_1 = require('./output');
 var Project = (function () {
-    function Project(configFileName, config, options, noExternalResolve, sortOutput, typescript) {
+    function Project(configFileName, config, options, noExternalResolve, sortOutput, typescript, useCaseSensitiveFileNames) {
         if (typescript === void 0) { typescript = ts; }
+        if (useCaseSensitiveFileNames === void 0) { useCaseSensitiveFileNames = false; }
         this.typescript = typescript;
         this.configFileName = configFileName;
         this.config = config;
@@ -19,6 +20,7 @@ var Project = (function () {
         this.sortOutput = sortOutput;
         this.singleOutput = options.out !== undefined || options['outFile'] !== undefined;
         this.input = new input_1.FileCache(typescript, options);
+        this.useCaseSensitiveFileNames = useCaseSensitiveFileNames;
     }
     /**
      * Resets the compiler.

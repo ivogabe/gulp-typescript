@@ -131,7 +131,8 @@ function getCompilerOptions(settings) {
             key === 'sourceRoot' ||
             key === 'rootDir' ||
             key === 'sourceMap' ||
-            key === 'inlineSourceMap')
+            key === 'inlineSourceMap' ||
+            key === 'useCaseSensitiveFileNames')
             continue;
         tsSettings[key] = settings[key];
     }
@@ -212,7 +213,7 @@ var compile;
                 settings = fileNameOrSettings;
             }
         }
-        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript, settings.useCaseSensitiveFileNames);
         // Isolated modules are only supported when using TS1.5+
         if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
             if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {

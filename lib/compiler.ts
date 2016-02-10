@@ -73,7 +73,8 @@ export class ProjectCompiler implements ICompiler {
 			this.project.currentDirectory,
 			this.project.input,
 			!this.project.noExternalResolve,
-			this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts'
+			this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts',
+			this.project.useCaseSensitiveFileNames
 		);
 
 		let rootFilenames: string[] = this.project.input.getFileNames(true);
