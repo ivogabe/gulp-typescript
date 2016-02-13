@@ -154,6 +154,15 @@ export class FileCache {
 
 	typescript: typeof ts;
 	version: number = 0;
+  _commonBasePath: string;
+
+
+  private getCommonBasePath() {
+    if (!this._commonBasePath) {
+      this._commonBasePath = this.current.commonBasePath;
+    }
+    return this._commonBasePath;
+  }
 
 	constructor(typescript: typeof ts, options: ts.CompilerOptions) {
 		this.typescript = typescript;
@@ -192,7 +201,13 @@ export class FileCache {
 	}
 
 	getFile(name: string) {
+    if (/^\//.test(name)) {
 		return this.current.getFile(name);
+    }
+    else {
+      let file = this.current.getFile(path.resolve(this.getCommonBasePath(), name));
+      return file
+    }
 	}
 
 	getFileChange(name: string): FileChange {

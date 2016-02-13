@@ -236,6 +236,11 @@ module compile {
 		target: string | ts.ScriptTarget;
 		module: string | ts.ModuleKind;
 		moduleResolution: string | number;
+
+    paths: any;
+    baseUrl: string;
+    rootDirs: any;
+
 		jsx: string | number;
 
 		declarationFiles?: boolean;
