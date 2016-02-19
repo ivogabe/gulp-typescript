@@ -7,6 +7,8 @@ import * as tsApi from './tsapi';
 import * as utils from './utils';
 import { VinylFile } from './vinyl-file';
 
+const pathIsAbsolute = require('path-is-absolute')
+
 export enum FileChangeState {
 	New,
 	Equal,
@@ -112,12 +114,12 @@ export class FileDictionary {
 		}
 		return fileNames;
 	}
-	
+
 	private getSourceFileNames(onlyGulp?: boolean) {
 		const fileNames = this.getFileNames(onlyGulp);
 		const sourceFileNames = fileNames
 			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts');
-		
+
 		if (sourceFileNames.length === 0) {
 			// Only definition files, so we will calculate the common base path based on the
 			// paths of the definition files.
@@ -125,7 +127,7 @@ export class FileDictionary {
 		}
 		return sourceFileNames;
 	}
-	
+
 	get commonBasePath() {
 		const fileNames = this.getSourceFileNames(true);
 		return utils.getCommonBasePathOfArray(
@@ -154,15 +156,15 @@ export class FileCache {
 
 	typescript: typeof ts;
 	version: number = 0;
-  _commonBasePath: string;
+	_commonBasePath: string;
 
 
-  private getCommonBasePath() {
-    if (!this._commonBasePath) {
-      this._commonBasePath = this.current.commonBasePath;
-    }
-    return this._commonBasePath;
-  }
+	private getCommonBasePath() {
+		if (!this._commonBasePath) {
+			this._commonBasePath = this.current.commonBasePath;
+		}
+		return this._commonBasePath;
+	}
 
 	constructor(typescript: typeof ts, options: ts.CompilerOptions) {
 		this.typescript = typescript;
@@ -201,13 +203,12 @@ export class FileCache {
 	}
 
 	getFile(name: string) {
-    if (/^\//.test(name)) {
-		return this.current.getFile(name);
-    }
-    else {
-      let file = this.current.getFile(path.resolve(this.getCommonBasePath(), name));
-      return file
-    }
+		if (pathIsAbsolute(name)) {
+			return this.current.getFile(name);
+		}
+		else {
+			return this.current.getFile(path.resolve(this.getCommonBasePath(), name));
+		}
 	}
 
 	getFileChange(name: string): FileChange {

@@ -237,9 +237,9 @@ module compile {
 		module: string | ts.ModuleKind;
 		moduleResolution: string | number;
 
-    paths: any;
-    baseUrl: string;
-    rootDirs: any;
+		paths: any;
+		baseUrl: string;
+		rootDirs: any;
 
 		jsx: string | number;
 

@@ -2,6 +2,7 @@
 var path = require('path');
 var tsApi = require('./tsapi');
 var utils = require('./utils');
+var pathIsAbsolute = require('path-is-absolute');
 (function (FileChangeState) {
     FileChangeState[FileChangeState["New"] = 0] = "New";
     FileChangeState[FileChangeState["Equal"] = 1] = "Equal";
@@ -176,12 +177,11 @@ var FileCache = (function () {
         file.ts = tsApi.createSourceFile(this.typescript, file.fileNameOriginal, file.content, this.options.target, this.version + '');
     };
     FileCache.prototype.getFile = function (name) {
-        if (/^\//.test(name)) {
+        if (pathIsAbsolute(name)) {
             return this.current.getFile(name);
         }
         else {
-            var file = this.current.getFile(path.resolve(this.getCommonBasePath(), name));
-            return file;
+            return this.current.getFile(path.resolve(this.getCommonBasePath(), name));
         }
     };
     FileCache.prototype.getFileChange = function (name) {
