@@ -99,7 +99,11 @@ export class Project {
 			if (tsApi.isTS16OrNewer(this.typescript)) {
 				files.push(path.join(configPath, '**/*.tsx'));
 			}
-			
+			if ((<tsApi.TSOptions18> this.options).allowJs) {
+				files.push(path.join(configPath, '**/*.js'));
+				files.push(path.join(configPath, '**/*.jsx'));
+			}
+
 			if (this.config.exclude instanceof Array) {
 				files = files.concat(
 					// Exclude files

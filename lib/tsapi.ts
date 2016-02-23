@@ -56,6 +56,11 @@ export interface TSFile15 {
 	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
 }
 
+export interface TSOptions18 extends ts.CompilerOptions {
+	allowJs: boolean;
+	suppressOutputPathCheck: boolean;
+}
+
 export function isTS14(typescript: typeof ts) {
 	return !('findConfigFile' in typescript);
 }

@@ -209,6 +209,9 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 
 	tsSettings.sourceMap = true;
 
+	// Suppress errors when providing `allowJs` without `outDir`.
+	(<tsApi.TSOptions18> tsSettings).suppressOutputPathCheck = true;
+
 	return tsSettings;
 }
 
