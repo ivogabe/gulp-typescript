@@ -4,8 +4,8 @@
 		"isolatedModules": true,
 		"declaration": true
 	},
-	"files": [
-		"test-3.ts",
-		"other-3.ts"
+	"exclude": [
+		"excluded-file.ts",
+		"excluded-dir"
 	]
 }
