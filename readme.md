@@ -48,6 +48,7 @@ Allmost all options from TypeScript are supported.
 - `noEmitHelpers` (boolean) - Do not generate custom helper functions like __extends in compiled output.
 - `preserveConstEnums` (boolean) - Do not erase const enum declarations in generated code. 
 - `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
+- `allowJs` (boolean) - Allow JavaScript files to be compiled.
 
 See the [TypeScript wiki](https://github.com/Microsoft/TypeScript/wiki/Compiler-Options) for a complete list.
 These options are not supported:
@@ -155,7 +156,7 @@ gulp.task('scripts', function() {
 
 TypeScript version
 ------------------
-gulp-typescript uses TypeScript 1.7 by default. You can also use 1.4+ or a nighty version of TypeScript instead.
+gulp-typescript uses TypeScript 1.8 by default. You can also use 1.4+ or a nighty version of TypeScript instead.
 You should add the version you want (1.4+) to your package.json file as a devDependency. You can use the a nightly build to get the latest features:
 ```
 npm install typescript@next
