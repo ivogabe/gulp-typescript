@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var path = require('path');
 var ts = require('typescript');
 var sourceMap = require('source-map');
@@ -180,22 +181,22 @@ var Output = (function () {
     Output.prototype.finish = function (results) {
         var _this = this;
         if (this.project.sortOutput) {
-            var sortedEmit = function (fileName) {
+            var sortedEmit_1 = function (fileName) {
                 var file = _this.files[utils.normalizePath(fileName)];
                 if (!file || file.skipPush || file.pushed)
                     return;
                 if (file.original && file.original.ts) {
                     var references = file.original.ts.referencedFiles.map(function (file) { return tsApi.getFileName(file); });
-                    for (var _i = 0; _i < references.length; _i++) {
-                        var reference = references[_i];
-                        sortedEmit(utils.splitExtension(reference)[0]);
+                    for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
+                        var reference = references_1[_i];
+                        sortedEmit_1(utils.splitExtension(reference)[0]);
                     }
                 }
                 _this.emit(file);
             };
             for (var _i = 0, _a = Object.keys(this.files); _i < _a.length; _i++) {
                 var fileName = _a[_i];
-                sortedEmit(fileName);
+                sortedEmit_1(fileName);
             }
         }
         this.results = results;
@@ -269,5 +270,5 @@ var Output = (function () {
     };
     Output.knownExtensions = ['js', 'jsx', 'js.map', 'jsx.map', 'd.ts'];
     return Output;
-})();
+}());
 exports.Output = Output;

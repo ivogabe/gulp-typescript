@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -52,7 +53,7 @@ var CompileStream = (function (_super) {
         this.project.compiler.inputDone();
     };
     return CompileStream;
-})(stream.Duplex);
+}(stream.Duplex));
 var CompileOutputStream = (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
@@ -61,7 +62,7 @@ var CompileOutputStream = (function (_super) {
     CompileOutputStream.prototype._read = function () {
     };
     return CompileOutputStream;
-})(stream.Readable);
+}(stream.Readable));
 function compile(param, filters, theReporter) {
     var proj;
     if (param instanceof project.Project) {
@@ -80,8 +81,8 @@ function compile(param, filters, theReporter) {
 function createEnumMap(input) {
     var map = {};
     var keys = Object.keys(input);
-    for (var _i = 0; _i < keys.length; _i++) {
-        var key = keys[_i];
+    for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+        var key = keys_1[_i];
         var value = input[key];
         if (typeof value === 'number') {
             map[key.toLowerCase()] = value;
@@ -165,11 +166,11 @@ function getCompilerOptions(settings) {
         // TS 1.4 has a bug that the target needs to be set.
         // This block can be removed when a version that solves this bug is published.
         // The bug is already fixed in the master of TypeScript
-        tsSettings.target = 0 /* ES3 */;
+        tsSettings.target = ts.ScriptTarget.ES3;
     }
     if (tsSettings.module === undefined) {
         // Same bug in TS 1.4 as previous comment.
-        tsSettings.module = 0 /* None */;
+        tsSettings.module = ts.ModuleKind.None;
     }
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
@@ -178,6 +179,8 @@ function getCompilerOptions(settings) {
         tsSettings.declaration = settings.declarationFiles;
     }
     tsSettings.sourceMap = true;
+    // Suppress errors when providing `allowJs` without `outDir`.
+    tsSettings.suppressOutputPathCheck = true;
     return tsSettings;
 }
 var compile;

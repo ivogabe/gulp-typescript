@@ -1,3 +1,4 @@
+"use strict";
 var reporter_1 = require('./reporter');
 function isTS14(typescript) {
     return !('findConfigFile' in typescript);

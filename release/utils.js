@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var path = require('path');
 function normalizePath(pathString) {
     return path.normalize(pathString).toLowerCase();
@@ -12,8 +13,8 @@ exports.normalizePath = normalizePath;
  */
 function splitExtension(fileName, knownExtensions) {
     if (knownExtensions) {
-        for (var _i = 0; _i < knownExtensions.length; _i++) {
-            var ext_1 = knownExtensions[_i];
+        for (var _i = 0, knownExtensions_1 = knownExtensions; _i < knownExtensions_1.length; _i++) {
+            var ext_1 = knownExtensions_1[_i];
             var index_1 = fileName.length - ext_1.length - 1;
             if (fileName.substr(index_1) === '.' + ext_1) {
                 return [fileName.substr(0, index_1), ext_1];

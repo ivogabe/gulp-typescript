@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var path = require('path');
 var tsApi = require('./tsapi');
 var utils = require('./utils');
@@ -130,7 +131,7 @@ var FileDictionary = (function () {
         configurable: true
     });
     return FileDictionary;
-})();
+}());
 exports.FileDictionary = FileDictionary;
 var FileCache = (function () {
     function FileCache(typescript, options) {
@@ -229,5 +230,5 @@ var FileCache = (function () {
         return false;
     };
     return FileCache;
-})();
+}());
 exports.FileCache = FileCache;

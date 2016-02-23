@@ -1,3 +1,4 @@
+"use strict";
 var tsApi = require('./tsapi');
 var path = require('path');
 var utils = require('./utils');
@@ -10,7 +11,7 @@ var Filter = (function () {
         if (filters.referencedFrom !== undefined) {
             this.referencedFrom = this.mapFilenamesToFiles(filters.referencedFrom);
             this.referencedFromAll = [];
-            var addReference = function (file) {
+            var addReference_1 = function (file) {
                 if (_this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1)
                     return;
                 _this.referencedFromAll.push(file.fileNameNormalized);
@@ -19,11 +20,11 @@ var Filter = (function () {
                     ref = utils.normalizePath(path.join(path.dirname(tsApi.getFileName(file.ts)), ref));
                     var refFile = _this.project.input.getFile(ref);
                     if (refFile)
-                        addReference(refFile);
+                        addReference_1(refFile);
                 }
             };
             for (var i = 0; i < this.referencedFrom.length; i++) {
-                addReference(this.referencedFrom[i]);
+                addReference_1(this.referencedFrom[i]);
             }
         }
     }
@@ -42,8 +43,8 @@ var Filter = (function () {
     };
     Filter.prototype.getFile = function (searchFileName) {
         var fileNames = this.project.input.getFileNames(true);
-        for (var _i = 0; _i < fileNames.length; _i++) {
-            var fileName = fileNames[_i];
+        for (var _i = 0, fileNames_1 = fileNames; _i < fileNames_1.length; _i++) {
+            var fileName = fileNames_1[_i];
             var file = this.project.input.getFile(fileName);
             if (!file || !file.gulp)
                 continue;
@@ -79,5 +80,5 @@ var Filter = (function () {
         return this.referencedFromAll.indexOf(file.fileNameNormalized) !== -1;
     };
     return Filter;
-})();
+}());
 exports.Filter = Filter;

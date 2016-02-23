@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var gutil = require('gulp-util');
 function emptyCompilationResult() {
     return {
@@ -53,7 +54,7 @@ function flattenDiagnosticsVerbose(message, index) {
         return message;
     }
     else {
-        var result;
+        var result = void 0;
         if (index === 0) {
             result = message.messageText;
         }
@@ -86,9 +87,9 @@ function fullReporter(fullFilename) {
                 + ' ' + gutil.colors.red(flattenDiagnosticsVerbose(error.diagnostic.messageText)));
             if (error.tsFile) {
                 console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
-                var lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
+                var lines_1 = error.tsFile.text.split(/(\r\n|\r|\n)/);
                 var logLine = function (lineIndex, errorStart, errorEnd) {
-                    var line = lines[lineIndex];
+                    var line = lines_1[lineIndex];
                     if (errorEnd === undefined)
                         errorEnd = line.length;
                     console.error('> ' + gutil.colors.gray('[' + lineIndex + '] ')

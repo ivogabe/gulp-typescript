@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var stream = require('stream');
 var ts = require('typescript');
 var vfs = require('vinyl-fs');
@@ -41,6 +42,10 @@ var Project = (function () {
             if (tsApi.isTS16OrNewer(this.typescript)) {
                 files_1.push(path.join(configPath, '**/*.tsx'));
             }
+            if (this.options.allowJs) {
+                files_1.push(path.join(configPath, '**/*.js'));
+                files_1.push(path.join(configPath, '**/*.jsx'));
+            }
             if (this.config.exclude instanceof Array) {
                 files_1 = files_1.concat(
                 // Exclude files
@@ -52,20 +57,20 @@ var Project = (function () {
                 return vfs.src(files_1, { base: base });
             }
             var srcStream = vfs.src(files_1);
-            var sources = new stream.Readable({ objectMode: true });
-            sources._read = function () { };
+            var sources_1 = new stream.Readable({ objectMode: true });
+            sources_1._read = function () { };
             var resolvedFiles_1 = [];
             srcStream.on('data', function (file) {
                 resolvedFiles_1.push(file);
             });
             srcStream.on('finish', function () {
                 var base = utils.getCommonBasePathOfArray(resolvedFiles_1.map(function (file) { return path.dirname(file.path); }));
-                for (var _i = 0; _i < resolvedFiles_1.length; _i++) {
-                    var file = resolvedFiles_1[_i];
+                for (var _i = 0, resolvedFiles_2 = resolvedFiles_1; _i < resolvedFiles_2.length; _i++) {
+                    var file = resolvedFiles_2[_i];
                     file.base = base;
-                    sources.push(file);
+                    sources_1.push(file);
                 }
-                sources.emit('finish');
+                sources_1.emit('finish');
             });
             return srcStream;
         }
@@ -97,5 +102,5 @@ var Project = (function () {
             .pipe(checkMissingFiles);
     };
     return Project;
-})();
+}());
 exports.Project = Project;

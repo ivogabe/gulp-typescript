@@ -1,4 +1,5 @@
 ///<reference path='../typings/tsd.d.ts'/>
+"use strict";
 var tsApi = require('./tsapi');
 var utils = require('./utils');
 var fs = require('fs');
@@ -20,7 +21,7 @@ var Host = (function () {
             if (sourceFile)
                 return sourceFile.ts;
             if (_this.externalResolve) {
-                var text;
+                var text = void 0;
                 try {
                     text = fs.readFileSync(fileName).toString('utf8');
                 }
@@ -57,7 +58,7 @@ var Host = (function () {
             return this.libDefault[fileName]; // Already loaded
         }
         var content = fs.readFileSync(fileName).toString('utf8');
-        return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, 0 /* ES3 */); // Will also work for ES5 & 6
+        return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
         this.output = {};
@@ -103,7 +104,7 @@ var Host = (function () {
             return sourceFile.content;
         if (this.externalResolve) {
             // Read the whole file (and cache contents) to prevent race conditions.
-            var text;
+            var text = void 0;
             try {
                 text = fs.readFileSync(fileName).toString('utf8');
             }
@@ -116,5 +117,5 @@ var Host = (function () {
     };
     Host.libDefault = {};
     return Host;
-})();
+}());
 exports.Host = Host;

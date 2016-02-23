@@ -1,3 +1,4 @@
+"use strict";
 var ts = require('typescript');
 var path = require('path');
 var tsApi = require('./tsapi');
@@ -43,11 +44,11 @@ var ProjectCompiler = (function () {
         }
         var root = this.project.input.commonBasePath;
         this.project.options.sourceRoot = root;
-        this.host = new host_1.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= 2 /* ES6 */ ? 'lib.es6.d.ts' : 'lib.d.ts');
+        this.host = new host_1.Host(this.project.typescript, this.project.currentDirectory, this.project.input, !this.project.noExternalResolve, this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts');
         var rootFilenames = this.project.input.getFileNames(true);
         if (this.project.filterSettings !== undefined) {
-            var filter = new filter_1.Filter(this.project, this.project.filterSettings);
-            rootFilenames = rootFilenames.filter(function (fileName) { return filter.match(fileName); });
+            var filter_2 = new filter_1.Filter(this.project, this.project.filterSettings);
+            rootFilenames = rootFilenames.filter(function (fileName) { return filter_2.match(fileName); });
         }
         if (!this.project.singleOutput) {
             // Add an empty file under the root.
@@ -112,21 +113,21 @@ var ProjectCompiler = (function () {
             return true;
         if (diffLength < 0) {
             // There were files added outside of the common base.
-            var outsideRoot = false;
+            var outsideRoot_1 = false;
             map.sources = map.sources.map(function (fileName) {
                 var full = utils.normalizePath(path.join(_this.project.input.commonSourceDirectory, fileName));
                 var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), full);
                 var first2 = relative.substring(0, 2);
                 var first3 = relative.substring(0, 3);
                 if (first3 === '../' || first3 === '..\\') {
-                    outsideRoot = true;
+                    outsideRoot_1 = true;
                 }
                 else if (first2 === './' || first2 === '.\\') {
                     relative = relative.substring(2);
                 }
                 return full.substring(full.length - relative.length);
             });
-            if (outsideRoot)
+            if (outsideRoot_1)
                 return false;
         }
         return true;
@@ -140,7 +141,7 @@ var ProjectCompiler = (function () {
         return content.substring(0, index) + '\n';
     };
     return ProjectCompiler;
-})();
+}());
 exports.ProjectCompiler = ProjectCompiler;
 var FileCompiler = (function () {
     function FileCompiler() {
@@ -161,8 +162,8 @@ var FileCompiler = (function () {
             // Not changed, re-use old file.
             var old = this.project.previousOutput;
             var diagnostics_1 = this.previousErrorsPerFile[file.fileNameNormalized];
-            for (var _i = 0; _i < diagnostics_1.length; _i++) {
-                var error = diagnostics_1[_i];
+            for (var _i = 0, diagnostics_2 = diagnostics_1; _i < diagnostics_2.length; _i++) {
+                var error = diagnostics_2[_i];
                 this.project.output.diagnostic(error);
             }
             this.compilationResult.transpileErrors += diagnostics_1.length;
@@ -179,8 +180,8 @@ var FileCompiler = (function () {
         }
         var diagnostics = [];
         var outputString = tsApi.transpile(this.project.typescript, file.content, this.project.options, file.fileNameOriginal, diagnostics);
-        for (var _c = 0; _c < diagnostics.length; _c++) {
-            var diagnostic = diagnostics[_c];
+        for (var _c = 0, diagnostics_3 = diagnostics; _c < diagnostics_3.length; _c++) {
+            var diagnostic = diagnostics_3[_c];
             this.project.output.diagnostic(diagnostic);
         }
         this.compilationResult.transpileErrors += diagnostics.length;
@@ -212,5 +213,5 @@ var FileCompiler = (function () {
         return true;
     };
     return FileCompiler;
-})();
+}());
 exports.FileCompiler = FileCompiler;
