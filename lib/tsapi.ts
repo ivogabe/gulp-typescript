@@ -7,7 +7,7 @@ export interface TypeScript14 {
 }
 export interface TypeScript15 {
 	createSourceFile(fileName: string, content: string, target: ts.ScriptTarget, isOpen: boolean);
-	findConfigFile(searchPath: string): string;
+	findConfigFile(searchPath: string, fileExists: (fileName: string) => boolean): string;
 	flattenDiagnosticMessageText(messageText: string | DiagnosticMessageChain15, newLine: string): string;
 	transpile(input: string, compilerOptions?: ts.CompilerOptions, fileName?: string, diagnostics?: ts.Diagnostic[]): string;
 }

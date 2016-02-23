@@ -12,3 +12,6 @@
 [submodule "typescript/1-6"]
 	path = typescript/1-6
 	url = https://github.com/Microsoft/TypeScript.git
+[submodule "typescript/1-7"]
+	path = typescript/1-7
+	url = https://github.com/Microsoft/TypeScript.git

@@ -14,7 +14,8 @@ var tsVersions = {
 	dev: './typescript/dev',
 	release14: './typescript/1-4',
 	release15: './typescript/1-5',
-	release16: './typescript/1-6'
+	release16: './typescript/1-6',
+	release17: './typescript/1-7'
 };
 
 function findTSDefinition(location) {
@@ -80,6 +81,12 @@ gulp.task('typecheck-1.6', function() {
 		findTSDefinition(tsVersions.release16)
 	])).pipe(ts(tsOptions));
 });
+gulp.task('typecheck-1.7', function() {
+	return gulp.src(paths.scripts.concat([
+		'!definitions/typescript.d.ts',
+		findTSDefinition(tsVersions.release17)
+	])).pipe(ts(tsOptions));
+});
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
@@ -96,11 +103,12 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	// We run every test on multiple typescript versions:
 	var libs = [
-		['1.7', undefined],
+		['1.8', undefined],
 		['dev', require(tsVersions.dev)],
 		['1.4', require(tsVersions.release14)],
 		['1.5', require(tsVersions.release15)],
-		['1.6', require(tsVersions.release16)]
+		['1.6', require(tsVersions.release16)],
+		['1.7', require(tsVersions.release17)]
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
