@@ -271,7 +271,12 @@ module compile {
 				tsConfigFileName = fileNameOrSettings;
 				// load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
 				let tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
-				tsConfigContent = JSON.parse(tsConfigText.replace(/^\uFEFF/, ''));
+				const typescript = (settings && settings.typescript) || ts;
+				const tsConfig = tsApi.parseTsConfig(typescript, tsConfigFileName, tsConfigText);
+				tsConfigContent = tsConfig.config || {};
+				if (tsConfig.error) {
+					console.log(tsConfig.error.messageText);
+				}
 				let newSettings: any = {};
 				if (tsConfigContent.compilerOptions) {
 					for (const key of Object.keys(tsConfigContent.compilerOptions)) {

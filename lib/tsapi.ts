@@ -11,6 +11,23 @@ export interface TypeScript15 {
 	flattenDiagnosticMessageText(messageText: string | DiagnosticMessageChain15, newLine: string): string;
 	transpile(input: string, compilerOptions?: ts.CompilerOptions, fileName?: string, diagnostics?: ts.Diagnostic[]): string;
 }
+export interface TypeScript17 {
+	parseConfigFileTextToJson(fileName: string, jsonText: string): {
+        config?: any;
+        error?: ts.Diagnostic;
+    };
+}
+
+export function parseTsConfig(typescript: TypeScript14 | TypeScript15 | TypeScript17, fileName: string, content: string) {
+	if ('parseConfigFileTextToJson' in typescript) {
+		return (<TypeScript17> typescript).parseConfigFileTextToJson(fileName, content);
+	} else {
+		return {
+			config: JSON.parse(content.replace(/^\uFEFF/, ''))
+		};
+	}
+}
+	
 
 /*
  * In TS1.6+ ts.createProgram has an extra argument, `oldProgram`.
