@@ -157,9 +157,10 @@ export class ProjectCompiler implements ICompiler {
 			// There were files added outside of the common base.
 			let outsideRoot = false;
 			map.sources = map.sources.map<string>(fileName => {
-				const full = utils.normalizePath(path.join(this.project.input.commonSourceDirectory, fileName));
-				let relative = path.relative(utils.normalizePath(this.project.input.commonBasePath), full);
-				
+				const fullPath = path.join(this.project.input.commonSourceDirectory, fileName);
+				const fullPathNormalized = utils.normalizePath(fullPath);
+				let relative = path.relative(utils.normalizePath(this.project.input.commonBasePath), fullPathNormalized);
+
 				const first2 = relative.substring(0, 2);
 				const first3 = relative.substring(0, 3);
 				if (first3 === '../' || first3 === '..\\') {
@@ -167,7 +168,7 @@ export class ProjectCompiler implements ICompiler {
 				} else if (first2 === './' || first2 === '.\\') {
 					relative = relative.substring(2);
 				}
-				return full.substring(full.length - relative.length);
+				return path.normalize(fullPath).substring(fullPathNormalized.length - relative.length);
 			});
 			
 			if (outsideRoot) return false;
