@@ -123,6 +123,18 @@ function runTest(name, callback) {
 			var finishInfo;
 			var reporter = {
 				error: function(err) {
+					if (path.sep === '\\') { //filenames embedded in error output contain OS-dependent path separators
+						var colon = err.message.indexOf(":");
+						if (colon === -1 || !err.diagnostic || err.message.indexOf(path.sep) === -1) {
+							return;
+						}
+
+						var fileName = err.message.slice(0, colon);
+						var detail = err.message.slice(colon);
+						fileName = fileName.replace(/\\/g, '/');
+						err.message = fileName + detail;
+					}
+
 					errors.push(err);
 				},
 				finish: function(info) {

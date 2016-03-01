@@ -302,6 +302,7 @@ module compile {
 				console.warn('You cannot combine option `isolatedModules` with `out`, `outFile` or `sortOutput`');
 			}
 
+			project.options['newLine'] = (<any>ts).NewLineKind.LineFeed; //new line option/kind fails TS1.4 typecheck
 			project.options.sourceMap = false;
 			project.options.declaration = false;
 			project.options['inlineSourceMap'] = true;
