@@ -84,6 +84,10 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	let proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
+		if (proj.running) {
+			throw new Error('gulp-typescript: A project cannot be used in two compilations at the same time. Create multiple projects with createProject instead.'); 
+		}
+		proj.running = true;
 	} else {
 		proj = compile.createProject(param || {});
 	}

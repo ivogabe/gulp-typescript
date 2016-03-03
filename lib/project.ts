@@ -23,6 +23,8 @@ export class Project {
 	
 	configFileName: string;
 	config: TsConfig;
+	
+	running = false;
 
 	// region settings
 

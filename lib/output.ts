@@ -240,6 +240,7 @@ export class Output {
 		this.streamDts.emit('finish');
 		this.streamJs.push(null);
 		this.streamDts.push(null);
+		this.project.running = false;
 	}
 
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
