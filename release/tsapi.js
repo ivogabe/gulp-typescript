@@ -1,5 +1,16 @@
 "use strict";
 var reporter_1 = require('./reporter');
+function parseTsConfig(typescript, fileName, content) {
+    if ('parseConfigFileTextToJson' in typescript) {
+        return typescript.parseConfigFileTextToJson(fileName, content);
+    }
+    else {
+        return {
+            config: JSON.parse(content.replace(/^\uFEFF/, ''))
+        };
+    }
+}
+exports.parseTsConfig = parseTsConfig;
 function isTS14(typescript) {
     return !('findConfigFile' in typescript);
 }

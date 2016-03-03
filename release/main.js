@@ -67,6 +67,10 @@ function compile(param, filters, theReporter) {
     var proj;
     if (param instanceof project.Project) {
         proj = param;
+        if (proj.running) {
+            throw new Error('gulp-typescript: A project cannot be used in two compilations at the same time. Create multiple projects with createProject instead.');
+        }
+        proj.running = true;
     }
     else {
         proj = compile.createProject(param || {});
@@ -162,15 +166,17 @@ function getCompilerOptions(settings) {
     else if (typeof settings.moduleResolution === 'number') {
         tsSettings['moduleResolution'] = settings.moduleResolution;
     }
-    if (tsSettings.target === undefined) {
-        // TS 1.4 has a bug that the target needs to be set.
-        // This block can be removed when a version that solves this bug is published.
-        // The bug is already fixed in the master of TypeScript
-        tsSettings.target = ts.ScriptTarget.ES3;
-    }
-    if (tsSettings.module === undefined) {
-        // Same bug in TS 1.4 as previous comment.
-        tsSettings.module = ts.ModuleKind.None;
+    if (tsApi.isTS14(typescript)) {
+        if (tsSettings.target === undefined) {
+            // TS 1.4 has a bug that the target needs to be set.
+            // This block can be removed when a version that solves this bug is published.
+            // The bug is already fixed in the master of TypeScript
+            tsSettings.target = ts.ScriptTarget.ES3;
+        }
+        if (tsSettings.module === undefined) {
+            // Same bug in TS 1.4 as previous comment.
+            tsSettings.module = ts.ModuleKind.None;
+        }
     }
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
@@ -195,7 +201,12 @@ var compile;
                 tsConfigFileName = fileNameOrSettings;
                 // load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
                 var tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
-                tsConfigContent = JSON.parse(tsConfigText.replace(/^\uFEFF/, ''));
+                var typescript = (settings && settings.typescript) || ts;
+                var tsConfig_1 = tsApi.parseTsConfig(typescript, tsConfigFileName, tsConfigText);
+                tsConfigContent = tsConfig_1.config || {};
+                if (tsConfig_1.error) {
+                    console.log(tsConfig_1.error.messageText);
+                }
                 var newSettings = {};
                 if (tsConfigContent.compilerOptions) {
                     for (var _i = 0, _a = Object.keys(tsConfigContent.compilerOptions); _i < _a.length; _i++) {
@@ -221,6 +232,7 @@ var compile;
             if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
                 console.warn('You cannot combine option `isolatedModules` with `out`, `outFile` or `sortOutput`');
             }
+            project.options['newLine'] = ts.NewLineKind.LineFeed; //new line option/kind fails TS1.4 typecheck
             project.options.sourceMap = false;
             project.options.declaration = false;
             project.options['inlineSourceMap'] = true;

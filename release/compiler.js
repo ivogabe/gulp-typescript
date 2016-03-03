@@ -115,8 +115,9 @@ var ProjectCompiler = (function () {
             // There were files added outside of the common base.
             var outsideRoot_1 = false;
             map.sources = map.sources.map(function (fileName) {
-                var full = utils.normalizePath(path.join(_this.project.input.commonSourceDirectory, fileName));
-                var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), full);
+                var fullPath = path.join(_this.project.input.commonSourceDirectory, fileName);
+                var fullPathNormalized = utils.normalizePath(fullPath);
+                var relative = path.relative(utils.normalizePath(_this.project.input.commonBasePath), fullPathNormalized);
                 var first2 = relative.substring(0, 2);
                 var first3 = relative.substring(0, 3);
                 if (first3 === '../' || first3 === '..\\') {
@@ -125,7 +126,7 @@ var ProjectCompiler = (function () {
                 else if (first2 === './' || first2 === '.\\') {
                     relative = relative.substring(2);
                 }
-                return full.substring(full.length - relative.length);
+                return path.normalize(fullPath).substring(fullPathNormalized.length - relative.length);
             });
             if (outsideRoot_1)
                 return false;

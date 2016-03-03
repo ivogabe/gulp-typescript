@@ -12,6 +12,7 @@ var output_1 = require('./output');
 var Project = (function () {
     function Project(configFileName, config, options, noExternalResolve, sortOutput, typescript) {
         if (typescript === void 0) { typescript = ts; }
+        this.running = false;
         this.typescript = typescript;
         this.configFileName = configFileName;
         this.config = config;

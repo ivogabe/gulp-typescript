@@ -206,6 +206,7 @@ var Output = (function () {
         this.streamDts.emit('finish');
         this.streamJs.push(null);
         this.streamDts.push(null);
+        this.project.running = false;
     };
     Output.prototype.getError = function (info) {
         var err = new Error();
