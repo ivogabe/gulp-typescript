@@ -65,9 +65,11 @@ var Project = (function () {
                 resolvedFiles_1.push(file);
             });
             srcStream.on('finish', function () {
-                var base = utils.getCommonBasePathOfArray(resolvedFiles_1.map(function (file) { return path.dirname(file.path); }));
-                for (var _i = 0, resolvedFiles_2 = resolvedFiles_1; _i < resolvedFiles_2.length; _i++) {
-                    var file = resolvedFiles_2[_i];
+                var sourceFiles = resolvedFiles_1
+                    .filter(function (file) { return file.path.substr(-5) !== ".d.ts"; });
+                var base = utils.getCommonBasePathOfArray(sourceFiles.map(function (file) { return path.dirname(file.path); }));
+                for (var _i = 0, sourceFiles_1 = sourceFiles; _i < sourceFiles_1.length; _i++) {
+                    var file = sourceFiles_1[_i];
                     file.base = base;
                     sources_1.push(file);
                 }
