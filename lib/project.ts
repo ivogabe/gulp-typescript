@@ -125,10 +125,12 @@ export class Project {
 				resolvedFiles.push(file);
 			});
 			srcStream.on('finish', () => {
+				const sourceFiles = resolvedFiles
+					.filter(file => file.path.substr(-5) !== ".d.ts");
 				const base = utils.getCommonBasePathOfArray(
-					resolvedFiles.map(file => path.dirname(file.path))
+					sourceFiles.map(file => path.dirname(file.path))
 				);
-				for (const file of resolvedFiles) {
+				for (const file of sourceFiles) {
 					file.base = base;
 					sources.push(file);
 				}
