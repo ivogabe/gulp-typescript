@@ -44,7 +44,7 @@ var Host = (function () {
     Host.getLibDefault = function (typescript, libFileName) {
         var fileName;
         for (var i in require.cache) {
-            if (!Object.prototype.hasOwnProperty.call(require.cache, i))
+            if (!Object.prototype.hasOwnProperty.call(require.cache, i) || require.cache[i].exports === undefined)
                 continue;
             if (require.cache[i].exports === typescript) {
                 fileName = i;
