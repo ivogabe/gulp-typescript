@@ -240,10 +240,10 @@ module compile {
 		removeComments?: boolean;
 		suppressImplicitAnyIndexErrors?: boolean;
 
-		target: string | ts.ScriptTarget;
-		module: string | ts.ModuleKind;
-		moduleResolution: string | number;
-		jsx: string | number;
+		target?: string | ts.ScriptTarget;
+		module?: string | ts.ModuleKind;
+		moduleResolution?: string | number;
+		jsx?: string | number;
 
 		declarationFiles?: boolean;
 
