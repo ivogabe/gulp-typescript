@@ -14,7 +14,7 @@ export class Host implements ts.CompilerHost {
 	static getLibDefault(typescript: typeof ts, libFileName: string) {
 		let fileName: string;
 		for (const i in require.cache) {
-			if (!Object.prototype.hasOwnProperty.call(require.cache, i) || require.cache[i].exports === undefined) continue;
+			if (!Object.prototype.hasOwnProperty.call(require.cache, i) || require.cache[i] === undefined) continue;
 
 			if (require.cache[i].exports === typescript) {
 				fileName = i;
