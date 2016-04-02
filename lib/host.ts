@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
 import * as tsApi from './tsapi';
 import * as gutil from 'gulp-util';
@@ -79,7 +77,7 @@ export class Host implements ts.CompilerHost {
 	writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
 		this.output[fileName] = data;
 	}
-	
+
 	fileExists(fileName: string) {
 		if (fileName === '__lib.d.ts') {
 			return true;
@@ -87,25 +85,25 @@ export class Host implements ts.CompilerHost {
 
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return true;
-		
+
 		if (this.externalResolve) {
 			try {
 				const stat = fs.statSync(fileName);
 				if (!stat) return false;
 				return stat.isFile();
 			} catch (ex) {
-				
+
 			}
 		}
 		return false;
 	}
-	
+
 	readFile(fileName: string) {
 		const normalizedFileName = utils.normalizePath(fileName);
-		
+
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return sourceFile.content;
-		
+
 		if (this.externalResolve) {
 			// Read the whole file (and cache contents) to prevent race conditions.
 			let text: string;

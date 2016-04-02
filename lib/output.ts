@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as stream from 'stream';
 import * as path from 'path';
 import * as ts from 'typescript';
@@ -88,14 +86,14 @@ export class Output {
 					file.skipPush = true;
 					return;
 				}
-				
+
 				if (this.project.singleOutput) {
 					file.original = this.project.input.firstSourceFile;
 					file.sourceMapOrigins = this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName));
 				} else {
 					const originalFileName = path.resolve(file.sourceMap.sourceRoot, file.sourceMap.sources[0]);
 					file.original = this.project.input.getFile(originalFileName);
-					
+
 					if (!file.original) {
 						console.error(`Could not find input file ${ originalFileName }. This is probably an issue of gulp-typescript.`
 							+ `\nPlease report it at https://github.com/ivogabe/gulp-typescript/issues`
@@ -153,10 +151,10 @@ export class Output {
 		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
 		for (const sourceFile of file.sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
-			
+
 			const inputOriginalMap = sourceFile.gulp.sourceMap;
 			const inputMap: sourceMap.RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
-			
+
 			/* We should only apply the input mappings if the input mapping isn't empty,
 			 * since `generator.applySourceMap` has a really bad performance on big inputs.
 			 */
@@ -164,7 +162,7 @@ export class Output {
 				const consumer = new sourceMap.SourceMapConsumer(inputMap);
 				generator.applySourceMap(consumer);
 			}
-			
+
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
 			for (const i in inputMap.sources) {
 				generator.setSourceContent(inputMap.sources[i], inputMap.sourcesContent[i]);
@@ -220,7 +218,7 @@ export class Output {
 
 				if (file.original && file.original.ts) {
 					let references = file.original.ts.referencedFiles.map(file => tsApi.getFileName(file));
-	
+
 					for (const reference of references) {
 						sortedEmit(utils.splitExtension(reference)[0]);
 					}
@@ -232,7 +230,7 @@ export class Output {
 				sortedEmit(fileName);
 			}
 		}
-		
+
 		this.results = results;
 		if (this.project.reporter.finish) this.project.reporter.finish(results);
 
@@ -247,7 +245,7 @@ export class Output {
 		const err = <reporter.TypeScriptError> new Error();
 		err.name = 'TypeScript error';
 		err.diagnostic = info;
-		
+
 		const codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
 			' TS' +
 			info.code +
@@ -301,7 +299,7 @@ export class Output {
 	}
 	error(error: reporter.TypeScriptError) {
 		if (!error) return;
-		
+
 		// Save errors for lazy compilation (if the next input is the same as the current),
 		this.errors.push(error);
 		// call reporter callback

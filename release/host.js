@@ -1,4 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
 "use strict";
 var tsApi = require('./tsapi');
 var utils = require('./utils');

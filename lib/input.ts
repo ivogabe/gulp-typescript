@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
 import * as gutil from 'gulp-util';
 import * as path from 'path';
@@ -112,12 +110,12 @@ export class FileDictionary {
 		}
 		return fileNames;
 	}
-	
+
 	private getSourceFileNames(onlyGulp?: boolean) {
 		const fileNames = this.getFileNames(onlyGulp);
 		const sourceFileNames = fileNames
 			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts');
-		
+
 		if (sourceFileNames.length === 0) {
 			// Only definition files, so we will calculate the common base path based on the
 			// paths of the definition files.
@@ -125,7 +123,7 @@ export class FileDictionary {
 		}
 		return sourceFileNames;
 	}
-	
+
 	get commonBasePath() {
 		const fileNames = this.getSourceFileNames(true);
 		return utils.getCommonBasePathOfArray(

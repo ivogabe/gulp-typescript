@@ -1,4 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
 "use strict";
 var gutil = require('gulp-util');
 function emptyCompilationResult() {

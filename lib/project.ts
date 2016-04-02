@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as stream from 'stream';
 import * as ts from 'typescript';
 import * as vfs from 'vinyl-fs';
@@ -20,10 +18,10 @@ export class Project {
 	output: Output;
 	previousOutput: Output;
 	compiler: ICompiler;
-	
+
 	configFileName: string;
 	config: TsConfig;
-	
+
 	running = false;
 
 	// region settings
@@ -87,17 +85,17 @@ export class Project {
 		this.previousOutput = this.output;
 		this.output = new Output(this, outputJs, outputDts);
 	}
-	
+
 	src() {
 		let configPath = path.dirname(this.configFileName)
 		let base: string;
 		if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
 			base = path.resolve(configPath, this.config.compilerOptions.rootDir);
 		}
-		
+
 		if (!this.config.files) {
 			let files = [path.join(configPath, '**/*.ts')];
-			
+
 			if (tsApi.isTS16OrNewer(this.typescript)) {
 				files.push(path.join(configPath, '**/*.tsx'));
 			}
@@ -138,7 +136,7 @@ export class Project {
 		}
 		const files = this.config.files.map(file => path.resolve(configPath, file));
 		if (base === undefined) base = utils.getCommonBasePathOfArray(files.map(file => path.dirname(file)));
-		
+
 		const resolvedFiles: string[] = [];
 		const checkMissingFiles = through2.obj(function (file: gutil.File, enc, callback) {
 			this.push(file);
@@ -159,7 +157,7 @@ export class Project {
 				}
 			}
 		});
-		
+
 		const vinylOptions = { base, allowEmpty: true };
 		return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), vinylOptions)
 			.pipe(checkMissingFiles);
