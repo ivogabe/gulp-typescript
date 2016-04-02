@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var rimraf = require('rimraf');
 var fs = require('fs');
 var path = require('path');
+var mergeStream = require('merge-stream');
 var ts = require('./release/main');
 
 var plumber = require('gulp-plumber');
@@ -25,6 +26,7 @@ function findTSDefinition(location) {
 var tsOptions = {
 	target: 'es5',
 	module: 'commonjs',
+	declaration: true,
 	preserveConstEnums: true,
 	typescript: require('typescript')
 };
@@ -57,7 +59,7 @@ gulp.task('scripts', ['clean'], function() {
 	var tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
 		.pipe(ts(tsProject));
 
-	return tsResult.js
+	return mergeStream(tsResult.js, tsResult.dts)
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
@@ -159,7 +161,7 @@ gulp.task('test-run', ['clean-test', 'scripts'], function(cb) {
 		cb();
 		return;
 	}
-	
+
 	var isFailed = false;
 	for (var i = 0; i < tests.length; i++) {
 		runTest(tests[i], function(failed) {

@@ -1,4 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
 "use strict";
 var stream = require('stream');
 var ts = require('typescript');

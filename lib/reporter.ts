@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
 import * as tsApi from './tsapi';
 import * as gutil from 'gulp-util';
@@ -32,7 +30,7 @@ export interface CompilationResult {
 	globalErrors: number;
 	semanticErrors: number;
 	emitErrors: number;
-	
+
 	emitSkipped: boolean;
 }
 export function emptyCompilationResult(): CompilationResult {
@@ -55,17 +53,17 @@ function defaultFinishHandler(results: CompilationResult) {
 	let hasError = false;
 	const showErrorCount = (count: number, type: string) => {
 		if (count === 0) return;
-		
+
 		gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), (type !== '' ? type + ' ' : '') + (count === 1 ? 'error' : 'errors'));
 		hasError = true;
 	};
-	
+
 	showErrorCount(results.transpileErrors, '');
 	showErrorCount(results.syntaxErrors, 'syntax');
 	showErrorCount(results.globalErrors, 'global');
 	showErrorCount(results.semanticErrors, 'semantic');
 	showErrorCount(results.emitErrors, 'emit');
-	
+
 	if (results.emitSkipped) {
 		gutil.log('TypeScript: emit', gutil.colors.red('failed'));
 	} else if (hasError) {
