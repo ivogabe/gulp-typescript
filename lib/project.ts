@@ -111,7 +111,7 @@ export class Project {
 					// Exclude files
 					this.config.exclude.map(file => '!' + path.resolve(configPath, file)),
 					// Exclude directories
-					this.config.exclude.map(file => '!' + path.resolve(configPath, file) + '/**/*')
+					this.config.exclude.map(file => '!' + path.resolve(configPath, file) + '/**')
 				);
 			}
 			if (base !== undefined) {

@@ -52,7 +52,7 @@ var Project = (function () {
                 // Exclude files
                 this.config.exclude.map(function (file) { return '!' + path.resolve(configPath, file); }), 
                 // Exclude directories
-                this.config.exclude.map(function (file) { return '!' + path.resolve(configPath, file) + '/**/*'; }));
+                this.config.exclude.map(function (file) { return '!' + path.resolve(configPath, file) + '/**'; }));
             }
             if (base !== undefined) {
                 return vfs.src(files_1, { base: base });
