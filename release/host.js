@@ -1,9 +1,9 @@
-///<reference path='../typings/tsd.d.ts'/>
 "use strict";
 var tsApi = require('./tsapi');
 var utils = require('./utils');
 var fs = require('fs');
 var path = require('path');
+var libDirectory = '__lib/';
 var Host = (function () {
     function Host(typescript, currentDirectory, input, externalResolve, libFileName) {
         var _this = this;
@@ -15,7 +15,18 @@ var Host = (function () {
         };
         this.getSourceFile = function (fileName, languageVersion, onError) {
             if (fileName === '__lib.d.ts') {
-                return Host.getLibDefault(_this.typescript, _this.libFileName);
+                return Host.getLibDefault(_this.typescript, _this.libFileName, fileName);
+            }
+            if (fileName.substring(0, libDirectory.length) === libDirectory) {
+                try {
+                    return Host.getLibDefault(_this.typescript, fileName.substring(libDirectory.length), fileName);
+                }
+                catch (e) { }
+                try {
+                    return Host.getLibDefault(_this.typescript, 'lib.' + fileName.substring(libDirectory.length), fileName);
+                }
+                catch (e) { }
+                return undefined;
             }
             var sourceFile = _this.input.getFile(fileName);
             if (sourceFile)
@@ -41,7 +52,7 @@ var Host = (function () {
         this.libFileName = libFileName;
         this.reset();
     }
-    Host.getLibDefault = function (typescript, libFileName) {
+    Host.getLibDefault = function (typescript, libFileName, originalFileName) {
         var fileName;
         for (var i in require.cache) {
             if (!Object.prototype.hasOwnProperty.call(require.cache, i) || require.cache[i] === undefined)
@@ -58,7 +69,7 @@ var Host = (function () {
             return this.libDefault[fileName]; // Already loaded
         }
         var content = fs.readFileSync(fileName).toString('utf8');
-        return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
+        return this.libDefault[fileName] = tsApi.createSourceFile(typescript, originalFileName, content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
         this.output = {};
@@ -77,6 +88,9 @@ var Host = (function () {
     };
     Host.prototype.getDefaultLibFileName = function () {
         return '__lib.d.ts';
+    };
+    Host.prototype.getDefaultLibLocation = function () {
+        return libDirectory;
     };
     Host.prototype.fileExists = function (fileName) {
         if (fileName === '__lib.d.ts') {
