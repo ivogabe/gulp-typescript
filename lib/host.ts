@@ -1,5 +1,4 @@
 ///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
 import * as tsApi from './tsapi';
 import * as gutil from 'gulp-util';
@@ -9,9 +8,10 @@ import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
+const libDirectory = '__lib/';
 export class Host implements ts.CompilerHost {
 	static libDefault: utils.Map<ts.SourceFile> = {};
-	static getLibDefault(typescript: typeof ts, libFileName: string) {
+	static getLibDefault(typescript: typeof ts, libFileName: string, originalFileName: string) {
 		let fileName: string;
 		for (const i in require.cache) {
 			if (!Object.prototype.hasOwnProperty.call(require.cache, i) || require.cache[i] === undefined) continue;
@@ -29,7 +29,7 @@ export class Host implements ts.CompilerHost {
 		}
 
 		const content = fs.readFileSync(fileName).toString('utf8');
-		return this.libDefault[fileName] = tsApi.createSourceFile(typescript, '__lib.d.ts', content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
+		return this.libDefault[fileName] = tsApi.createSourceFile(typescript, originalFileName, content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
 	}
 
 	typescript: typeof ts;
@@ -74,6 +74,9 @@ export class Host implements ts.CompilerHost {
 	}
 	getDefaultLibFileName() {
 		return '__lib.d.ts';
+	}
+	getDefaultLibLocation() {
+		return libDirectory;
 	}
 
 	writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
@@ -121,7 +124,16 @@ export class Host implements ts.CompilerHost {
 
 	getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
 		if (fileName === '__lib.d.ts') {
-			return Host.getLibDefault(this.typescript, this.libFileName);
+			return Host.getLibDefault(this.typescript, this.libFileName, fileName);
+		}
+		if (fileName.substring(0, libDirectory.length) === libDirectory) {
+			try {
+				return Host.getLibDefault(this.typescript, fileName.substring(libDirectory.length), fileName);
+			} catch (e) {}
+			try {
+				return Host.getLibDefault(this.typescript, 'lib.' + fileName.substring(libDirectory.length), fileName);
+			} catch (e) {}
+			return undefined;
 		}
 
 		let sourceFile = this.input.getFile(fileName);
