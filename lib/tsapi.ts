@@ -73,9 +73,13 @@ export interface TSFile15 {
 	getLineAndCharacterOfPosition(pos: number): ts.LineAndCharacter;
 }
 
-export interface TSOptions18 extends ts.CompilerOptions {
-	allowJs: boolean;
-	suppressOutputPathCheck: boolean;
+export interface TSOptions18 {
+	allowJs?: boolean;
+	suppressOutputPathCheck?: boolean;
+}
+export interface TSOptions20 extends TSOptions18 {
+	baseUrl?: string;
+	rootDirs?: string[];
 }
 
 export function isTS14(typescript: typeof ts) {

@@ -146,7 +146,7 @@ function getJsxEmit(typescript: typeof ts, jsx: string) {
 	return map[jsx.toLowerCase()];
 }
 
-function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
+function getCompilerOptions(settings: compile.Settings, projectPath: string): ts.CompilerOptions {
 	const tsSettings: ts.CompilerOptions = {};
 
 	var typescript = settings.typescript || ts;
@@ -218,6 +218,15 @@ function getCompilerOptions(settings: compile.Settings): ts.CompilerOptions {
 	// Suppress errors when providing `allowJs` without `outDir`.
 	(<tsApi.TSOptions18> tsSettings).suppressOutputPathCheck = true;
 
+	if ((<tsApi.TSOptions20> tsSettings).baseUrl) {
+		(<tsApi.TSOptions20> tsSettings).baseUrl = path.resolve(projectPath, (<tsApi.TSOptions20> tsSettings).baseUrl);
+	}
+	if ((<tsApi.TSOptions20> tsSettings).rootDirs) {
+		(<tsApi.TSOptions20> tsSettings).rootDirs = (<tsApi.TSOptions20> tsSettings).rootDirs.map(
+			dir => path.resolve(projectPath, dir)
+		);
+	}
+
 	return tsSettings;
 }
 
@@ -272,9 +281,11 @@ module compile {
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: tsConfig.TsConfig = undefined;
+		let projectDirectory = process.cwd();
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				tsConfigFileName = fileNameOrSettings;
+				projectDirectory = path.dirname(fileNameOrSettings);
 				// load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
 				let tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
 				const typescript = (settings && settings.typescript) || ts;
@@ -300,7 +311,7 @@ module compile {
 			}
 		}
 
-		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 
 		// Isolated modules are only supported when using TS1.5+
 		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
