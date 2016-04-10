@@ -1,11 +1,8 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
-import * as gutil from 'gulp-util';
 import * as path from 'path';
 import * as tsApi from './tsapi';
 import * as utils from './utils';
-import { VinylFile } from './vinyl-file';
+import { VinylFile } from './types';
 
 export enum FileChangeState {
 	New,
@@ -46,7 +43,7 @@ export module File {
 		};
 	}
 	export function fromGulp(file: VinylFile): File {
-		let str = file.contents.toString('utf8');
+		let str = (<Buffer> file.contents).toString('utf8');
 		let data = fromContent(file.path, str);
 		data.gulp = file;
 
@@ -112,12 +109,12 @@ export class FileDictionary {
 		}
 		return fileNames;
 	}
-	
+
 	private getSourceFileNames(onlyGulp?: boolean) {
 		const fileNames = this.getFileNames(onlyGulp);
 		const sourceFileNames = fileNames
 			.filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts');
-		
+
 		if (sourceFileNames.length === 0) {
 			// Only definition files, so we will calculate the common base path based on the
 			// paths of the definition files.
@@ -125,7 +122,7 @@ export class FileDictionary {
 		}
 		return sourceFileNames;
 	}
-	
+
 	get commonBasePath() {
 		const fileNames = this.getSourceFileNames(true);
 		return utils.getCommonBasePathOfArray(

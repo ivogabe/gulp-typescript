@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
@@ -10,9 +8,9 @@ import * as utils from './utils';
 import * as _filter from './filter';
 import * as _reporter from './reporter';
 import * as compiler from './compiler';
-import * as tsConfig from './tsconfig';
 import * as tsApi from './tsapi';
 import * as through2 from 'through2';
+import { VinylFile, TsConfig } from './types';
 
 const PLUGIN_NAME = 'gulp-typescript';
 
@@ -32,7 +30,7 @@ class CompileStream extends stream.Duplex {
 	private project: project.Project;
 
 	_write(file: any, encoding, cb: (err?) => void);
-	_write(file: gutil.File, encoding, cb = (err?) => {}) {
+	_write(file: VinylFile, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
 
 		if (file.isNull()) {
@@ -85,7 +83,7 @@ function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _r
 	if (param instanceof project.Project) {
 		proj = param;
 		if (proj.running) {
-			throw new Error('gulp-typescript: A project cannot be used in two compilations at the same time. Create multiple projects with createProject instead.'); 
+			throw new Error('gulp-typescript: A project cannot be used in two compilations at the same time. Create multiple projects with createProject instead.');
 		}
 		proj.running = true;
 	} else {
@@ -251,10 +249,10 @@ module compile {
 		removeComments?: boolean;
 		suppressImplicitAnyIndexErrors?: boolean;
 
-		target: string | ts.ScriptTarget;
-		module: string | ts.ModuleKind;
-		moduleResolution: string | number;
-		jsx: string | number;
+		target?: string | ts.ScriptTarget;
+		module?: string | ts.ModuleKind;
+		moduleResolution?: string | number;
+		jsx?: string | number;
 
 		declarationFiles?: boolean;
 
@@ -280,7 +278,7 @@ module compile {
 	export function createProject(tsConfigFileName: string, settings?: Settings);
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
 		let tsConfigFileName: string = undefined;
-		let tsConfigContent: tsConfig.TsConfig = undefined;
+		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {

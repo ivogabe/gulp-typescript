@@ -1,4 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
 "use strict";
 var path = require('path');
 function normalizePath(pathString) {

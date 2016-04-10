@@ -1,5 +1,3 @@
-///<reference path='../typings/tsd.d.ts'/>
-
 import * as path from 'path';
 
 export interface Map<T> {
@@ -40,10 +38,10 @@ export function getCommonBasePath(a: string, b: string) {
 	let commonLength = 0;
 	for (let i = 0; i < aSplit.length && i < bSplit.length; i++) {
 		if (aSplit[i] !== bSplit[i]) break;
-		
+
 		commonLength += aSplit[i].length + 1;
 	}
-	
+
 	return a.substr(0, commonLength);
 }
 
