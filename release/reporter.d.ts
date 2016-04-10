@@ -1,9 +1,9 @@
 import * as ts from 'typescript';
-import * as gutil from 'gulp-util';
+import { VinylFile } from './types';
 export interface TypeScriptError extends Error {
     fullFilename?: string;
     relativeFilename?: string;
-    file?: gutil.File;
+    file?: VinylFile;
     tsFile?: ts.SourceFile;
     diagnostic: ts.Diagnostic;
     startPosition?: {

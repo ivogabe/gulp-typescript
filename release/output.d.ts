@@ -1,10 +1,10 @@
 import * as stream from 'stream';
 import * as ts from 'typescript';
-import * as sourceMap from 'source-map';
 import * as utils from './utils';
 import * as input from './input';
 import * as reporter from './reporter';
 import * as project from './project';
+import { RawSourceMap } from './types';
 export interface OutputFile {
     fileName: string;
     original: input.File;
@@ -18,7 +18,7 @@ export interface OutputFile {
     pushed: boolean;
     skipPush: boolean;
     sourceMapsApplied: boolean;
-    sourceMap: sourceMap.RawSourceMap;
+    sourceMap: RawSourceMap;
     sourceMapString: string;
 }
 export declare enum OutputFileKind {

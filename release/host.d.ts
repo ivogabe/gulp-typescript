@@ -3,7 +3,7 @@ import { FileCache } from './input';
 import * as utils from './utils';
 export declare class Host implements ts.CompilerHost {
     static libDefault: utils.Map<ts.SourceFile>;
-    static getLibDefault(typescript: typeof ts, libFileName: string): any;
+    static getLibDefault(typescript: typeof ts, libFileName: string, originalFileName: string): any;
     typescript: typeof ts;
     currentDirectory: string;
     private externalResolve;
@@ -18,6 +18,7 @@ export declare class Host implements ts.CompilerHost {
     getCanonicalFileName(filename: string): string;
     getDefaultLibFilename(): string;
     getDefaultLibFileName(): string;
+    getDefaultLibLocation(): string;
     writeFile: (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => void;
     fileExists(fileName: string): boolean;
     readFile(fileName: string): string;

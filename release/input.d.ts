@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as utils from './utils';
-import { VinylFile } from './vinyl-file';
+import { VinylFile } from './types';
 export declare enum FileChangeState {
     New = 0,
     Equal = 1,

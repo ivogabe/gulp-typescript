@@ -5,7 +5,7 @@ import { Reporter } from './reporter';
 import { FileCache } from './input';
 import { Output } from './output';
 import { ICompiler } from './compiler';
-import { TsConfig } from './tsconfig';
+import { TsConfig } from './types';
 export declare class Project {
     input: FileCache;
     output: Output;

@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { RawSourceMap } from 'source-map';
+import { RawSourceMap } from './types';
 import { File } from './input';
 import { Host } from './host';
 import { Project } from './project';

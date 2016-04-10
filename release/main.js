@@ -7,6 +7,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var ts = require('typescript');
 var fs = require('fs');
 var gutil = require('gulp-util');
+var path = require('path');
 var stream = require('stream');
 var project = require('./project');
 var _filter = require('./filter');
@@ -118,7 +119,7 @@ function getJsxEmit(typescript, jsx) {
     var map = createEnumMap(typescript.JsxEmit);
     return map[jsx.toLowerCase()];
 }
-function getCompilerOptions(settings) {
+function getCompilerOptions(settings, projectPath) {
     var tsSettings = {};
     var typescript = settings.typescript || ts;
     for (var key in settings) {
@@ -186,6 +187,12 @@ function getCompilerOptions(settings) {
     tsSettings.sourceMap = true;
     // Suppress errors when providing `allowJs` without `outDir`.
     tsSettings.suppressOutputPathCheck = true;
+    if (tsSettings.baseUrl) {
+        tsSettings.baseUrl = path.resolve(projectPath, tsSettings.baseUrl);
+    }
+    if (tsSettings.rootDirs) {
+        tsSettings.rootDirs = tsSettings.rootDirs.map(function (dir) { return path.resolve(projectPath, dir); });
+    }
     return tsSettings;
 }
 var compile;
@@ -195,16 +202,18 @@ var compile;
     function createProject(fileNameOrSettings, settings) {
         var tsConfigFileName = undefined;
         var tsConfigContent = undefined;
+        var projectDirectory = process.cwd();
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
                 tsConfigFileName = fileNameOrSettings;
+                projectDirectory = path.dirname(fileNameOrSettings);
                 // load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
                 var tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
                 var typescript = (settings && settings.typescript) || ts;
-                var tsConfig_1 = tsApi.parseTsConfig(typescript, tsConfigFileName, tsConfigText);
-                tsConfigContent = tsConfig_1.config || {};
-                if (tsConfig_1.error) {
-                    console.log(tsConfig_1.error.messageText);
+                var tsConfig = tsApi.parseTsConfig(typescript, tsConfigFileName, tsConfigText);
+                tsConfigContent = tsConfig.config || {};
+                if (tsConfig.error) {
+                    console.log(tsConfig.error.messageText);
                 }
                 var newSettings = {};
                 if (tsConfigContent.compilerOptions) {
@@ -225,7 +234,7 @@ var compile;
                 settings = fileNameOrSettings;
             }
         }
-        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
         // Isolated modules are only supported when using TS1.5+
         if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
             if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
