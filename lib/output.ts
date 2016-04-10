@@ -8,7 +8,7 @@ import * as input from './input';
 import * as tsApi from './tsapi';
 import * as reporter from './reporter';
 import * as project from './project';
-import { VinylFile } from './vinyl-file';
+import { VinylFile, RawSourceMap } from './types';
 
 export interface OutputFile {
 	fileName: string;
@@ -19,7 +19,7 @@ export interface OutputFile {
 	pushed: boolean;
 	skipPush: boolean;
 	sourceMapsApplied: boolean;
-	sourceMap: sourceMap.RawSourceMap;
+	sourceMap: RawSourceMap;
 	sourceMapString: string;
 }
 
@@ -153,7 +153,7 @@ export class Output {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 
 			const inputOriginalMap = sourceFile.gulp.sourceMap;
-			const inputMap: sourceMap.RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
+			const inputMap: RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
 
 			/* We should only apply the input mappings if the input mapping isn't empty,
 			 * since `generator.applySourceMap` has a really bad performance on big inputs.

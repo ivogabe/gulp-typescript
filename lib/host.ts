@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
 import * as tsApi from './tsapi';
-import * as gutil from 'gulp-util';
 import { Project } from './project';
 import { File, FileCache } from './input';
 import * as utils from './utils';

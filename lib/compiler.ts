@@ -1,7 +1,6 @@
 import * as ts from 'typescript';
 import * as path from 'path';
-import * as gutil from 'gulp-util';
-import { RawSourceMap } from 'source-map';
+import { RawSourceMap } from './types';
 import * as tsApi from './tsapi';
 import { File, FileChangeState } from './input';
 import { Output, OutputFileKind } from './output';

@@ -8,9 +8,9 @@ import * as utils from './utils';
 import * as _filter from './filter';
 import * as _reporter from './reporter';
 import * as compiler from './compiler';
-import * as tsConfig from './tsconfig';
 import * as tsApi from './tsapi';
 import * as through2 from 'through2';
+import { VinylFile, TsConfig } from './types';
 
 const PLUGIN_NAME = 'gulp-typescript';
 
@@ -30,7 +30,7 @@ class CompileStream extends stream.Duplex {
 	private project: project.Project;
 
 	_write(file: any, encoding, cb: (err?) => void);
-	_write(file: gutil.File, encoding, cb = (err?) => {}) {
+	_write(file: VinylFile, encoding, cb = (err?) => {}) {
 		if (!file) return cb();
 
 		if (file.isNull()) {
@@ -269,7 +269,7 @@ module compile {
 	export function createProject(tsConfigFileName: string, settings?: Settings);
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
 		let tsConfigFileName: string = undefined;
-		let tsConfigContent: tsConfig.TsConfig = undefined;
+		let tsConfigContent: TsConfig = undefined;
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				tsConfigFileName = fileNameOrSettings;

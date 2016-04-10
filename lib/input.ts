@@ -1,9 +1,8 @@
 import * as ts from 'typescript';
-import * as gutil from 'gulp-util';
 import * as path from 'path';
 import * as tsApi from './tsapi';
 import * as utils from './utils';
-import { VinylFile } from './vinyl-file';
+import { VinylFile } from './types';
 
 export enum FileChangeState {
 	New,
@@ -44,7 +43,7 @@ export module File {
 		};
 	}
 	export function fromGulp(file: VinylFile): File {
-		let str = file.contents.toString('utf8');
+		let str = (<Buffer> file.contents).toString('utf8');
 		let data = fromContent(file.path, str);
 		data.gulp = file;
 
