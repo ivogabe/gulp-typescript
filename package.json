@@ -58,19 +58,19 @@
   "dependencies": {
     "gulp-util": "~3.0.7",
     "source-map": "~0.5.3",
-    "through2": "~2.0.0",
-    "typescript": "1.8.7",
-    "vinyl-fs": "~2.2.1"
+    "through2": "~2.0.1",
+    "typescript": "1.8.9",
+    "vinyl-fs": "~2.4.3"
   },
   "devDependencies": {
-    "gulp": "~3.9.0",
+    "gulp": "~3.9.1",
     "gulp-concat": "~2.6.0",
     "gulp-diff": "~1.0.0",
     "gulp-header": "~1.7.1",
-    "gulp-plumber": "~1.0.1",
+    "gulp-plumber": "~1.1.0",
     "gulp-sourcemaps": "~1.6.0",
-    "merge-stream": "^1.0.0",
-    "rimraf": "~2.4.4"
+    "merge-stream": "~1.0.0",
+    "rimraf": "~2.5.2"
   },
   "scripts": {
     "test": "gulp"
