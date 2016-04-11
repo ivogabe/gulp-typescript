@@ -1,10 +1,15 @@
 import * as ts from 'typescript';
+import * as stream from 'stream';
 import * as project from './project';
 import * as _reporter from './reporter';
-declare function compile(): any;
-declare function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): any;
-declare function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): any;
+declare function compile(): compile.CompileStream;
+declare function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
+declare function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
 declare module compile {
+    interface CompileStream extends stream.Readable {
+        js: stream.Readable;
+        dts: stream.Readable;
+    }
     interface Settings {
         out?: string;
         outFile?: string;

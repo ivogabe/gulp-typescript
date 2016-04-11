@@ -75,10 +75,10 @@ class CompileOutputStream extends stream.Readable {
 	}
 }
 
-function compile();
-function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
-function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter);
-function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): any {
+function compile(): compile.CompileStream;
+function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
+function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
+function compile(param?: any, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream {
 	let proj: project.Project;
 	if (param instanceof project.Project) {
 		proj = param;
@@ -229,6 +229,10 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string): ts
 }
 
 module compile {
+	export interface CompileStream extends stream.Readable {
+		js: stream.Readable;
+		dts: stream.Readable;
+	}
 	export interface Settings {
 		out?: string;
 		outFile?: string;
