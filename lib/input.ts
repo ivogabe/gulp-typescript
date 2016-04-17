@@ -229,11 +229,11 @@ export class FileCache {
 
 		if (files.length !== oldFiles.length) return true;
 
-		for (let fileName of files) {
+		for (const fileName of files) {
 			if (oldFiles.indexOf(fileName) === -1) return true;
 		}
 
-		for (let fileName of files) {
+		for (const fileName of files) {
 			const change = this.getFileChange(fileName);
 			if (change.state !== FileChangeState.Equal) return true;
 		}
