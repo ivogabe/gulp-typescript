@@ -1,4 +1,9 @@
 import * as path from 'path';
+import * as ts from 'typescript';
+import { File } from './input';
+import * as tsApi from './tsapi';
+import * as reporter from './reporter';
+import * as gutil from 'gulp-util';
 
 export interface Map<T> {
 	[key: string]: T;
@@ -48,4 +53,57 @@ export function getCommonBasePath(a: string, b: string) {
 export function getCommonBasePathOfArray(paths: string[]) {
 	if (paths.length === 0) return '';
 	return paths.reduce(getCommonBasePath);
+}
+
+export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File) {
+	const err = <reporter.TypeScriptError> new Error();
+	err.name = 'TypeScript error';
+	err.diagnostic = info;
+
+	const codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+		' TS' +
+		info.code +
+		': ' +
+		tsApi.flattenDiagnosticMessageText(typescript, info.messageText)
+
+	if (!info.file) {
+		err.message = codeAndMessageText;
+		return err;
+	}
+
+	let fileName = tsApi.getFileName(info.file);
+	
+	if (file) {
+		err.tsFile = file.ts;
+		err.fullFilename = file.fileNameOriginal;
+		if (file.gulp) {
+			fileName = path.relative(file.gulp.cwd, file.fileNameOriginal);
+			err.relativeFilename = fileName;
+			err.file = file.gulp;
+		} else {
+			fileName = file.fileNameOriginal;
+		}
+	} else {
+		fileName = tsApi.getFileName(info.file);
+		err.fullFilename = fileName;
+	}
+
+	const startPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start);
+	const endPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start + info.length);
+
+	err.startPosition = {
+		position: info.start,
+		line: startPos.line,
+		character: startPos.character
+	};
+	err.endPosition = {
+		position: info.start + info.length - 1,
+		line: endPos.line,
+		character: endPos.character
+	};
+
+	err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
+		+ codeAndMessageText;
+
+	return err;
 }

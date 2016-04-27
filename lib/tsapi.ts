@@ -2,6 +2,13 @@ import * as ts from 'typescript';
 import { CompilationResult, emptyCompilationResult } from './reporter';
 import { normalizePath } from './utils';
 
+export interface TypeScript {
+	convertCompilerOptionsFromJson?: (jsonOptions: any, basePath: string, configFileName?: string) => {
+        options: ts.CompilerOptions;
+        errors: ts.Diagnostic[];
+    }
+}
+
 export interface TypeScript14 {
 	createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string);
 }

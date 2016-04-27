@@ -173,7 +173,6 @@ export class Output {
 
 	private emit(file: OutputFile) {
 		if (file.skipPush) return;
-
 		let root: string;
 		if (this.project.singleOutput) {
 			root = file.original.gulp.base;
@@ -242,57 +241,10 @@ export class Output {
 	}
 
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
-		const err = <reporter.TypeScriptError> new Error();
-		err.name = 'TypeScript error';
-		err.diagnostic = info;
-
-		const codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
-			' TS' +
-			info.code +
-			': ' +
-			tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText)
-
-		if (!info.file) {
-			err.message = codeAndMessageText;
-			return err;
-		}
-
-		let fileName = tsApi.getFileName(info.file);
-		const file = this.project.input.getFile(fileName);
-
-		if (file) {
-			err.tsFile = file.ts;
-			err.fullFilename = file.fileNameOriginal;
-			if (file.gulp) {
-				fileName = path.relative(file.gulp.cwd, file.fileNameOriginal);
-				err.relativeFilename = fileName;
-				err.file = file.gulp;
-			} else {
-				fileName = file.fileNameOriginal;
-			}
-		} else {
-			fileName = tsApi.getFileName(info.file);
-			err.fullFilename = fileName;
-		}
-
-		const startPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start);
-		const endPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start + info.length);
-
-		err.startPosition = {
-			position: info.start,
-			line: startPos.line,
-			character: startPos.character
-		};
-		err.endPosition = {
-			position: info.start + info.length - 1,
-			line: endPos.line,
-			character: endPos.character
-		};
-
-		err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
-			+ codeAndMessageText;
-
-		return err;
+		let fileName = info.file && tsApi.getFileName(info.file);
+		const file = fileName && this.project.input.getFile(fileName);
+		
+		return utils.getError(info, this.project.typescript, file);
 	}
 	diagnostic(info: ts.Diagnostic) {
 		this.error(this.getError(info));
