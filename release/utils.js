@@ -1,5 +1,8 @@
 "use strict";
 var path = require('path');
+var ts = require('typescript');
+var tsApi = require('./tsapi');
+var gutil = require('gulp-util');
 function normalizePath(pathString) {
     return path.normalize(pathString).toLowerCase();
 }
@@ -46,3 +49,50 @@ function getCommonBasePathOfArray(paths) {
     return paths.reduce(getCommonBasePath);
 }
 exports.getCommonBasePathOfArray = getCommonBasePathOfArray;
+function getError(info, typescript, file) {
+    var err = new Error();
+    err.name = 'TypeScript error';
+    err.diagnostic = info;
+    var codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+        ' TS' +
+        info.code +
+        ': ' +
+        tsApi.flattenDiagnosticMessageText(typescript, info.messageText);
+    if (!info.file) {
+        err.message = codeAndMessageText;
+        return err;
+    }
+    var fileName = tsApi.getFileName(info.file);
+    if (file) {
+        err.tsFile = file.ts;
+        err.fullFilename = file.fileNameOriginal;
+        if (file.gulp) {
+            fileName = path.relative(file.gulp.cwd, file.fileNameOriginal);
+            err.relativeFilename = fileName;
+            err.file = file.gulp;
+        }
+        else {
+            fileName = file.fileNameOriginal;
+        }
+    }
+    else {
+        fileName = tsApi.getFileName(info.file);
+        err.fullFilename = fileName;
+    }
+    var startPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start);
+    var endPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start + info.length);
+    err.startPosition = {
+        position: info.start,
+        line: startPos.line,
+        character: startPos.character
+    };
+    err.endPosition = {
+        position: info.start + info.length - 1,
+        line: endPos.line,
+        character: endPos.character
+    };
+    err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
+        + codeAndMessageText;
+    return err;
+}
+exports.getError = getError;

@@ -217,11 +217,13 @@ var FileCache = (function () {
         var oldFiles = this.previous.getFileNames(onlyGulp);
         if (files.length !== oldFiles.length)
             return true;
-        for (var fileName in files) {
+        for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+            var fileName = files_1[_i];
             if (oldFiles.indexOf(fileName) === -1)
                 return true;
         }
-        for (var fileName in files) {
+        for (var _a = 0, files_2 = files; _a < files_2.length; _a++) {
+            var fileName = files_2[_a];
             var change = this.getFileChange(fileName);
             if (change.state !== FileChangeState.Equal)
                 return true;

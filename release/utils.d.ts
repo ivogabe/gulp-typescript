@@ -1,3 +1,6 @@
+import * as ts from 'typescript';
+import { File } from './input';
+import * as reporter from './reporter';
 export interface Map<T> {
     [key: string]: T;
 }
@@ -14,3 +17,4 @@ export declare function splitExtension(fileName: string, knownExtensions?: strin
  */
 export declare function getCommonBasePath(a: string, b: string): string;
 export declare function getCommonBasePathOfArray(paths: string[]): string;
+export declare function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File): reporter.TypeScriptError;

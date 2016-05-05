@@ -1,5 +1,11 @@
 import * as ts from 'typescript';
 import { CompilationResult } from './reporter';
+export interface TypeScript {
+    convertCompilerOptionsFromJson?: (jsonOptions: any, basePath: string, configFileName?: string) => {
+        options: ts.CompilerOptions;
+        errors: ts.Diagnostic[];
+    };
+}
 export interface TypeScript14 {
     createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string): any;
 }

@@ -10,6 +10,7 @@ var gutil = require('gulp-util');
 var path = require('path');
 var stream = require('stream');
 var project = require('./project');
+var utils = require('./utils');
 var _filter = require('./filter');
 var _reporter = require('./reporter');
 var compiler = require('./compiler');
@@ -119,9 +120,41 @@ function getJsxEmit(typescript, jsx) {
     var map = createEnumMap(typescript.JsxEmit);
     return map[jsx.toLowerCase()];
 }
-function getCompilerOptions(settings, projectPath) {
-    var tsSettings = {};
+function getCompilerOptions(settings, projectPath, configFileName) {
     var typescript = settings.typescript || ts;
+    if (settings.sourceRoot !== undefined) {
+        console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
+    }
+    // Try to use `convertCompilerOptionsFromJson` to convert options.
+    if (typescript.convertCompilerOptionsFromJson) {
+        // Copy settings and remove several options
+        var newSettings = {};
+        for (var _i = 0, _a = Object.keys(settings); _i < _a.length; _i++) {
+            var option = _a[_i];
+            if (option === 'declarationFiles') {
+                newSettings.declaration = settings.declarationFiles;
+                continue;
+            }
+            if (option === 'noExternalResolve' ||
+                option === 'sortOutput' ||
+                option === 'typescript' ||
+                option === 'sourceMap' ||
+                option === 'inlineSourceMap')
+                continue;
+            newSettings[option] = settings[option];
+        }
+        var result = typescript.convertCompilerOptionsFromJson(newSettings, projectPath, configFileName);
+        var reporter = _reporter.defaultReporter();
+        for (var _b = 0, _c = result.errors; _b < _c.length; _b++) {
+            var error = _c[_b];
+            reporter.error(utils.getError(error, typescript), typescript);
+        }
+        result.options.sourceMap = true;
+        result.options.suppressOutputPathCheck = true;
+        return result.options;
+    }
+    // Legacy conversion
+    var tsSettings = {};
     for (var key in settings) {
         if (!Object.hasOwnProperty.call(settings, key))
             continue;
@@ -134,7 +167,6 @@ function getCompilerOptions(settings, projectPath) {
             key === 'moduleResolution' ||
             key === 'jsx' ||
             key === 'sourceRoot' ||
-            key === 'rootDir' ||
             key === 'sourceMap' ||
             key === 'inlineSourceMap')
             continue;
@@ -169,17 +201,12 @@ function getCompilerOptions(settings, projectPath) {
     if (tsApi.isTS14(typescript)) {
         if (tsSettings.target === undefined) {
             // TS 1.4 has a bug that the target needs to be set.
-            // This block can be removed when a version that solves this bug is published.
-            // The bug is already fixed in the master of TypeScript
             tsSettings.target = ts.ScriptTarget.ES3;
         }
         if (tsSettings.module === undefined) {
             // Same bug in TS 1.4 as previous comment.
             tsSettings.module = ts.ModuleKind.None;
         }
-    }
-    if (settings.sourceRoot !== undefined) {
-        console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
     }
     if (settings.declarationFiles !== undefined) {
         tsSettings.declaration = settings.declarationFiles;
@@ -234,7 +261,7 @@ var compile;
                 settings = fileNameOrSettings;
             }
         }
-        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
         // Isolated modules are only supported when using TS1.5+
         if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
             if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {

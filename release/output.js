@@ -1,10 +1,10 @@
 "use strict";
 var path = require('path');
-var ts = require('typescript');
 var sourceMap = require('source-map');
 var gutil = require('gulp-util');
 var utils = require('./utils');
 var tsApi = require('./tsapi');
+var compiler_1 = require("./compiler");
 (function (OutputFileKind) {
     OutputFileKind[OutputFileKind["JavaScript"] = 0] = "JavaScript";
     OutputFileKind[OutputFileKind["SourceMap"] = 1] = "SourceMap";
@@ -145,14 +145,14 @@ var Output = (function () {
         if (this.project.singleOutput) {
             root = file.original.gulp.base;
         }
-        else if (this.project.options.outDir !== undefined) {
+        else if (this.project.options.outDir !== undefined && this.project.compiler instanceof compiler_1.ProjectCompiler) {
             root = file.original.gulp.cwd + '/';
         }
         else {
             root = '';
         }
         var base;
-        if (this.project.options.outDir !== undefined) {
+        if (this.project.options.outDir !== undefined && this.project.compiler instanceof compiler_1.ProjectCompiler) {
             base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
         }
         else {
@@ -208,51 +208,9 @@ var Output = (function () {
         this.project.running = false;
     };
     Output.prototype.getError = function (info) {
-        var err = new Error();
-        err.name = 'TypeScript error';
-        err.diagnostic = info;
-        var codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
-            ' TS' +
-            info.code +
-            ': ' +
-            tsApi.flattenDiagnosticMessageText(this.project.typescript, info.messageText);
-        if (!info.file) {
-            err.message = codeAndMessageText;
-            return err;
-        }
-        var fileName = tsApi.getFileName(info.file);
-        var file = this.project.input.getFile(fileName);
-        if (file) {
-            err.tsFile = file.ts;
-            err.fullFilename = file.fileNameOriginal;
-            if (file.gulp) {
-                fileName = path.relative(file.gulp.cwd, file.fileNameOriginal);
-                err.relativeFilename = fileName;
-                err.file = file.gulp;
-            }
-            else {
-                fileName = file.fileNameOriginal;
-            }
-        }
-        else {
-            fileName = tsApi.getFileName(info.file);
-            err.fullFilename = fileName;
-        }
-        var startPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start);
-        var endPos = tsApi.getLineAndCharacterOfPosition(this.project.typescript, info.file, info.start + info.length);
-        err.startPosition = {
-            position: info.start,
-            line: startPos.line,
-            character: startPos.character
-        };
-        err.endPosition = {
-            position: info.start + info.length - 1,
-            line: endPos.line,
-            character: endPos.character
-        };
-        err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
-            + codeAndMessageText;
-        return err;
+        var fileName = info.file && tsApi.getFileName(info.file);
+        var file = fileName && this.project.input.getFile(fileName);
+        return utils.getError(info, this.project.typescript, file);
     };
     Output.prototype.diagnostic = function (info) {
         this.error(this.getError(info));
