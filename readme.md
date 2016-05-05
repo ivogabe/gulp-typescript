@@ -49,11 +49,11 @@ Allmost all options from TypeScript are supported.
 - `preserveConstEnums` (boolean) - Do not erase const enum declarations in generated code. 
 - `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
 - `allowJs` (boolean) - Allow JavaScript files to be compiled.
+- `rootDir` - Specifies the root directory of input files. Only use to control the output directory structure with `outDir`.
 
-See the [TypeScript wiki](https://github.com/Microsoft/TypeScript/wiki/Compiler-Options) for a complete list.
+See the [TypeScript wiki](http://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
 These options are not supported:
 - Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use  [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps) instead.
-- `rootDir` - Use `base` option of `gulp.src()` instead.
 - `watch` - Use `gulp.watch` instead. See the paragraph "Incremental compilation".
 - `project` - See "Using `tsconfig.json`".
 - Obvious: `help`, `version`

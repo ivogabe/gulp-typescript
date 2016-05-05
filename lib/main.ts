@@ -164,7 +164,6 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 			if (option === 'noExternalResolve' ||
 				option === 'sortOutput' ||
 				option === 'typescript' ||
-				option === 'rootDir' ||
 				option === 'sourceMap' ||
 				option === 'inlineSourceMap') continue;
 			
@@ -195,7 +194,6 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 			key === 'moduleResolution' ||
 			key === 'jsx' ||
 			key === 'sourceRoot' ||
-			key === 'rootDir' ||
 			key === 'sourceMap' ||
 			key === 'inlineSourceMap') continue;
 
@@ -296,7 +294,7 @@ module compile {
 
 		isolatedModules?: boolean;
 
-		rootDir?: string; // Only supported when using tsProject.src(). If you're not using tsProject.src, use base option of gulp.src instead.
+		rootDir?: string;
 
 		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
