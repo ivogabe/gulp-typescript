@@ -9,6 +9,7 @@ import * as tsApi from './tsapi';
 import * as reporter from './reporter';
 import * as project from './project';
 import { VinylFile, RawSourceMap } from './types';
+import { ProjectCompiler } from "./compiler";
 
 export interface OutputFile {
 	fileName: string;
@@ -176,14 +177,14 @@ export class Output {
 		let root: string;
 		if (this.project.singleOutput) {
 			root = file.original.gulp.base;
-		} else if (this.project.options.outDir !== undefined) {
+		} else if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			root = file.original.gulp.cwd + '/';
 		} else {
 			root = '';
 		}
 
 		let base: string;
-		if (this.project.options.outDir !== undefined) {
+		if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
 		} else {
 			base = file.original.gulp.base;
