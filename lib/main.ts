@@ -351,6 +351,7 @@ module compile {
 			project.options['newLine'] = (<any>ts).NewLineKind.LineFeed; //new line option/kind fails TS1.4 typecheck
 			project.options.sourceMap = false;
 			project.options.declaration = false;
+			delete project.options.outDir;
 			project.options['inlineSourceMap'] = true;
 			project.compiler = new compiler.FileCompiler();
 		} else {
