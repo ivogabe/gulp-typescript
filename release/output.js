@@ -142,7 +142,10 @@ var Output = (function () {
         if (file.skipPush)
             return;
         var root;
-        if (this.project.singleOutput) {
+        if (this.project.typescript.convertCompilerOptionsFromJson !== undefined) {
+            root = '';
+        }
+        else if (this.project.singleOutput) {
             root = file.original.gulp.base;
         }
         else if (this.project.options.outDir !== undefined && this.project.compiler instanceof compiler_1.ProjectCompiler) {
@@ -154,6 +157,9 @@ var Output = (function () {
         var base;
         if (this.project.options.outDir !== undefined && this.project.compiler instanceof compiler_1.ProjectCompiler) {
             base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
+        }
+        else if (this.project.singleOutput) {
+            base = this.project.input.commonBasePath;
         }
         else {
             base = file.original.gulp.base;

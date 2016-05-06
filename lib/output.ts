@@ -175,7 +175,9 @@ export class Output {
 	private emit(file: OutputFile) {
 		if (file.skipPush) return;
 		let root: string;
-		if (this.project.singleOutput) {
+		if ((<tsApi.TypeScript>this.project.typescript).convertCompilerOptionsFromJson !== undefined && this.project.options.out === undefined) {
+			root = '';
+		} else if (this.project.singleOutput) {
 			root = file.original.gulp.base;
 		} else if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			root = file.original.gulp.cwd + '/';
@@ -186,6 +188,8 @@ export class Output {
 		let base: string;
 		if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
+		} else if (this.project.singleOutput) {
+			base = this.project.input.commonBasePath;
 		} else {
 			base = file.original.gulp.base;
 		}
