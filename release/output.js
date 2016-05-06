@@ -142,7 +142,7 @@ var Output = (function () {
         if (file.skipPush)
             return;
         var root;
-        if (this.project.typescript.convertCompilerOptionsFromJson !== undefined) {
+        if (this.project.typescript.convertCompilerOptionsFromJson !== undefined && this.project.options.out === undefined) {
             root = '';
         }
         else if (this.project.singleOutput) {
