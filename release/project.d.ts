@@ -12,6 +12,7 @@ export declare class Project {
     previousOutput: Output;
     compiler: ICompiler;
     configFileName: string;
+    projectDirectory: string;
     config: TsConfig;
     running: boolean;
     /**
@@ -41,7 +42,7 @@ export declare class Project {
     singleOutput: boolean;
     reporter: Reporter;
     currentDirectory: string;
-    constructor(configFileName: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript?: typeof ts);
+    constructor(configFileName: string, projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript?: typeof ts);
     /**
      * Resets the compiler.
      * The compiler needs to be reset for incremental builds.

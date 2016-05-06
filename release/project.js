@@ -9,11 +9,12 @@ var utils = require('./utils');
 var input_1 = require('./input');
 var output_1 = require('./output');
 var Project = (function () {
-    function Project(configFileName, config, options, noExternalResolve, sortOutput, typescript) {
+    function Project(configFileName, projectDirectory, config, options, noExternalResolve, sortOutput, typescript) {
         if (typescript === void 0) { typescript = ts; }
         this.running = false;
         this.typescript = typescript;
         this.configFileName = configFileName;
+        this.projectDirectory = projectDirectory;
         this.config = config;
         this.options = options;
         this.noExternalResolve = noExternalResolve;

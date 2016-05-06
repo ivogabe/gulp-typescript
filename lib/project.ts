@@ -20,6 +20,7 @@ export class Project {
 	compiler: ICompiler;
 
 	configFileName: string;
+	projectDirectory: string;
 	config: TsConfig;
 
 	running = false;
@@ -63,9 +64,10 @@ export class Project {
 
 	currentDirectory: string;
 
-	constructor(configFileName: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
+	constructor(configFileName: string, projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, noExternalResolve: boolean, sortOutput: boolean, typescript = ts) {
 		this.typescript = typescript;
 		this.configFileName = configFileName;
+		this.projectDirectory = projectDirectory;
 		this.config = config;
 		this.options = options;
 

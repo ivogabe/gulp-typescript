@@ -189,7 +189,11 @@ export class Output {
 		if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			base = path.resolve(file.original.gulp.cwd, this.project.options.outDir) + '/';
 		} else if (this.project.singleOutput) {
-			base = this.project.input.commonBasePath;
+			if (this.project.options.out === undefined) {
+				base = this.project.projectDirectory;
+			} else {
+				base = this.project.input.commonBasePath;
+			}
 		} else {
 			base = file.original.gulp.base;
 		}

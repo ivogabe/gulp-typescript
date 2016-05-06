@@ -340,7 +340,7 @@ module compile {
 			}
 		}
 
-		const project = new Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+		const project = new Project(tsConfigFileName, projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
 
 		// Isolated modules are only supported when using TS1.5+
 		if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {

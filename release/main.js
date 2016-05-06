@@ -261,7 +261,7 @@ var compile;
                 settings = fileNameOrSettings;
             }
         }
-        var project = new compile.Project(tsConfigFileName, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
+        var project = new compile.Project(tsConfigFileName, projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.noExternalResolve ? true : false, settings.sortOutput ? true : false, settings.typescript);
         // Isolated modules are only supported when using TS1.5+
         if (project.options['isolatedModules'] && !tsApi.isTS14(project.typescript)) {
             if (project.options.out !== undefined || project.options['outFile'] !== undefined || project.sortOutput) {
