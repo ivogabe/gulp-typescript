@@ -88,7 +88,7 @@ export class ProjectCompiler implements ICompiler {
 			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
 			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
 			// The empty file is filtered out later on.
-			let emptyFileName = path.join(this.project.options['rootDir'] || root, '________________empty.ts');
+			let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
 			rootFilenames.push(emptyFileName);
 			this.project.input.addContent(emptyFileName, '');
 		}
