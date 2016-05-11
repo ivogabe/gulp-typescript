@@ -91,8 +91,8 @@ export class Project {
 	src() {
 		let configPath = path.dirname(this.configFileName)
 		let base: string;
-		if (this.options.rootDir) {
-			base = path.resolve(configPath, this.options.rootDir);
+		if (this.options["rootDir"]) {
+			base = path.resolve(configPath, this.options["rootDir"]);
 		}
 
 		if (!this.config.files) {
