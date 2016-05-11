@@ -178,7 +178,7 @@ export class Output {
 		if ((<tsApi.TypeScript>this.project.typescript).convertCompilerOptionsFromJson !== undefined && this.project.options.out === undefined) {
 			root = '';
 		} else if (this.project.singleOutput) {
-			root = file.original.gulp.base;
+			root = this.project.input.commonBasePath;
 		} else if (this.project.options.outDir !== undefined && this.project.compiler instanceof ProjectCompiler) {
 			root = file.original.gulp.cwd + '/';
 		} else {

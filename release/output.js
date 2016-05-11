@@ -146,7 +146,7 @@ var Output = (function () {
             root = '';
         }
         else if (this.project.singleOutput) {
-            root = file.original.gulp.base;
+            root = this.project.input.commonBasePath;
         }
         else if (this.project.options.outDir !== undefined && this.project.compiler instanceof compiler_1.ProjectCompiler) {
             root = file.original.gulp.cwd + '/';
