@@ -86,6 +86,7 @@ Another example of `gulpfile.js`. Instead of creating default task, the file spe
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');  // Require separate installation
+
 gulp.task('scripts', function() {
     var tsResult = gulp.src('lib/**/*.ts')
         .pipe(ts({
@@ -125,6 +126,7 @@ gulp.task('scripts', function() {
         tsResult.js.pipe(gulp.dest('release/js'))
     ]);
 });
+
 gulp.task('watch', ['scripts'], function() {
     gulp.watch('lib/*.ts', ['scripts']);
 });
