@@ -42,6 +42,19 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 
+		let root = this.project.input.commonBasePath;
+		let rootFilenames: string[] = this.project.input.getFileNames(true);
+		if (!this.project.singleOutput) {
+			// Add an empty file under the root.
+			// This will make sure the commonSourceDirectory, calculated by TypeScript, won't point to a subdirectory of the root.
+			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
+			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
+			// The empty file is filtered out later on.
+			let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
+			rootFilenames.push(emptyFileName);
+			this.project.input.addContent(emptyFileName, '');
+		}
+		
 		if (!this.project.input.isChanged(true)) {
 			// Re-use old output
 			const old = this.project.previousOutput;
@@ -64,7 +77,6 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 		
-		let root = this.project.input.commonBasePath;
 		this.project.options.sourceRoot = root;
 		
 		this.host = new Host(
@@ -75,24 +87,11 @@ export class ProjectCompiler implements ICompiler {
 			this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts'
 		);
 
-		let rootFilenames: string[] = this.project.input.getFileNames(true);
-
 		if (this.project.filterSettings !== undefined) {
 			let filter = new Filter(this.project, this.project.filterSettings);
 			rootFilenames = rootFilenames.filter((fileName) => filter.match(fileName));
 		}
 		
-		if (!this.project.singleOutput) {
-			// Add an empty file under the root.
-			// This will make sure the commonSourceDirectory, calculated by TypeScript, won't point to a subdirectory of the root.
-			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
-			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
-			// The empty file is filtered out later on.
-			let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
-			rootFilenames.push(emptyFileName);
-			this.project.input.addContent(emptyFileName, '');
-		}
-
 		// Creating a program to compile the sources
 		// We cast to `tsApi.CreateProgram` so we can pass the old program as an extra argument.
 		// TS 1.6+ will try to reuse program structure (if possible)
