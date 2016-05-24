@@ -73,12 +73,12 @@ var gulp = require('gulp');
 var ts = require('gulp-typescript');
 
 gulp.task('default', function () {
-	return gulp.src('src/**/*.ts')
-		.pipe(ts({
-			noImplicitAny: true,
-			out: 'output.js'
-		}))
-		.pipe(gulp.dest('built/local'));
+    return gulp.src('src/**/*.ts')
+        .pipe(ts({
+            noImplicitAny: true,
+            out: 'output.js'
+        }))
+        .pipe(gulp.dest('built/local'));
 });
 ```
 Another example of `gulpfile.js`. Instead of creating default task, the file specifies custom named task. To invoke, run `gulp scripts` instead of `gulp`. As a result, the task will generate both JavaScript files and TypeScript definition files (.d.ts).
@@ -86,17 +86,18 @@ Another example of `gulpfile.js`. Instead of creating default task, the file spe
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var merge = require('merge2');  // Require separate installation
-gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/**/*.ts')
-		.pipe(ts({
-			declaration: true,
-			noExternalResolve: true
-		}));
 
-	return merge([
-		tsResult.dts.pipe(gulp.dest('release/definitions')),
-		tsResult.js.pipe(gulp.dest('release/js'))
-	]);
+gulp.task('scripts', function() {
+    var tsResult = gulp.src('lib/**/*.ts')
+        .pipe(ts({
+            declaration: true,
+            noExternalResolve: true
+        }));
+
+    return merge([
+        tsResult.dts.pipe(gulp.dest('release/definitions')),
+        tsResult.js.pipe(gulp.dest('release/js'))
+    ]);
 });
 ```
 `tsResult` is a object that has a JavaScript stream (`.js`) and a definition file stream (`.dts`). 
@@ -112,19 +113,20 @@ var ts = require('gulp-typescript');
 var merge = require('merge2');
 
 var tsProject = ts.createProject({
-	declaration: true,
-	noExternalResolve: true
+    declaration: true,
+    noExternalResolve: true
 });
 
 gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/*.ts')
-					.pipe(ts(tsProject));
+    var tsResult = gulp.src('lib/*.ts')
+        .pipe(ts(tsProject));
 
-	return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done.
-		tsResult.dts.pipe(gulp.dest('release/definitions')),
-		tsResult.js.pipe(gulp.dest('release/js'))
-	]);
+    return merge([ // Merge the two output streams, so this task is finished when the IO of both operations are done.
+        tsResult.dts.pipe(gulp.dest('release/definitions')),
+        tsResult.js.pipe(gulp.dest('release/js'))
+    ]);
 });
+
 gulp.task('watch', ['scripts'], function() {
     gulp.watch('lib/*.ts', ['scripts']);
 });
@@ -147,10 +149,10 @@ var tsProject = ts.createProject('tsconfig.json', { sortOutput: true });
 The task will look like:
 ```javascript
 gulp.task('scripts', function() {
-	var tsResult = tsProject.src() // instead of gulp.src(...)
-		.pipe(ts(tsProject));
-	
-	return tsResult.js.pipe(gulp.dest('release'));
+    var tsResult = tsProject.src() // instead of gulp.src(...)
+        .pipe(ts(tsProject));
+
+    return tsResult.js.pipe(gulp.dest('release'));
 });
 ```
 
@@ -164,20 +166,20 @@ npm install typescript@next
 And add this to your gulpfile:
 ```javascript
 [...].pipe(ts({
-	typescript: require('typescript')
+    typescript: require('typescript')
 }));
 ```
 Or in combination with a `tsconfig` file:
 ```javascript
 var tsProject = ts.createProject('tsconfig.json', {
-	typescript: require('typescript')
+    typescript: require('typescript')
 });
 ```
 
 It's also possible to use a fork of TypeScript. Add an extra option to the options object like this:
 ```javascript
 [...].pipe(ts({
-	typescript: require('my-fork-of-typescript')
+    typescript: require('my-fork-of-typescript')
 }));
 ```
 
@@ -186,19 +188,19 @@ Filters
 There are two ways to filter files:
 ```javascript
 gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/*.ts')
-					   .pipe(ts(tsProject, filterSettings));
-	
-	...
+    var tsResult = gulp.src('lib/*.ts')
+        .pipe(ts(tsProject, filterSettings));
+
+    ...
 });
 ```
 And
 ```javascript
 gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/*.ts')
-					   .pipe(ts(tsProject));
-	
-	tsResult.pipe(ts.filter(tsProject, filterSettings));
+    var tsResult = gulp.src('lib/*.ts')
+        .pipe(ts(tsProject));
+
+    tsResult.pipe(ts.filter(tsProject, filterSettings));
 });
 ```
 The first example doesn't add files (that don't pass the filter) to the compiler, the second one does add them to the compiler,
@@ -242,17 +244,17 @@ var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('scripts', function() {
-	var tsResult = gulp.src('lib/*.ts')
-					   .pipe(sourcemaps.init()) // This means sourcemaps will be generated
-					   .pipe(ts({
-						   sortOutput: true,
-						   // ...
-					   }));
-	
-	return tsResult.js
-				.pipe(concat('output.js')) // You can use other plugins that also support gulp-sourcemaps
-				.pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
-				.pipe(gulp.dest('release/js'));
+    var tsResult = gulp.src('lib/*.ts')
+        .pipe(sourcemaps.init()) // This means sourcemaps will be generated
+        .pipe(ts({
+            sortOutput: true,
+            // ...
+        }));
+
+    return tsResult.js
+        .pipe(concat('output.js')) // You can use other plugins that also support gulp-sourcemaps
+        .pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
+        .pipe(gulp.dest('release/js'));
 });
 ```
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
