@@ -46,6 +46,8 @@ export class Host implements ts.CompilerHost {
 
 		this.externalResolve = externalResolve;
 		this.libFileName = libFileName;
+		
+		this.realpath = typescript.createCompilerHost({})['realpath'];
 
 		this.reset();
 	}
@@ -150,4 +152,6 @@ export class Host implements ts.CompilerHost {
 			if (sourceFile) return sourceFile.ts;
 		}
 	}
+	
+	realpath: any;
 }
