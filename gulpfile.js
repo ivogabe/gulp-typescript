@@ -28,7 +28,7 @@ var tsOptions = {
 	module: 'commonjs',
 	declaration: true,
 	preserveConstEnums: true,
-	typescript: require('typescript')
+	typescript: require('./typescript/dev')
 };
 var tsProject = ts.createProject(tsOptions);
 
