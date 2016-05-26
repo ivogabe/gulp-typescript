@@ -29,7 +29,7 @@ export declare class ProjectCompiler implements ICompiler {
      * Calculates the difference between the common base directory calculated based on the base paths of the input files
      * and the common source directory calculated by TypeScript.
      */
-    private commonBaseDiff;
+    private readonly commonBaseDiff;
     correctSourceMap(map: RawSourceMap): boolean;
     private removeSourceMapComment(content);
 }

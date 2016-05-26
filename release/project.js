@@ -35,8 +35,8 @@ var Project = (function () {
         var _this = this;
         var configPath = path.dirname(this.configFileName);
         var base;
-        if (this.config.compilerOptions && this.config.compilerOptions.rootDir) {
-            base = path.resolve(configPath, this.config.compilerOptions.rootDir);
+        if (this.options["rootDir"]) {
+            base = path.resolve(configPath, this.options["rootDir"]);
         }
         if (!this.config.files) {
             var files_1 = [path.join(configPath, '**/*.ts')];

@@ -50,6 +50,7 @@ var Host = (function () {
         this.input = input;
         this.externalResolve = externalResolve;
         this.libFileName = libFileName;
+        this.realpath = typescript.createCompilerHost({})['realpath'];
         this.reset();
     }
     Host.getLibDefault = function (typescript, libFileName, originalFileName) {
