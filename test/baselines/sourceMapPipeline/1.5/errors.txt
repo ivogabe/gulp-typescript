@@ -1,0 +1,9 @@
+TypeScript error: error TS6054: File '/Users/jvilk/Code/gulp-typescript/test/sourceMapPipeline/Main/Foo.tsx' must have extension '.ts' or '.d.ts'.
+{
+    "transpileErrors": 0,
+    "syntaxErrors": 0,
+    "globalErrors": 1,
+    "semanticErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": false
+}

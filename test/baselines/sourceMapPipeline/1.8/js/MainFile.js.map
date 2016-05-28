@@ -1,0 +1,1 @@
+{"version":3,"sources":["MainFile.js","MainFile.ts"],"names":["Foo","require","console","log"],"mappings":"AAAA,YCAA,IAAOA,KAAGC,QAAW,QAErBC,SAAQC,IAAIH","file":"MainFile.js","sourcesContent":["\"use strict\";\nvar Foo = require(\"./Foo\");\nconsole.log(Foo);\n","import Foo = require(\"./Foo\");\n\nconsole.log(Foo);\n"],"sourceRoot":"../../../../sourceMapPipeline/Main/"}

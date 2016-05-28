@@ -51,6 +51,10 @@
     {
       "name": "Yui Tanglertsampan",
       "email": "yuisu@microsoft.com"
+    },
+    {
+      "name": "John Vilk",
+      "email": "jvilk@cs.umass.edu"
     }
   ],
   "main": "release/main.js",
@@ -63,12 +67,15 @@
     "vinyl-fs": "~2.4.3"
   },
   "devDependencies": {
+    "babel-preset-react": "6.5.0",
     "gulp": "~3.9.1",
+    "gulp-babel": "6.1.2",
     "gulp-concat": "~2.6.0",
     "gulp-diff": "~1.0.0",
     "gulp-header": "~1.7.1",
     "gulp-plumber": "~1.1.0",
     "gulp-sourcemaps": "~1.6.0",
+    "gulp-uglify": "1.5.3",
     "merge-stream": "~1.0.0",
     "rimraf": "~2.5.2"
   },
