@@ -43,8 +43,8 @@ export declare class FileDictionary {
     initTypeScriptSourceFile: (file: File) => void;
     getFileNames(onlyGulp?: boolean): string[];
     private getSourceFileNames(onlyGulp?);
-    readonly commonBasePath: string;
-    readonly commonSourceDirectory: string;
+    commonBasePath: string;
+    commonSourceDirectory: string;
 }
 export declare class FileCache {
     previous: FileDictionary;
@@ -62,8 +62,8 @@ export declare class FileCache {
     getFile(name: string): File;
     getFileChange(name: string): FileChange;
     getFileNames(onlyGulp?: boolean): string[];
-    readonly firstSourceFile: File;
-    readonly commonBasePath: string;
-    readonly commonSourceDirectory: string;
+    firstSourceFile: File;
+    commonBasePath: string;
+    commonSourceDirectory: string;
     isChanged(onlyGulp?: boolean): boolean;
 }

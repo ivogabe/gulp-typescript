@@ -103,6 +103,9 @@ var ProjectCompiler = (function () {
             }
             return this._commonBaseDiff;
         },
+        // This empty setter will prevent that TS emits 'readonly' modifier.
+        // 'readonly' is not supported in current stable release.
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });

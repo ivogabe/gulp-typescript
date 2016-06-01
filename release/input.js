@@ -114,6 +114,9 @@ var FileDictionary = (function () {
                 return path.resolve(process.cwd(), file.gulp.base);
             }));
         },
+        // This empty setter will prevent that TS emits 'readonly' modifier.
+        // 'readonly' is not supported in current stable release.
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });
@@ -126,6 +129,9 @@ var FileDictionary = (function () {
                 return path.dirname(file.fileNameNormalized);
             }));
         },
+        // This empty setter will prevent that TS emits 'readonly' modifier.
+        // 'readonly' is not supported in current stable release.
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });
@@ -192,6 +198,9 @@ var FileCache = (function () {
         get: function () {
             return this.current.firstSourceFile;
         },
+        // This empty setter will prevent that TS emits 'readonly' modifier.
+        // 'readonly' is not supported in current stable release.
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });
@@ -199,6 +208,7 @@ var FileCache = (function () {
         get: function () {
             return this.current.commonBasePath;
         },
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });
@@ -206,6 +216,7 @@ var FileCache = (function () {
         get: function () {
             return this.current.commonSourceDirectory;
         },
+        set: function (value) { },
         enumerable: true,
         configurable: true
     });
