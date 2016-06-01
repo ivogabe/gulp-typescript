@@ -132,6 +132,10 @@ export class FileDictionary {
 			})
 		);
 	}
+	// This empty setter will prevent that TS emits 'readonly' modifier.
+	// 'readonly' is not supported in current stable release.
+	set commonBasePath(value) {}
+	
 	get commonSourceDirectory() {
 		const fileNames = this.getSourceFileNames();
 		return utils.getCommonBasePathOfArray(
@@ -141,6 +145,9 @@ export class FileDictionary {
 			})
 		);
 	}
+	// This empty setter will prevent that TS emits 'readonly' modifier.
+	// 'readonly' is not supported in current stable release.
+	set commonSourceDirectory(value) {}
 }
 
 export class FileCache {
@@ -214,12 +221,19 @@ export class FileCache {
 	get firstSourceFile() {
 		return this.current.firstSourceFile;
 	}
+	// This empty setter will prevent that TS emits 'readonly' modifier.
+	// 'readonly' is not supported in current stable release.
+	set firstSourceFile(value) {}
+	
 	get commonBasePath() {
 		return this.current.commonBasePath;
 	}
+	set commonBasePath(value) {}
+	
 	get commonSourceDirectory() {
 		return this.current.commonSourceDirectory;
 	}
+	set commonSourceDirectory(value) {}
 
 	isChanged(onlyGulp = false) {
 		if (!this.previous) return true;

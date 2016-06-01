@@ -145,6 +145,9 @@ export class ProjectCompiler implements ICompiler {
 		
 		return this._commonBaseDiff;
 	}
+	// This empty setter will prevent that TS emits 'readonly' modifier.
+	// 'readonly' is not supported in current stable release.
+	private set commonBaseDiff(value) {}
 	
 	correctSourceMap(map: RawSourceMap) {
 		const [diffLength, diff] = this.commonBaseDiff;
