@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "jsx": "preserve"
+  },
+  "files": [
+    "Main/Foo.tsx",
+    "Main/MainFile.ts"
+  ]
+}

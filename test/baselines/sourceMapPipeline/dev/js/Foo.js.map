@@ -1,0 +1,1 @@
+{"version":3,"sources":["Foo.jsx","Foo.tsx"],"names":["Foo","React","createElement","module","exports"],"mappings":"AAAA,YCAA,IAAIA,KAAOC,MAAAC,cAAA,MAAA,KACXC,QAAAC,QAASJ","file":"Foo.js","sourcesContent":["\"use strict\";\nvar Foo = (<div></div>);\nmodule.exports = Foo;\n","var Foo = (<div></div>);\nexport = Foo;\n"],"sourceRoot":"../../../../sourceMapPipeline/Main/"}
