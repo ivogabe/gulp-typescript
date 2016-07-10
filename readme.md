@@ -157,7 +157,7 @@ gulp.task('scripts', function() {
 ```
 To watch for changes to the TypeScript files, you can use:
 ```javascript
-gulp.task('watch', ['scripts', function() {
+gulp.task('watch', ['scripts'], function() {
     gulp.watch(tsProject.srcGlob(), ['scripts']);
 });
 ```
