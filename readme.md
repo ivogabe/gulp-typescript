@@ -155,6 +155,12 @@ gulp.task('scripts', function() {
     return tsResult.js.pipe(gulp.dest('release'));
 });
 ```
+To watch for changes to the TypeScript files, you can use:
+```javascript
+gulp.task('watch', ['scripts', function() {
+    gulp.watch(tsProject.srcGlob(), ['scripts']);
+});
+```
 
 TypeScript version
 ------------------
