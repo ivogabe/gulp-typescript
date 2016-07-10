@@ -139,6 +139,14 @@ function runTest(name, callback) {
 
 					errors.push(err);
 				},
+				outputSrcGlob: function(tsProject) {
+					try {
+						var srcGlobResult = tsProject.srcGlob();
+						fs.writeFileSync(output + 'srcglob.txt', srcGlobResult.join('\n'));
+					} catch (err) {
+						fs.writeFileSync(output + 'srcglob.txt', err);
+					}
+				},
 				finish: function(info) {
 					finishInfo = info;
 				}

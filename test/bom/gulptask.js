@@ -4,6 +4,7 @@ var sourcemaps = require('gulp-sourcemaps');
 module.exports = function(newTS, lib, output, reporter) {
 	var tsProject = newTS.createProject('test/bom/tsconfig.json');
 	
+	reporter.outputSrcGlob(tsProject);
 	var tsResult = tsProject.src()
 		.pipe(newTS(tsProject, undefined, reporter));
 

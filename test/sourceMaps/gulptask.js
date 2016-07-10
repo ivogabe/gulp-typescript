@@ -6,6 +6,7 @@ module.exports = function(newTS, lib, output, reporter) {
 		typescript: lib
 	});
 
+	reporter.outputSrcGlob(project);
 	return project.src()
 		.pipe(sourcemaps.init())
 		.pipe(newTS(project, undefined, reporter)).js
