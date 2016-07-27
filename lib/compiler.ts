@@ -1,12 +1,10 @@
 import * as ts from 'typescript';
 import * as path from 'path';
 import { RawSourceMap } from './types';
-import * as tsApi from './tsapi';
 import { File, FileChangeState } from './input';
 import { Output, OutputFileKind } from './output';
 import { Host } from './host';
 import { Project } from './project';
-import { Filter } from './filter';
 import { CompilationResult, emptyCompilationResult } from './reporter';
 import * as utils from './utils';
 
@@ -83,24 +81,29 @@ export class ProjectCompiler implements ICompiler {
 			this.project.typescript,
 			this.project.currentDirectory,
 			this.project.input,
-			!this.project.noExternalResolve,
-			this.project.options.target >= ts.ScriptTarget.ES6 ? 'lib.es6.d.ts' : 'lib.d.ts'
+			this.project.options
 		);
-
-		if (this.project.filterSettings !== undefined) {
-			let filter = new Filter(this.project, this.project.filterSettings);
-			rootFilenames = rootFilenames.filter((fileName) => filter.match(fileName));
-		}
 		
-		// Creating a program to compile the sources
-		// We cast to `tsApi.CreateProgram` so we can pass the old program as an extra argument.
-		// TS 1.6+ will try to reuse program structure (if possible)
-		this.program = (<tsApi.CreateProgram> this.project.typescript.createProgram)(rootFilenames, this.project.options, this.host, this.program);
+		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
+		const emitResult = this.program.emit();
+		const preEmitDiagnostics = this.project.typescript.getPreEmitDiagnostics(this.program).concat(emitResult.diagnostics);
+		// const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
+		const result = emptyCompilationResult();
+		result.optionsErrors = this.program.getOptionsDiagnostics().length;
+		result.syntaxErrors = this.program.getSyntacticDiagnostics().length;
+		result.globalErrors = this.program.getGlobalDiagnostics().length;
+		result.semanticErrors = this.program.getSemanticDiagnostics().length;
+		if (this.project.options.declaration) {
+			result.declarationErrors = this.program.getDeclarationDiagnostics().length;
+		}
 
-		const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
+		const emitOutput = this.program.emit();
+		result.emitErrors = emitOutput.diagnostics.length;
+		result.emitSkipped = emitOutput.emitSkipped;
+		const diagnostics = [...preEmitDiagnostics, ...emitOutput.diagnostics];
 
-		for (let i = 0; i < errors.length; i++) {
-			this.project.output.diagnostic(errors[i]);
+		for (const error of diagnostics) {
+			this.project.output.diagnostic(error);
 		}
 
 		for (const fileName in this.host.output) {
@@ -232,8 +235,7 @@ export class FileCompiler implements ICompiler {
 		}
 		
 		const diagnostics: ts.Diagnostic[] = [];
-		const outputString = tsApi.transpile(
-			this.project.typescript,
+		const outputString = this.project.typescript.transpile(
 			file.content,
 			this.project.options,
 			file.fileNameOriginal,

@@ -27,9 +27,11 @@ export interface CompilationResult {
 	 * Only used when using isolatedModules.
 	 */
 	transpileErrors: number;
+	optionsErrors: number;
 	syntaxErrors: number;
 	globalErrors: number;
 	semanticErrors: number;
+	declarationErrors: number;
 	emitErrors: number;
 
 	emitSkipped: boolean;
@@ -37,9 +39,11 @@ export interface CompilationResult {
 export function emptyCompilationResult(): CompilationResult {
 	return {
 		transpileErrors: 0,
+		optionsErrors: 0,
 		syntaxErrors: 0,
 		globalErrors: 0,
 		semanticErrors: 0,
+		declarationErrors: 0,
 		emitErrors: 0,
 		emitSkipped: false
 	}
@@ -60,9 +64,11 @@ function defaultFinishHandler(results: CompilationResult) {
 	};
 
 	showErrorCount(results.transpileErrors, '');
+	showErrorCount(results.optionsErrors, 'options');
 	showErrorCount(results.syntaxErrors, 'syntax');
 	showErrorCount(results.globalErrors, 'global');
 	showErrorCount(results.semanticErrors, 'semantic');
+	showErrorCount(results.declarationErrors, 'declaration');
 	showErrorCount(results.emitErrors, 'emit');
 
 	if (results.emitSkipped) {

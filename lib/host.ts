@@ -32,9 +32,9 @@ export class Host implements ts.CompilerHost {
 	currentDirectory: string;
 	input: FileCache;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, option: ts.CompilerOptions) {
+	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, options: ts.CompilerOptions) {
 		this.typescript = typescript;
-		this.fallback = typescript.createCompilerHost(option);
+		this.fallback = typescript.createCompilerHost(options);
 
 		this.currentDirectory = currentDirectory;
 		this.input = input;
