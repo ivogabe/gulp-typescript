@@ -275,7 +275,15 @@ If you want to build a custom reporter, you take a look at `lib/reporter.ts`, in
 
 Build gulp-typescript
 ------------
+
+1. Clone this repo
+2. Execute `npm install`
+3. Execute `git submodule update --init` to pull down the TypeScript compiler/services versions used in the test suite.
+4. Ensure the gulp CLI is globally installed (`npm install -g gulp`).
+5. Execute the tests: `gulp`.
+
 The plugin uses itself to compile. There are 2 build directories, ```release``` and ```release-2```. ```release``` must always contain a working build. ```release-2``` contains the last build. When you run ```gulp compile```, the build will be saved in the ```release-2``` directory. ```gulp test``` will compile the source to ```release-2```, and then it will run some tests. If these tests give no errors, you can run ```gulp release```. The contents from ```release-2``` will be copied to ```release```.
+
 
 License
 -------
