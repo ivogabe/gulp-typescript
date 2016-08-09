@@ -58,7 +58,14 @@ class CompileStream extends stream.Duplex {
 	}
 
 	end(chunk?, encoding?, callback?) {
-		this._write(chunk, encoding, callback);
+		if (typeof chunk === 'function') {
+			this._write(null, null, chunk);
+		} else if (typeof encoding === 'function') {
+			this._write(chunk, null, encoding);
+		} else {
+			this._write(chunk, encoding, callback);
+		}
+
 		this.project.compiler.inputDone();
 	}
 
