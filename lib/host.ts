@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { File, FileCache } from './input';
+import { FileCache } from './input';
 import * as utils from './utils';
 
 export class Host implements ts.CompilerHost {
@@ -70,8 +70,6 @@ export class Host implements ts.CompilerHost {
 	}
 
 	readFile = (fileName: string) => {
-		const normalizedFileName = utils.normalizePath(fileName);
-
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return sourceFile.content;
 

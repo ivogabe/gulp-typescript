@@ -2,22 +2,15 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import { RawSourceMap } from './types';
 import { File, FileChangeState } from './input';
-import { Output, OutputFileKind } from './output';
 import { Host } from './host';
-import { Project } from './project';
+import { ProjectInfo } from './project';
 import { CompilationResult, emptyCompilationResult } from './reporter';
 import * as utils from './utils';
 
 export interface ICompiler {
-	prepare(_project: Project): void;
+	prepare(project: ProjectInfo): void;
 	inputFile(file: File);
 	inputDone();
-	/**
-	 * Corrects the paths in the sourcemap.
-	 * Returns true when the file is located
-	 * under the base path.
-	 */
-	correctSourceMap(map: RawSourceMap): boolean;
 }
 
 /**
@@ -25,11 +18,11 @@ export interface ICompiler {
  */
 export class ProjectCompiler implements ICompiler {
 	host: Host;
-	project: Project;
+	project: ProjectInfo;
 	program: ts.Program;
 
-	prepare(_project: Project) {
-		this.project = _project;
+	prepare(project: ProjectInfo) {
+		this.project = project;
 	}
 
 	inputFile(file: File) { }
@@ -40,54 +33,32 @@ export class ProjectCompiler implements ICompiler {
 			return;
 		}
 
-		let root = this.project.input.commonBasePath;
-		let rootFilenames: string[] = this.project.input.getFileNames(true);
+		const rootFilenames: string[] = this.project.input.getFileNames(true);
 		if (!this.project.singleOutput) {
 			// Add an empty file under the root.
 			// This will make sure the commonSourceDirectory, calculated by TypeScript, won't point to a subdirectory of the root.
 			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
 			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
 			// The empty file is filtered out later on.
-			let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
+			/* let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
 			rootFilenames.push(emptyFileName);
-			this.project.input.addContent(emptyFileName, '');
+			this.project.input.addContent(emptyFileName, ''); */
 		}
-		
-		if (!this.project.input.isChanged(true)) {
-			// Re-use old output
-			const old = this.project.previousOutput;
 
-			for (const error of old.errors) {
-				this.project.output.error(error);
-			}
+		const currentDirectory = utils.getCommonBasePathOfArray(
+			rootFilenames.map(fileName => this.project.input.getFile(fileName).gulp.cwd)
+		);
 
-			for (const fileName of Object.keys(old.files)) {
-				const file = old.files[fileName];
-				this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.JavaScript], file.content[OutputFileKind.JavaScript]);
-				this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.SourceMap], file.content[OutputFileKind.SourceMap]);
-				if (file.content[OutputFileKind.Definitions] !== undefined) {
-					this.project.output.write(file.fileName + '.' + file.extension[OutputFileKind.Definitions], file.content[OutputFileKind.Definitions]);
-				}
-			}
-			
-			this.project.output.finish(old.results);
-
-			return;
-		}
-		
-		this.project.options.sourceRoot = root;
-		
 		this.host = new Host(
 			this.project.typescript,
-			this.project.currentDirectory,
+			currentDirectory,
 			this.project.input,
 			this.project.options
 		);
-		
+
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
-		const emitResult = this.program.emit();
-		const preEmitDiagnostics = this.project.typescript.getPreEmitDiagnostics(this.program).concat(emitResult.diagnostics);
-		// const [errors, result] = tsApi.getDiagnosticsAndEmit(this.program);
+		const preEmitDiagnostics = this.project.typescript.getPreEmitDiagnostics(this.program);
+		
 		const result = emptyCompilationResult();
 		result.optionsErrors = this.program.getOptionsDiagnostics().length;
 		result.syntaxErrors = this.program.getSyntacticDiagnostics().length;
@@ -97,90 +68,65 @@ export class ProjectCompiler implements ICompiler {
 			result.declarationErrors = this.program.getDeclarationDiagnostics().length;
 		}
 
+		this.reportDiagnostics(preEmitDiagnostics);
+
 		const emitOutput = this.program.emit();
 		result.emitErrors = emitOutput.diagnostics.length;
 		result.emitSkipped = emitOutput.emitSkipped;
-		const diagnostics = [...preEmitDiagnostics, ...emitOutput.diagnostics];
 
-		for (const error of diagnostics) {
-			this.project.output.diagnostic(error);
-		}
+		for (const fileName of this.host.input.getFileNames(true)) {
+			const file = this.project.input.getFile(fileName);
 
-		for (const fileName in this.host.output) {
-			if (!this.host.output.hasOwnProperty(fileName)) continue;
+			let jsFileName: string;
+			let dtsFileName: string;
+			let jsContent: string;
+			let dtsContent: string;
+			let jsMapContent: string;
+
+			const emitOutput = this.program.emit(file.ts, (fileName: string, content: string) => {
+				const [, extension] = utils.splitExtension(fileName, ['d.ts']);
+				switch (extension) {
+					case 'js':
+					case 'jsx':
+						jsFileName = fileName;
+						jsContent = this.removeSourceMapComment(content);
+						break;
+					case 'd.ts':
+						dtsFileName = fileName;
+						dtsContent = content;
+						break;
+					case 'map':
+						jsMapContent = content;
+						break;
+				}
+			});
+
+			result.emitErrors += emitOutput.diagnostics.length;
+			this.reportDiagnostics(emitOutput.diagnostics);
 			
-			let content = this.host.output[fileName]
-			const [, extension] = utils.splitExtension(fileName);
-			if (extension === 'js' || extension === 'jsx') {
-				content = this.removeSourceMapComment(content);
+			if (jsContent !== undefined) {
+				// TODO: Set `base` correctly when `outDir` is set
+				this.project.output.writeJs(file.gulp.base, jsFileName, jsContent, jsMapContent, file);
+			}
+			if (dtsContent !== undefined) {
+				// TODO: Set `base` correctly when `outDir` or `declarationDir` is set
+				this.project.output.writeDts(file.gulp.base, dtsFileName, dtsContent, file);
 			}
 
-			this.project.output.write(fileName, content);
+			if (emitOutput.emitSkipped) {
+				result.emitSkipped = true;
+			}
 		}
 
 		this.project.output.finish(result);
 	}
-	
-	private _commonBaseDiff: [number, string];
-	/**
-	 * Calculates the difference between the common base directory calculated based on the base paths of the input files
-	 * and the common source directory calculated by TypeScript.
-	 */
-	private get commonBaseDiff(): [number, string] {
-		if (this._commonBaseDiff) return this._commonBaseDiff;
-		
-		const expected = this.project.input.commonBasePath;
-		const real = this.project.input.commonSourceDirectory;
-		
-		const length = real.length - expected.length;
-		
-		this._commonBaseDiff = [length, real.substring(real.length - length)]
-		
-		if (length > 0) {
-			this._commonBaseDiff = [length, real.substring(real.length - length)];
-		} else {
-			this._commonBaseDiff = [length, expected.substring(expected.length + length)];
-		}
-		
-		if (this._commonBaseDiff[1] === '/' || this._commonBaseDiff[1] === '\\') {
-			this._commonBaseDiff = [0, ''];
-		}
-		
-		return this._commonBaseDiff;
-	}
-	// This empty setter will prevent that TS emits 'readonly' modifier.
-	// 'readonly' is not supported in current stable release.
-	private set commonBaseDiff(value) {}
-	
-	correctSourceMap(map: RawSourceMap) {
-		const [diffLength, diff] = this.commonBaseDiff;
-		
-		if (this.project.singleOutput) return true;
-		
-		if (diffLength < 0) {
-			// There were files added outside of the common base.
-			let outsideRoot = false;
-			map.sources = map.sources.map<string>(fileName => {
-				const fullPath = path.join(this.project.input.commonSourceDirectory, fileName);
-				const fullPathNormalized = utils.normalizePath(fullPath);
-				let relative = path.relative(utils.normalizePath(this.project.input.commonBasePath), fullPathNormalized);
 
-				const first2 = relative.substring(0, 2);
-				const first3 = relative.substring(0, 3);
-				if (first3 === '../' || first3 === '..\\') {
-					outsideRoot = true;
-				} else if (first2 === './' || first2 === '.\\') {
-					relative = relative.substring(2);
-				}
-				return path.normalize(fullPath).substring(fullPathNormalized.length - relative.length);
-			});
-			
-			if (outsideRoot) return false;
+	private reportDiagnostics(diagnostics: ts.Diagnostic[]) {
+		for (const error of diagnostics) {
+			this.project.output.diagnostic(error);
 		}
-		
-		return true;
 	}
-	
+
 	private removeSourceMapComment(content: string): string {
 		// By default the TypeScript automaticly inserts a source map comment.
 		// This should be removed because gulp-sourcemaps takes care of that.
@@ -191,19 +137,36 @@ export class ProjectCompiler implements ICompiler {
 	}
 }
 
+interface FileResult {
+	fileName: string;
+	diagnostics: ts.Diagnostic[];
+	content: string;
+	sourceMap: string;
+}
 export class FileCompiler implements ICompiler {
 	host: Host;
-	project: Project;
-	program: ts.Program;
-	
-	private errorsPerFile: utils.Map<ts.Diagnostic[]> = {};
-	private previousErrorsPerFile: utils.Map<ts.Diagnostic[]> = {};
+	project: ProjectInfo;
+
+	private output: utils.Map<FileResult> = {};
+	private previousOutput: utils.Map<FileResult> = {};
+
 	private compilationResult: CompilationResult = undefined;
 	
-	prepare(_project: Project) {
-		this.project = _project;
+	prepare(project: ProjectInfo) {
+		this.project = project;
 		this.project.input.noParse = true;
 		this.compilationResult = emptyCompilationResult();
+	}
+
+	private write(file: File, fileName: string, diagnostics: ts.Diagnostic[], content: string, sourceMap: string) {
+		this.output[file.fileNameNormalized] = { fileName, diagnostics, content, sourceMap };
+		
+		for (const error of diagnostics) {
+			this.project.output.diagnostic(error);
+		}
+		this.compilationResult.transpileErrors += diagnostics.length;
+		
+		this.project.output.writeJs(file.gulp.base, fileName, content, sourceMap, file);
 	}
 
 	inputFile(file: File) {
@@ -214,22 +177,8 @@ export class FileCompiler implements ICompiler {
 		if (this.project.input.getFileChange(file.fileNameOriginal).state === FileChangeState.Equal) {
 			// Not changed, re-use old file.
 			
-			const old = this.project.previousOutput;
-
-			const diagnostics = this.previousErrorsPerFile[file.fileNameNormalized]
-			for (const error of diagnostics) {
-				this.project.output.diagnostic(error);
-			}
-			this.compilationResult.transpileErrors += diagnostics.length;
-			this.errorsPerFile[file.fileNameNormalized] = this.previousErrorsPerFile[file.fileNameNormalized];
-
-			for (const fileName of Object.keys(old.files)) {
-				const oldFile = old.files[fileName];
-				if (oldFile.original.fileNameNormalized !== file.fileNameNormalized) continue;
-				
-				this.project.output.write(oldFile.fileName + '.' + oldFile.extension[OutputFileKind.JavaScript], oldFile.content[OutputFileKind.JavaScript]);
-				this.project.output.write(oldFile.fileName + '.' + oldFile.extension[OutputFileKind.SourceMap], oldFile.content[OutputFileKind.SourceMap]);
-			}
+			const old = this.previousOutput[file.fileNameNormalized];
+			this.write(file, old.fileName, old.diagnostics, old.content, old.sourceMap);
 
 			return;
 		}
@@ -241,11 +190,6 @@ export class FileCompiler implements ICompiler {
 			file.fileNameOriginal,
 			diagnostics
 		);
-		for (const diagnostic of diagnostics) {
-			this.project.output.diagnostic(diagnostic);
-		}
-		this.compilationResult.transpileErrors += diagnostics.length;
-		
 		let index = outputString.lastIndexOf('\n')
 		let mapString = outputString.substring(index + 1);
 		if (mapString.substring(0, 1) === '\r') mapString = mapString.substring(1);
@@ -265,20 +209,13 @@ export class FileCompiler implements ICompiler {
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		const [, extension] = utils.splitExtension(map.file); // js or jsx
 		
-		this.project.output.write(fileNameExtensionless + '.' + extension, outputString.substring(0, index));
-		this.project.output.write(fileNameExtensionless + '.' + extension + '.map', JSON.stringify(map));
-		
-		this.errorsPerFile[file.fileNameNormalized] = diagnostics;
+		this.write(file, fileNameExtensionless + '.' + extension, diagnostics, outputString.substring(0, index), JSON.stringify(map));
 	}
 
 	inputDone() {
 		this.project.output.finish(this.compilationResult);
 		
-		this.previousErrorsPerFile = this.errorsPerFile;
-		this.errorsPerFile = {};
-	}
-	
-	correctSourceMap(map: RawSourceMap) {
-		return true;
+		this.previousOutput = this.output;
+		this.output = {};
 	}
 }

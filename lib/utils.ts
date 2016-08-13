@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as ts from 'typescript';
 import { File } from './input';
-import * as tsApi from './tsapi';
 import * as reporter from './reporter';
 import * as gutil from 'gulp-util';
 
@@ -64,14 +63,14 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 		' TS' +
 		info.code +
 		': ' +
-		tsApi.flattenDiagnosticMessageText(typescript, info.messageText)
+		typescript.flattenDiagnosticMessageText(info.messageText, '\n')
 
 	if (!info.file) {
 		err.message = codeAndMessageText;
 		return err;
 	}
 
-	let fileName = tsApi.getFileName(info.file);
+	let fileName = info.file.fileName;
 	
 	if (file) {
 		err.tsFile = file.ts;
@@ -84,12 +83,11 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 			fileName = file.fileNameOriginal;
 		}
 	} else {
-		fileName = tsApi.getFileName(info.file);
-		err.fullFilename = fileName;
+		err.fullFilename = info.file.fileName;
 	}
 
-	const startPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start);
-	const endPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start + info.length);
+	const startPos = typescript.getLineAndCharacterOfPosition(info.file, info.start);
+	const endPos = typescript.getLineAndCharacterOfPosition(info.file, info.start + info.length);
 
 	err.startPosition = {
 		position: info.start,
