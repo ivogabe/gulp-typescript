@@ -35,14 +35,12 @@ export class ProjectCompiler implements ICompiler {
 
 		const rootFilenames: string[] = this.project.input.getFileNames(true);
 		if (!this.project.singleOutput) {
-			// Add an empty file under the root.
-			// This will make sure the commonSourceDirectory, calculated by TypeScript, won't point to a subdirectory of the root.
-			// We cannot use the `rootDir` option here, since that gives errors if the commonSourceDirectory points to a
-			// directory containing the rootDir instead of the rootDir, which will break the build when using `noEmitOnError`.
-			// The empty file is filtered out later on.
-			/* let emptyFileName = path.join(this.project.options['rootDir'] ? path.resolve(this.project.projectDirectory, this.project.options['rootDir']) : root, '________________empty.ts');
-			rootFilenames.push(emptyFileName);
-			this.project.input.addContent(emptyFileName, ''); */
+			if (this.project.options.rootDir === undefined) {
+				this.project.options.rootDir = utils.getCommonBasePathOfArray(
+					rootFilenames.filter(fileName => fileName.substr(-5) !== ".d.ts")
+						.map(fileName => this.project.input.getFile(fileName).gulp.base)
+				);
+			}
 		}
 
 		const currentDirectory = utils.getCommonBasePathOfArray(
@@ -104,13 +102,22 @@ export class ProjectCompiler implements ICompiler {
 			result.emitErrors += emitOutput.diagnostics.length;
 			this.reportDiagnostics(emitOutput.diagnostics);
 			
+			let base = file.gulp.base;
+			if (this.project.options.outDir) {
+				const baseRelative = path.relative(this.project.options.rootDir, base);
+				base = path.join(this.project.options.outDir, baseRelative);
+			}
+			let baseDeclarations = base;
+			if (this.project.options.declarationDir) {
+				const baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
+				baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
+			}
+
 			if (jsContent !== undefined) {
-				// TODO: Set `base` correctly when `outDir` is set
-				this.project.output.writeJs(file.gulp.base, jsFileName, jsContent, jsMapContent, file);
+				this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file);
 			}
 			if (dtsContent !== undefined) {
-				// TODO: Set `base` correctly when `outDir` or `declarationDir` is set
-				this.project.output.writeDts(file.gulp.base, dtsFileName, dtsContent, file);
+				this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file);
 			}
 
 			if (emitOutput.emitSkipped) {
