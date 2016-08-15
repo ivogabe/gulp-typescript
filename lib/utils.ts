@@ -100,7 +100,7 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 		character: endPos.character
 	};
 
-	err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
+	err.message = gutil.colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
 		+ codeAndMessageText;
 
 	return err;
