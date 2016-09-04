@@ -39,13 +39,25 @@ var Project = (function () {
             base = path.resolve(configPath, this.options["rootDir"]);
         }
         if (!this.config.files) {
-            var files_1 = [path.join(configPath, '**/*.ts')];
-            if (tsApi.isTS16OrNewer(this.typescript)) {
-                files_1.push(path.join(configPath, '**/*.tsx'));
+            var files_1 = [];
+            //If neither 'files' nor 'include' option is defined,
+            //take all .ts files (or .ts, .js, .jsx if required) by default.
+            if (!this.config.include) {
+                files_1.push(path.join(configPath, '**/*.ts'));
+                if (tsApi.isTS16OrNewer(this.typescript)) {
+                    files_1.push(path.join(configPath, '**/*.tsx'));
+                }
+                if (this.options.allowJs) {
+                    files_1.push(path.join(configPath, '**/*.js'));
+                    files_1.push(path.join(configPath, '**/*.jsx'));
+                }
             }
-            if (this.options.allowJs) {
-                files_1.push(path.join(configPath, '**/*.js'));
-                files_1.push(path.join(configPath, '**/*.jsx'));
+            if (this.config.include instanceof Array) {
+                files_1 = files_1.concat(
+                // Include files
+                this.config.include.map(function (file) { return path.resolve(configPath, file); }), 
+                // Include directories
+                this.config.include.map(function (file) { return path.resolve(configPath, file) + '/**'; }));
             }
             if (this.config.exclude instanceof Array) {
                 files_1 = files_1.concat(
@@ -59,7 +71,8 @@ var Project = (function () {
             }
             var srcStream = vfs.src(files_1);
             var sources_1 = new stream.Readable({ objectMode: true });
-            sources_1._read = function () { };
+            sources_1._read = function () {
+            };
             var resolvedFiles_1 = [];
             srcStream.on('data', function (file) {
                 resolvedFiles_1.push(file);

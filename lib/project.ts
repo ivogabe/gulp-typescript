@@ -6,12 +6,12 @@ import * as through2 from 'through2';
 import * as gutil from 'gulp-util';
 import * as tsApi from './tsapi';
 import * as utils from './utils';
-import { FilterSettings } from './main';
-import { Reporter } from './reporter';
-import { FileCache } from './input';
-import { Output } from './output';
-import { ICompiler } from './compiler';
-import { TsConfig } from './types';
+import {FilterSettings} from './main';
+import {Reporter} from './reporter';
+import {FileCache} from './input';
+import {Output} from './output';
+import {ICompiler} from './compiler';
+import {TsConfig} from './types';
 
 export class Project {
 	input: FileCache;
@@ -96,14 +96,29 @@ export class Project {
 		}
 
 		if (!this.config.files) {
-			let files = [path.join(configPath, '**/*.ts')];
+			let files = [];
 
-			if (tsApi.isTS16OrNewer(this.typescript)) {
-				files.push(path.join(configPath, '**/*.tsx'));
+			//If neither 'files' nor 'include' option is defined,
+			//take all .ts files (or .ts, .js, .jsx if required) by default.
+			if (!this.config.include) {
+				files.push(path.join(configPath, '**/*.ts'));
+
+				if (tsApi.isTS16OrNewer(this.typescript)) {
+					files.push(path.join(configPath, '**/*.tsx'));
+				}
+				if ((<tsApi.TSOptions18> this.options).allowJs) {
+					files.push(path.join(configPath, '**/*.js'));
+					files.push(path.join(configPath, '**/*.jsx'));
+				}
 			}
-			if ((<tsApi.TSOptions18> this.options).allowJs) {
-				files.push(path.join(configPath, '**/*.js'));
-				files.push(path.join(configPath, '**/*.jsx'));
+
+			if (this.config.include instanceof Array) {
+				files = files.concat(
+					// Include files
+					this.config.include.map(file => path.resolve(configPath, file)),
+					// Include directories
+					this.config.include.map(file => path.resolve(configPath, file) + '/**')
+				);
 			}
 
 			if (this.config.exclude instanceof Array) {
@@ -115,11 +130,12 @@ export class Project {
 				);
 			}
 			if (base !== undefined) {
-				return vfs.src(files, { base });
+				return vfs.src(files, {base});
 			}
 			const srcStream = vfs.src(files);
-			const sources = new stream.Readable({ objectMode: true });
-			sources._read = () => {};
+			const sources = new stream.Readable({objectMode: true});
+			sources._read = () => {
+			};
 			const resolvedFiles: gutil.File[] = [];
 			srcStream.on('data', (file: gutil.File) => {
 				resolvedFiles.push(file);
@@ -162,7 +178,7 @@ export class Project {
 			}
 		});
 
-		const vinylOptions = { base, allowEmpty: true };
+		const vinylOptions = {base, allowEmpty: true};
 		return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), vinylOptions)
 			.pipe(checkMissingFiles);
 	}
