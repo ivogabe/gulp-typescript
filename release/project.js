@@ -52,7 +52,7 @@ var Project = (function () {
                     files_1.push(path.join(configPath, '**/*.jsx'));
                 }
             }
-            if (this.config.include instanceof Array) {
+            else if (this.config.include instanceof Array) {
                 files_1 = files_1.concat(
                 // Include files
                 this.config.include.map(function (file) { return path.resolve(configPath, file); }), 
@@ -71,8 +71,7 @@ var Project = (function () {
             }
             var srcStream = vfs.src(files_1);
             var sources_1 = new stream.Readable({ objectMode: true });
-            sources_1._read = function () {
-            };
+            sources_1._read = function () { };
             var resolvedFiles_1 = [];
             srcStream.on('data', function (file) {
                 resolvedFiles_1.push(file);
