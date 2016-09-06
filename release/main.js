@@ -50,7 +50,15 @@ var CompileStream = (function (_super) {
     CompileStream.prototype._read = function () {
     };
     CompileStream.prototype.end = function (chunk, encoding, callback) {
-        this._write(chunk, encoding, callback);
+        if (typeof chunk === 'function') {
+            this._write(null, null, chunk);
+        }
+        else if (typeof encoding === 'function') {
+            this._write(chunk, null, encoding);
+        }
+        else {
+            this._write(chunk, encoding, callback);
+        }
         this.project.compiler.inputDone();
     };
     return CompileStream;

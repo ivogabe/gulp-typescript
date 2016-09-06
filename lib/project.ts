@@ -96,14 +96,28 @@ export class Project {
 		}
 
 		if (!this.config.files) {
-			let files = [path.join(configPath, '**/*.ts')];
+			let files: string[] = [];
 
-			if (tsApi.isTS16OrNewer(this.typescript)) {
-				files.push(path.join(configPath, '**/*.tsx'));
+			//If neither 'files' nor 'include' option is defined,
+			//take all .ts files (or .ts, .js, .jsx if required) by default.
+			if (!this.config.include) {
+				files.push(path.join(configPath, '**/*.ts'));
+
+				if (tsApi.isTS16OrNewer(this.typescript)) {
+					files.push(path.join(configPath, '**/*.tsx'));
+				}
+				if ((<tsApi.TSOptions18> this.options).allowJs) {
+					files.push(path.join(configPath, '**/*.js'));
+					files.push(path.join(configPath, '**/*.jsx'));
+				}
 			}
-			if ((<tsApi.TSOptions18> this.options).allowJs) {
-				files.push(path.join(configPath, '**/*.js'));
-				files.push(path.join(configPath, '**/*.jsx'));
+			else if (this.config.include instanceof Array) {
+				files = files.concat(
+					// Include files
+					this.config.include.map(file => path.resolve(configPath, file)),
+					// Include directories
+					this.config.include.map(file => path.resolve(configPath, file) + '/**')
+				);
 			}
 
 			if (this.config.exclude instanceof Array) {
