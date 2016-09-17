@@ -9,7 +9,7 @@ module.exports = function(newTS, lib, output, reporter) {
 			out: 'concat.js',
 			typescript: lib,
 			target: 'es6'
-		}, undefined, reporter));
+		}, reporter));
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
 		.pipe(sourcemaps.write('.', { sourceRoot: '../../../../out/' }))

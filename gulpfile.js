@@ -105,12 +105,12 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	// We run every test on multiple typescript versions:
 	var libs = [
-		['1.8', undefined],
-		['dev', require(tsVersions.dev)],
+		['dev', undefined],
+		/* ['dev', require(tsVersions.dev)],
 		['1.4', require(tsVersions.release14)],
 		['1.5', require(tsVersions.release15)],
 		['1.6', require(tsVersions.release16)],
-		['1.7', require(tsVersions.release17)]
+		['1.7', require(tsVersions.release17)] */
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
