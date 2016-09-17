@@ -56,6 +56,7 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 	}
 	result.options.sourceMap = true;
 	(result.options as any).suppressOutputPathCheck = true;
+
 	return result.options;
 }
 
@@ -111,10 +112,10 @@ module compile {
 		let projectDirectory = process.cwd();
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
-				tsConfigFileName = fileNameOrSettings;
-				projectDirectory = path.dirname(fileNameOrSettings);
+				tsConfigFileName = path.resolve(process.cwd(), fileNameOrSettings);
+				projectDirectory = path.dirname(tsConfigFileName);
 				// Load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
-				let tsConfigText = fs.readFileSync(fileNameOrSettings).toString();
+				let tsConfigText = fs.readFileSync(tsConfigFileName).toString();
 				const typescript = (settings && settings.typescript) || ts;
 				const tsConfig = typescript.parseConfigFileTextToJson(tsConfigFileName, tsConfigText);
 				tsConfigContent = tsConfig.config || {};

@@ -9,8 +9,8 @@ import * as utils from './utils';
 
 export interface ICompiler {
 	prepare(project: ProjectInfo): void;
-	inputFile(file: File);
-	inputDone();
+	inputFile(file: File): void;
+	inputDone(): void;
 }
 
 /**
@@ -72,60 +72,76 @@ export class ProjectCompiler implements ICompiler {
 		result.emitErrors = emitOutput.diagnostics.length;
 		result.emitSkipped = emitOutput.emitSkipped;
 
-		for (const fileName of this.host.input.getFileNames(true)) {
-			const file = this.project.input.getFile(fileName);
+		if (this.project.singleOutput) {
+			this.emitFile(result, currentDirectory);
+		} else {
+			// Emit files one by one
+			for (const fileName of this.host.input.getFileNames(true)) {
+				const file = this.project.input.getFile(fileName);
 
-			let jsFileName: string;
-			let dtsFileName: string;
-			let jsContent: string;
-			let dtsContent: string;
-			let jsMapContent: string;
-
-			const emitOutput = this.program.emit(file.ts, (fileName: string, content: string) => {
-				const [, extension] = utils.splitExtension(fileName, ['d.ts']);
-				switch (extension) {
-					case 'js':
-					case 'jsx':
-						jsFileName = fileName;
-						jsContent = this.removeSourceMapComment(content);
-						break;
-					case 'd.ts':
-						dtsFileName = fileName;
-						dtsContent = content;
-						break;
-					case 'map':
-						jsMapContent = content;
-						break;
-				}
-			});
-
-			result.emitErrors += emitOutput.diagnostics.length;
-			this.reportDiagnostics(emitOutput.diagnostics);
-			
-			let base = file.gulp.base;
-			if (this.project.options.outDir) {
-				const baseRelative = path.relative(this.project.options.rootDir, base);
-				base = path.join(this.project.options.outDir, baseRelative);
-			}
-			let baseDeclarations = base;
-			if (this.project.options.declarationDir) {
-				const baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
-				baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
-			}
-
-			if (jsContent !== undefined) {
-				this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file);
-			}
-			if (dtsContent !== undefined) {
-				this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file);
-			}
-
-			if (emitOutput.emitSkipped) {
-				result.emitSkipped = true;
+				this.emitFile(result, currentDirectory, file);
 			}
 		}
 
 		this.project.output.finish(result);
+	}
+
+	private emitFile(result: CompilationResult, currentDirectory: string, file?: File) {
+		let jsFileName: string;
+		let dtsFileName: string;
+		let jsContent: string;
+		let dtsContent: string;
+		let jsMapContent: string;
+
+		const emitOutput = this.program.emit(file && file.ts, (fileName: string, content: string) => {
+			const [, extension] = utils.splitExtension(fileName, ['d.ts']);
+			switch (extension) {
+				case 'js':
+				case 'jsx':
+					jsFileName = fileName;
+					jsContent = this.removeSourceMapComment(content);
+					break;
+				case 'd.ts':
+					dtsFileName = fileName;
+					dtsContent = content;
+					break;
+				case 'map':
+					jsMapContent = content;
+					break;
+			}
+		});
+
+		result.emitErrors += emitOutput.diagnostics.length;
+		this.reportDiagnostics(emitOutput.diagnostics);
+		
+		let base: string;
+		let baseDeclarations: string;
+		if (file) {
+			base = file.gulp.base;
+			if (this.project.options.outDir) {
+				const baseRelative = path.relative(this.project.options.rootDir, base);
+				base = path.join(this.project.options.outDir, baseRelative);
+			}
+			baseDeclarations = base;
+			if (this.project.options.declarationDir) {
+				const baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
+				baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
+			}
+		} else {
+			const outFile = this.project.options.outFile || this.project.options.out;
+			base = jsFileName.substring(0, jsFileName.length - outFile.length);
+		}
+
+		if (jsContent !== undefined) {
+			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
+		}
+		if (dtsContent !== undefined) {
+			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
+		}
+
+		if (emitOutput.emitSkipped) {
+			result.emitSkipped = true;
+		}
 	}
 
 	private reportDiagnostics(diagnostics: ts.Diagnostic[]) {
@@ -173,7 +189,7 @@ export class FileCompiler implements ICompiler {
 		}
 		this.compilationResult.transpileErrors += diagnostics.length;
 		
-		this.project.output.writeJs(file.gulp.base, fileName, content, sourceMap, file);
+		this.project.output.writeJs(file.gulp.base, fileName, content, sourceMap, file.gulp.cwd);
 	}
 
 	inputFile(file: File) {
@@ -210,8 +226,9 @@ export class FileCompiler implements ICompiler {
 		mapString = mapString.substring(start.length);
 		
 		let map: RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
-		map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base)
-		map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
+		// TODO: Set paths correctly
+		// map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
+		// map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
 		
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		const [, extension] = utils.splitExtension(map.file); // js or jsx

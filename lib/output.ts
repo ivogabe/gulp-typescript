@@ -1,4 +1,5 @@
 import * as stream from 'stream';
+import * as path from 'path';
 import * as ts from 'typescript';
 import * as sourceMap from 'source-map';
 import * as gutil from 'gulp-util';
@@ -20,36 +21,38 @@ export class Output {
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
 
-	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, original: input.File) {
-		const appliedSourceMap = this.applySourceMap(sourceMapContent, original);
-		
+	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original?: input.File) {
 		const file = <VinylFile> new gutil.File({
 			path: fileName,
 			contents: new Buffer(content),
-			cwd: original.gulp.cwd,
+			cwd,
 			base
 		});
+		const appliedSourceMap = this.applySourceMap(sourceMapContent, original, file);
 		if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
 		this.streamJs.push(file);
 	}
 
-	writeDts(base: string, fileName: string, content: string, original: input.File) {
+	writeDts(base: string, fileName: string, content: string, cwd: string) {
 		const file = new gutil.File({
 			path: fileName,
 			contents: new Buffer(content),
-			cwd: original.gulp.cwd,
+			cwd,
 			base
 		});
 		this.streamDts.push(file);
 	}
 
-	private applySourceMap(sourceMapContent: string, original: input.File) {
-		if (!original.gulp.sourceMap) return;
-
+	private applySourceMap(sourceMapContent: string, original: input.File, output: VinylFile) {
 		const map = JSON.parse(sourceMapContent);
-		map.file = map.file.replace(/\\/g, '/');
+		const directory = path.dirname(output.path);
+		
+		// gulp-sourcemaps docs:
+		// paths in the generated source map (`file` and `sources`) are relative to `file.base` (e.g. use `file.relative`).
+		map.file = output.relative;
+		map.sources = map.sources.map(relativeToOutput);
+
 		delete map.sourceRoot;
-		map.sources = map.sources.map(path => path.replace(/\\/g, '/'));
 
 		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
 
@@ -57,6 +60,7 @@ export class Output {
 			? this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName))
 			: [original];
 
+		
 		for (const sourceFile of sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 
@@ -67,7 +71,7 @@ export class Output {
 			// since `generator.applySourceMap` has a really bad performance on big inputs.
 			if (inputMap.mappings !== '') {
 				const consumer = new sourceMap.SourceMapConsumer(inputMap);
-				generator.applySourceMap(consumer);
+				generator.applySourceMap(consumer, sourceFile.fileNameOriginal, sourceFile.gulp.base);
 			}
 
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
@@ -76,6 +80,11 @@ export class Output {
 			}
 		}
 		return generator.toString();
+
+		function relativeToOutput(fileName: string) {
+			const absolute = path.resolve(directory, fileName.replace(/\\/g, '/'));
+			return path.relative(output.base, absolute);
+		}
 	}
 
 	finish(result: reporter.CompilationResult) {
