@@ -89,10 +89,33 @@ export class Project {
 	}
 
 	src() {
-		let configPath = path.dirname(this.configFileName)
+		let configPath = path.dirname(this.configFileName);
+
 		let base: string;
 		if (this.options["rootDir"]) {
 			base = path.resolve(configPath, this.options["rootDir"]);
+		}
+
+		if ((this.typescript as tsApi.TypeScript).parseJsonConfigFileContent && (this.typescript as tsApi.TypeScript).sys) {
+			const content: any = {};
+			if (this.config.include) content.include = this.config.include;
+			if (this.config.exclude) content.exclude = this.config.exclude;
+			if (this.config.files) content.files = this.config.files;
+			if (this.options['allowJs']) content.compilerOptions = { allowJs: true };
+			const { fileNames, errors } = (this.typescript as tsApi.TypeScript).parseJsonConfigFileContent(
+				content,
+				(this.typescript as tsApi.TypeScript).sys,
+				this.projectDirectory);
+
+			for (const error of errors) {
+				console.log(error.messageText);
+			}
+			console.log({ fileNames });
+
+			if (base === undefined) base = utils.getCommonBasePathOfArray(fileNames.map(file => path.dirname(file)));
+
+			const vinylOptions = { base, allowEmpty: true };
+			return vfs.src(fileNames, vinylOptions);
 		}
 
 		if (!this.config.files) {
