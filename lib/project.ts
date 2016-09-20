@@ -110,7 +110,6 @@ export class Project {
 			for (const error of errors) {
 				console.log(error.messageText);
 			}
-			console.log({ fileNames });
 
 			if (base === undefined) base = utils.getCommonBasePathOfArray(fileNames.map(file => path.dirname(file)));
 
