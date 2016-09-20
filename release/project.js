@@ -38,6 +38,26 @@ var Project = (function () {
         if (this.options["rootDir"]) {
             base = path.resolve(configPath, this.options["rootDir"]);
         }
+        if (this.typescript.parseJsonConfigFileContent && this.typescript.sys) {
+            var content = {};
+            if (this.config.include)
+                content.include = this.config.include;
+            if (this.config.exclude)
+                content.exclude = this.config.exclude;
+            if (this.config.files)
+                content.files = this.config.files;
+            if (this.options['allowJs'])
+                content.compilerOptions = { allowJs: true };
+            var _a = this.typescript.parseJsonConfigFileContent(content, this.typescript.sys, this.projectDirectory), fileNames = _a.fileNames, errors = _a.errors;
+            for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
+                var error = errors_1[_i];
+                console.log(error.messageText);
+            }
+            if (base === undefined)
+                base = utils.getCommonBasePathOfArray(fileNames.map(function (file) { return path.dirname(file); }));
+            var vinylOptions_1 = { base: base, allowEmpty: true };
+            return vfs.src(fileNames, vinylOptions_1);
+        }
         if (!this.config.files) {
             var files_1 = [];
             //If neither 'files' nor 'include' option is defined,

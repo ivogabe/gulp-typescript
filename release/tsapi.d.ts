@@ -5,6 +5,8 @@ export interface TypeScript {
         options: ts.CompilerOptions;
         errors: ts.Diagnostic[];
     };
+    parseJsonConfigFileContent?: (json: any, host: any, basePath: string) => any;
+    sys?: any;
 }
 export interface TypeScript14 {
     createSourceFile(filename: string, content: string, target: ts.ScriptTarget, version: string): any;
