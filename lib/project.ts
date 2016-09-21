@@ -111,7 +111,9 @@ export class Project {
 				console.log(error.messageText);
 			}
 
-			if (base === undefined) base = utils.getCommonBasePathOfArray(fileNames.map(file => path.dirname(file)));
+			if (base === undefined) base = utils.getCommonBasePathOfArray(
+				fileNames.filter(file => file.substr(-5) !== ".d.ts")
+					.map(file => path.dirname(file)));
 
 			const vinylOptions = { base, allowEmpty: true };
 			return vfs.src(fileNames, vinylOptions);
