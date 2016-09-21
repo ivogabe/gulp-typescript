@@ -6,7 +6,8 @@ module.exports = function(newTS, lib, output, reporter) {
 	var tsProject = newTS.createProject('test/isolatedModules/tsconfig.json', {
 		typescript: lib
 	});
-	
+
+	reporter.outputSrcGlob(tsProject);
 	var tsResult = tsProject.src()
 		.pipe(plumber())
 		.pipe(sourcemaps.init())

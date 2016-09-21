@@ -88,6 +88,34 @@ export class Project {
 		this.output = new Output(this, outputJs, outputDts);
 	}
 
+	srcGlob() {
+		if (!this.config.files) {
+			let configPath = path.dirname(this.configFileName);
+			let files = ['**/*.ts'];
+
+			if (tsApi.isTS16OrNewer(this.typescript)) {
+				files.push('**/*.tsx');
+			}
+			if ((<tsApi.TSOptions18> this.options).allowJs) {
+				files.push('**/*.js');
+				files.push('**/*.jsx');
+			}
+
+			if (this.config.exclude instanceof Array) {
+				files = files.concat(
+					// Exclude files
+					this.config.exclude.map(file => '!' + file),
+					// Exclude directories
+					this.config.exclude.map(file => '!' + file + '/**')
+				);
+			}
+
+			return files;
+		} else {
+			return this.config.files;
+		}
+	}
+
 	src() {
 		let configPath = path.dirname(this.configFileName);
 

@@ -1,0 +1,6 @@
+**/*.ts
+**/*.tsx
+!excluded-file.ts
+!excluded-dir
+!excluded-file.ts/**
+!excluded-dir/**
