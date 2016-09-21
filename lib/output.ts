@@ -106,10 +106,13 @@ export class Output {
 						file.sourceMapOrigins = [file.original];
 					}
 					const [, jsExtension] = utils.splitExtension(file.sourceMap.file); // js or jsx
+					const [filePath, ] = utils.splitExtension(originalFileName);
+					const outputFileName = `${filePath}.${jsExtension}`;
+
 					// Fix the output filename in the source map, which must be relative
 					// to the source root or it won't work correctly in gulp-sourcemaps if
 					// there are more transformations down in the pipeline.
-					file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, originalFileName).replace(/\.ts$/, '.' + jsExtension);
+					file.sourceMap.file = path.relative(file.sourceMap.sourceRoot, outputFileName);
 				}
 
 				this.applySourceMaps(file);
