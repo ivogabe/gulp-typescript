@@ -5,7 +5,10 @@ export interface TypeScript {
         options: ts.CompilerOptions;
         errors: ts.Diagnostic[];
     };
-    parseJsonConfigFileContent?: (json: any, host: any, basePath: string) => any;
+    parseJsonConfigFileContent?: (json: any, host: any, basePath: string) => {
+        fileNames: string[];
+        errors: ts.Diagnostic[];
+    };
     sys?: any;
 }
 export interface TypeScript14 {

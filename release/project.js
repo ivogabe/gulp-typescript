@@ -54,7 +54,8 @@ var Project = (function () {
                 console.log(error.messageText);
             }
             if (base === undefined)
-                base = utils.getCommonBasePathOfArray(fileNames.map(function (file) { return path.dirname(file); }));
+                base = utils.getCommonBasePathOfArray(fileNames.filter(function (file) { return file.substr(-5) !== ".d.ts"; })
+                    .map(function (file) { return path.dirname(file); }));
             var vinylOptions_1 = { base: base, allowEmpty: true };
             return vfs.src(fileNames, vinylOptions_1);
         }
