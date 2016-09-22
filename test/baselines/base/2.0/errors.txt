@@ -8,9 +8,11 @@ TypeScript error: error TS2318: Cannot find global type 'RegExp'.
 TypeScript error: error TS2318: Cannot find global type 'String'.
 {
     "transpileErrors": 0,
+    "optionsErrors": 0,
     "syntaxErrors": 0,
     "globalErrors": 8,
     "semanticErrors": 0,
+    "declarationErrors": 0,
     "emitErrors": 0,
     "emitSkipped": false
 }

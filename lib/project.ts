@@ -16,6 +16,7 @@ interface PartialProject {
 
 	src?(this: Project): NodeJS.ReadWriteStream;
 
+	typescript?: typeof ts;
 	projectDirectory?: string;
 	config?: TsConfig;
 	options?: ts.CompilerOptions;
@@ -25,6 +26,7 @@ export interface Project {
 
 	src(this: Project): NodeJS.ReadWriteStream;
 
+	readonly typescript?: typeof ts;
 	readonly projectDirectory: string;
 	readonly config: TsConfig;
 	readonly options: ts.CompilerOptions;
@@ -75,6 +77,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 	const singleOutput = options.out !== undefined || options.outFile !== undefined;
 
 	project.src = src;
+	project.typescript = typescript;
 	project.projectDirectory = projectDirectory;
 	project.config = config;
 	project.options = options;
@@ -94,11 +97,9 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 }
 
 function src(this: Project) {
-	let configPath = path.dirname(this.configFileName);
-
 	let base: string;
 	if (this.options["rootDir"]) {
-		base = path.resolve(configPath, this.options["rootDir"]);
+		base = path.resolve(this.projectDirectory, this.options["rootDir"]);
 	}
 
 	const content: any = {};
