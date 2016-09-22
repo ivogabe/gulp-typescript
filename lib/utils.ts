@@ -59,7 +59,7 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 	err.name = 'TypeScript error';
 	err.diagnostic = info;
 
-	const codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+	const codeAndMessageText = typescript.DiagnosticCategory[info.category].toLowerCase() +
 		' TS' +
 		info.code +
 		': ' +

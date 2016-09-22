@@ -48,7 +48,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 	let running = false;
 
 	if (options.isolatedModules) {
-		options.newLine = ts.NewLineKind.LineFeed;
+		options.newLine = typescript.NewLineKind.LineFeed;
 		options.sourceMap = false;
 		options.declaration = false;
 		options.inlineSourceMap = true;

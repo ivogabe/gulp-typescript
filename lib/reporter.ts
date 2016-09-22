@@ -90,12 +90,13 @@ export function defaultReporter(): Reporter {
 }
 
 export function longReporter(): Reporter {
+	const typescript: typeof ts = require('typescript');
 	return {
 		error: (error: TypeScriptError) => {
 			if (error.tsFile) {
 				console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.red(error.fullFilename
 					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
-					+ 'error TS' + error.diagnostic.code + ' ' + ts.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
+					+ 'error TS' + error.diagnostic.code + ' ' + typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
 			} else {
 				console.error(error.message);
 			}
@@ -104,11 +105,12 @@ export function longReporter(): Reporter {
 	}
 }
 export function fullReporter(fullFilename: boolean = false): Reporter {
+	const typescript: typeof ts = require('typescript');
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.error('[' + gutil.colors.gray('gulp-typescript') + '] '
 				+ gutil.colors.bgRed(error.diagnostic.code + '')
-				+ ' ' + gutil.colors.red(ts.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
+				+ ' ' + gutil.colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 
 			if (error.tsFile) {

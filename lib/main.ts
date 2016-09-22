@@ -37,8 +37,19 @@ function compile(param?: any, theReporter?: _reporter.Reporter): compile.Compile
 	return proj(theReporter);
 }
 
+function getTypeScript(typescript: typeof ts) {
+	if (typescript) return typescript;
+	try {
+		return require('typescript');
+	} catch (e) {
+		deprecate("TypeScript not installed",
+			"install with `npm install typescript --save-dev`",
+			"As of gulp-typescript 3.0, TypeScript isn't bundled with gulp-typescript any more.\nInstall the latest stable version with `npm install typescript --save-dev`\nor a nightly with `npm install typescript@next --save-dev`");
+	}
+}
+
 function getCompilerOptions(settings: compile.Settings, projectPath: string, configFileName: string): ts.CompilerOptions {
-	var typescript = settings.typescript || ts;
+	let typescript = getTypeScript(settings.typescript);
 	
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
@@ -138,7 +149,7 @@ module compile {
 				projectDirectory = path.dirname(tsConfigFileName);
 				// Load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
 				let tsConfigText = fs.readFileSync(tsConfigFileName).toString();
-				const typescript = (settings && settings.typescript) || ts;
+				const typescript = getTypeScript(settings && settings.typescript);
 				const tsConfig = typescript.parseConfigFileTextToJson(tsConfigFileName, tsConfigText);
 				tsConfigContent = tsConfig.config || {};
 				if (tsConfig.error) {
@@ -161,7 +172,7 @@ module compile {
 			}
 		}
 
-		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), settings.typescript || ts);
+		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript));
 
 		return project;
 	}
