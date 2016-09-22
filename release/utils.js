@@ -1,7 +1,5 @@
 "use strict";
 var path = require('path');
-var ts = require('typescript');
-var tsApi = require('./tsapi');
 var gutil = require('gulp-util');
 function normalizePath(pathString) {
     return path.normalize(pathString).toLowerCase();
@@ -53,16 +51,16 @@ function getError(info, typescript, file) {
     var err = new Error();
     err.name = 'TypeScript error';
     err.diagnostic = info;
-    var codeAndMessageText = ts.DiagnosticCategory[info.category].toLowerCase() +
+    var codeAndMessageText = typescript.DiagnosticCategory[info.category].toLowerCase() +
         ' TS' +
         info.code +
         ': ' +
-        tsApi.flattenDiagnosticMessageText(typescript, info.messageText);
+        typescript.flattenDiagnosticMessageText(info.messageText, '\n');
     if (!info.file) {
         err.message = codeAndMessageText;
         return err;
     }
-    var fileName = tsApi.getFileName(info.file);
+    var fileName = info.file.fileName;
     if (file) {
         err.tsFile = file.ts;
         err.fullFilename = file.fileNameOriginal;
@@ -76,11 +74,10 @@ function getError(info, typescript, file) {
         }
     }
     else {
-        fileName = tsApi.getFileName(info.file);
-        err.fullFilename = fileName;
+        err.fullFilename = info.file.fileName;
     }
-    var startPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start);
-    var endPos = tsApi.getLineAndCharacterOfPosition(typescript, info.file, info.start + info.length);
+    var startPos = typescript.getLineAndCharacterOfPosition(info.file, info.start);
+    var endPos = typescript.getLineAndCharacterOfPosition(info.file, info.start + info.length);
     err.startPosition = {
         position: info.start,
         line: startPos.line,
@@ -91,7 +88,7 @@ function getError(info, typescript, file) {
         line: endPos.line,
         character: endPos.character
     };
-    err.message = gutil.colors.red(fileName + '(' + startPos.line + ',' + startPos.character + '): ').toString()
+    err.message = gutil.colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
         + codeAndMessageText;
     return err;
 }
