@@ -3,6 +3,7 @@
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as gutil from 'gulp-util';
 import * as _project from './project';
 import * as utils from './utils';
 import * as _reporter from './reporter';
@@ -12,14 +13,24 @@ function compile(): compile.CompileStream;
 function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(param?: any, theReporter?: _reporter.Reporter): compile.CompileStream {
-	if (arguments.length >= 2) {
-		// Show deprecation message.
-		// Filters are removed, reporter is now the second argument.
+	if (arguments.length >= 3) {
+		deprecate("Reporter are now passed as the second argument",
+			"remove the second argument",
+			"Filters have been removed as of gulp-typescript 3.0.\nThe reporter is now passed as the second argument instead of the third argument.");
 	}
 
 	let proj: _project.Project;
 	if (typeof param === "function") {
 		proj = param;
+		if (arguments.length >= 2) {
+			deprecate("ts(tsProject, ...) has been deprecated",
+				"use .pipe(tsProject(reporter)) instead",
+				"As of gulp-typescript 3.0, .pipe(ts(tsProject, ...)) should be written as .pipe(tsProject(reporter)).");
+		} else {
+			deprecate("ts(tsProject) has been deprecated",
+				"use .pipe(tsProject(reporter)) instead",
+				"As of gulp-typescript 3.0, .pipe(ts(tsProject)) should be written as .pipe(tsProject()).");
+		}
 	} else {
 		proj = compile.createProject(param || {});
 	}
@@ -31,6 +42,17 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 	
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
+	}
+
+	if (settings.noExternalResolve !== undefined) {
+		deprecate("noExternalResolve is deprecated",
+			"use noResolve instead",
+			"The non-standard option noExternalResolve has been removed as of gulp-typescript 3.0.\nUse noResolve instead.");
+	}
+	if (settings.sortOutput !== undefined) {
+		deprecate("sortOutput is deprecated",
+			"your project might work without it",
+			"The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
 	}
 	
 	// Copy settings and remove several options
@@ -145,8 +167,20 @@ module compile {
 	}
 
 	export function filter(...args: any[]) {
-		// TODO: Show deprecation message
+		deprecate('ts.filter() is deprecated',
+			'soon you can use tsProject.resolve()',
+			'Filters have been removed as of gulp-typescript 3.0.\nSoon tsProject.resolve() will be available as an alternative.\nSee https://github.com/ivogabe/gulp-typescript/issues/190.');
 	}
+}
+
+function deprecate(title: string, alternative: string, description: string) {
+	console.log(
+		gutil.colors.red('gulp-typescript').toString() +
+		gutil.colors.gray(': ') +
+		title +
+		gutil.colors.gray(' - ') +
+		alternative);
+	if (description) console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
 }
 
 export = compile;
