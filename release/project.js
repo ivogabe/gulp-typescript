@@ -38,14 +38,47 @@ var Project = (function () {
         if (this.options["rootDir"]) {
             base = path.resolve(configPath, this.options["rootDir"]);
         }
-        if (!this.config.files) {
-            var files_1 = [path.join(configPath, '**/*.ts')];
-            if (tsApi.isTS16OrNewer(this.typescript)) {
-                files_1.push(path.join(configPath, '**/*.tsx'));
+        if (this.typescript.parseJsonConfigFileContent && this.typescript.sys) {
+            var content = {};
+            if (this.config.include)
+                content.include = this.config.include;
+            if (this.config.exclude)
+                content.exclude = this.config.exclude;
+            if (this.config.files)
+                content.files = this.config.files;
+            if (this.options['allowJs'])
+                content.compilerOptions = { allowJs: true };
+            var _a = this.typescript.parseJsonConfigFileContent(content, this.typescript.sys, this.projectDirectory), fileNames = _a.fileNames, errors = _a.errors;
+            for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
+                var error = errors_1[_i];
+                console.log(error.messageText);
             }
-            if (this.options.allowJs) {
-                files_1.push(path.join(configPath, '**/*.js'));
-                files_1.push(path.join(configPath, '**/*.jsx'));
+            if (base === undefined)
+                base = utils.getCommonBasePathOfArray(fileNames.filter(function (file) { return file.substr(-5) !== ".d.ts"; })
+                    .map(function (file) { return path.dirname(file); }));
+            var vinylOptions_1 = { base: base, allowEmpty: true };
+            return vfs.src(fileNames, vinylOptions_1);
+        }
+        if (!this.config.files) {
+            var files_1 = [];
+            //If neither 'files' nor 'include' option is defined,
+            //take all .ts files (or .ts, .js, .jsx if required) by default.
+            if (!this.config.include) {
+                files_1.push(path.join(configPath, '**/*.ts'));
+                if (tsApi.isTS16OrNewer(this.typescript)) {
+                    files_1.push(path.join(configPath, '**/*.tsx'));
+                }
+                if (this.options.allowJs) {
+                    files_1.push(path.join(configPath, '**/*.js'));
+                    files_1.push(path.join(configPath, '**/*.jsx'));
+                }
+            }
+            else if (this.config.include instanceof Array) {
+                files_1 = files_1.concat(
+                // Include files
+                this.config.include.map(function (file) { return path.resolve(configPath, file); }), 
+                // Include directories
+                this.config.include.map(function (file) { return path.resolve(configPath, file) + '/**'; }));
             }
             if (this.config.exclude instanceof Array) {
                 files_1 = files_1.concat(

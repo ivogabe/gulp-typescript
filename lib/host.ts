@@ -83,7 +83,7 @@ export class Host implements ts.CompilerHost {
 
 		return this.fallback.getSourceFile(fileName, languageVersion, onError);
 	}
-	
+
 	realpath = (path: string) => {
 		return this.fallback.realpath(path);
 	}

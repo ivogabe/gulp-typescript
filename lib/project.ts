@@ -94,79 +94,33 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 }
 
 function src(this: Project) {
-	let configPath = this.projectDirectory;
+	let configPath = path.dirname(this.configFileName);
+
 	let base: string;
-	if (this.options.rootDir) {
-		base = path.resolve(configPath, this.options.rootDir);
+	if (this.options["rootDir"]) {
+		base = path.resolve(configPath, this.options["rootDir"]);
 	}
 
-	if (!this.config.files) {
-		let files = [path.join(configPath, '**/*.ts'), path.join(configPath, '**/*.tsx')];
+	const content: any = {};
+	if (this.config.include) content.include = this.config.include;
+	if (this.config.exclude) content.exclude = this.config.exclude;
+	if (this.config.files) content.files = this.config.files;
+	if (this.options['allowJs']) content.compilerOptions = { allowJs: true };
+	const { fileNames, errors } = this.typescript.parseJsonConfigFileContent(
+		content,
+		this.typescript.sys,
+		this.projectDirectory);
 
-		if (this.options.allowJs) {
-			files.push(path.join(configPath, '**/*.js'));
-			files.push(path.join(configPath, '**/*.jsx'));
-		}
-
-		if (this.config.exclude instanceof Array) {
-			files = files.concat(
-				// Exclude files
-				this.config.exclude.map(file => '!' + path.resolve(configPath, file)),
-				// Exclude directories
-				this.config.exclude.map(file => '!' + path.resolve(configPath, file) + '/**')
-			);
-		}
-		if (base !== undefined) {
-			return vfs.src(files, { base });
-		}
-		const srcStream = vfs.src(files);
-		const sources = new stream.Readable({ objectMode: true });
-		sources._read = () => {};
-		const resolvedFiles: gutil.File[] = [];
-		srcStream.on('data', (file: gutil.File) => {
-			resolvedFiles.push(file);
-		});
-		srcStream.on('finish', () => {
-			const sourceFiles = resolvedFiles
-				.filter(file => file.path.substr(-5) !== ".d.ts");
-			const base = utils.getCommonBasePathOfArray(
-				sourceFiles.map(file => path.dirname(file.path))
-			);
-			for (const file of sourceFiles) {
-				file.base = base;
-				sources.push(file);
-			}
-			sources.emit('finish');
-		});
-		return srcStream;
+	for (const error of errors) {
+		console.log(error.messageText);
 	}
-	const files = this.config.files.map(file => path.resolve(configPath, file));
-	if (base === undefined) base = utils.getCommonBasePathOfArray(files.map(file => path.dirname(file)));
 
-	const resolvedFiles: string[] = [];
-	const checkMissingFiles = through2.obj(function (file: gutil.File, enc, callback) {
-		this.push(file);
-		resolvedFiles.push(utils.normalizePath(file.path));
-		callback();
-	});
-	checkMissingFiles.on('finish', () => {
-		for (const fileName of this.config.files) {
-			const fullPaths = [
-				utils.normalizePath(path.join(configPath, fileName)),
-				utils.normalizePath(path.join(process.cwd(), configPath, fileName))
-			];
-
-			if (resolvedFiles.indexOf(fullPaths[0]) === -1 && resolvedFiles.indexOf(fullPaths[1]) === -1) {
-				const error = new Error(`error TS6053: File '${ fileName }' not found.`);
-				console.error(error.message);
-				checkMissingFiles.emit('error', error);
-			}
-		}
-	});
+	if (base === undefined) base = utils.getCommonBasePathOfArray(
+		fileNames.filter(file => file.substr(-5) !== ".d.ts")
+			.map(file => path.dirname(file)));
 
 	const vinylOptions = { base, allowEmpty: true };
-	return vfs.src(this.config.files.map(file => path.resolve(configPath, file)), vinylOptions)
-		.pipe(checkMissingFiles);
+	return vfs.src(fileNames, vinylOptions);
 }
 
 export interface ICompileStream extends NodeJS.ReadWriteStream {
@@ -208,7 +162,13 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 	}
 
 	end(chunk?, encoding?, callback?) {
-		this._write(chunk, encoding, callback);
+		if (typeof chunk === 'function') {
+			this._write(null, null, chunk);
+		} else if (typeof encoding === 'function') {
+			this._write(chunk, null, encoding);
+		} else {
+			this._write(chunk, encoding, callback);
+		}
 		this.project.compiler.inputDone();
 	}
 
