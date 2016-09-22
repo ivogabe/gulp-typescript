@@ -45,6 +45,7 @@ function getTypeScript(typescript: typeof ts) {
 		deprecate("TypeScript not installed",
 			"install with `npm install typescript --save-dev`",
 			"As of gulp-typescript 3.0, TypeScript isn't bundled with gulp-typescript any more.\nInstall the latest stable version with `npm install typescript --save-dev`\nor a nightly with `npm install typescript@next --save-dev`");
+		throw new Error("TypeScript not installed");
 	}
 }
 
