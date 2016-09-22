@@ -1,1 +1,0 @@
-{"version":3,"sources":["other-3.ts"],"names":["Hello","Hello.constructor"],"mappings":";IAAA,IAAa,KAAK;QAAlBA,SAAaA,KAAKA;QAElBC,CAACA;QAADD,YAACA;IAADA,CAFA,AAECA,IAAA;IAFY,aAAK,GAAL,KAEZ,CAAA","file":"other-3.js","sourcesContent":["export class Hello {\n\tvalue: string;\n}"],"sourceRoot":"../../../../basic/"}
