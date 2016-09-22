@@ -96,7 +96,7 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
-gulp.task('typecheck', ['typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', 'typecheck-dev']);
+gulp.task('typecheck', [/* 'typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', */ 'typecheck-dev']);
 
 // Tests
 
