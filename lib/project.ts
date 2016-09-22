@@ -169,7 +169,7 @@ function src(this: Project) {
 		.pipe(checkMissingFiles);
 }
 
-export interface ICompileStream extends stream.Readable {
+export interface ICompileStream extends NodeJS.ReadWriteStream {
 	js: stream.Readable;
 	dts: stream.Readable;
 }
