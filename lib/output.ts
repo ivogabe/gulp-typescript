@@ -76,7 +76,9 @@ export class Output {
 
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
 			for (let i = 0; i < inputMap.sources.length; i++) {
-				generator.setSourceContent(inputMap.sources[i], inputMap.sourcesContent[i]);
+				const absolute = path.resolve(sourceFile.gulp.base, inputMap.sources[i]);
+				const relative = path.relative(directory, absolute);
+				generator.setSourceContent(relative, inputMap.sourcesContent[i]);
 			}
 		}
 		return generator.toString();
