@@ -10,15 +10,20 @@ import * as project from './project';
 import { VinylFile, RawSourceMap } from './types';
 
 export class Output {
-	constructor(_project: project.ProjectInfo, streamJs: stream.Readable, streamDts: stream.Readable) {
+	constructor(_project: project.ProjectInfo, streamFull: stream.Readable, streamJs: stream.Readable, streamDts: stream.Readable) {
 		this.project = _project;
+		this.streamFull = streamFull;
 		this.streamJs = streamJs;
 		this.streamDts = streamDts;
 	}
 
 	project: project.ProjectInfo;
 	result: reporter.CompilationResult;
+	// .js and .d.ts files
+	streamFull: stream.Readable;
+	// .js files
 	streamJs: stream.Readable;
+	// .d.ts files
 	streamDts: stream.Readable;
 
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
@@ -30,6 +35,7 @@ export class Output {
 		});
 		const appliedSourceMap = this.applySourceMap(sourceMapContent, original, file);
 		if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
+		this.streamFull.push(file);
 		this.streamJs.push(file);
 	}
 
@@ -40,6 +46,7 @@ export class Output {
 			cwd,
 			base
 		});
+		this.streamFull.push(file);
 		this.streamDts.push(file);
 	}
 
@@ -93,8 +100,10 @@ export class Output {
 		this.result = result;
 		if (this.project.reporter.finish) this.project.reporter.finish(result);
 
+		this.streamFull.emit('finish');
 		this.streamJs.emit('finish');
 		this.streamDts.emit('finish');
+		this.streamFull.push(null);
 		this.streamJs.push(null);
 		this.streamDts.push(null);
 	}
@@ -114,6 +123,6 @@ export class Output {
 		// call reporter callback
 		if (this.project.reporter.error) this.project.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
 		// & emit the error on the stream.
-		this.streamJs.emit('error', error);
+		this.streamFull.emit('error', error);
 	}
 }

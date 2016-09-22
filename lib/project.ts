@@ -62,7 +62,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 		compiler.prepare(projectInfo);
 
 		const stream = new CompileStream(projectInfo);
-		projectInfo.output = new Output(projectInfo, stream.js, stream.dts);
+		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts);
 		projectInfo.reporter = reporter || defaultReporter;
 
 		stream.on('finish', () => {
@@ -179,9 +179,6 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 
 		this.project = project;
 
-		// Backwards compatibility
-		this.js = this;
-
 		// Prevent "Unhandled stream error in pipe" when a compilation error occurs.
 		this.on('error', () => {});
 	}
@@ -215,7 +212,7 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 		this.project.compiler.inputDone();
 	}
 
-	js: stream.Readable;
+	js: stream.Readable = new CompileOutputStream();
 	dts: stream.Readable = new CompileOutputStream();
 }
 class CompileOutputStream extends stream.Readable {
