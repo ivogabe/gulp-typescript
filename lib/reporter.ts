@@ -1,5 +1,4 @@
 import * as ts from 'typescript';
-import * as tsApi from './tsapi';
 import * as gutil from 'gulp-util';
 import { VinylFile } from './types';
 
@@ -27,9 +26,11 @@ export interface CompilationResult {
 	 * Only used when using isolatedModules.
 	 */
 	transpileErrors: number;
+	optionsErrors: number;
 	syntaxErrors: number;
 	globalErrors: number;
 	semanticErrors: number;
+	declarationErrors: number;
 	emitErrors: number;
 
 	emitSkipped: boolean;
@@ -37,9 +38,11 @@ export interface CompilationResult {
 export function emptyCompilationResult(): CompilationResult {
 	return {
 		transpileErrors: 0,
+		optionsErrors: 0,
 		syntaxErrors: 0,
 		globalErrors: 0,
 		semanticErrors: 0,
+		declarationErrors: 0,
 		emitErrors: 0,
 		emitSkipped: false
 	}
@@ -60,9 +63,11 @@ function defaultFinishHandler(results: CompilationResult) {
 	};
 
 	showErrorCount(results.transpileErrors, '');
+	showErrorCount(results.optionsErrors, 'options');
 	showErrorCount(results.syntaxErrors, 'syntax');
 	showErrorCount(results.globalErrors, 'global');
 	showErrorCount(results.semanticErrors, 'semantic');
+	showErrorCount(results.declarationErrors, 'declaration');
 	showErrorCount(results.emitErrors, 'emit');
 
 	if (results.emitSkipped) {
@@ -84,27 +89,14 @@ export function defaultReporter(): Reporter {
 	};
 }
 
-function flattenDiagnosticsVerbose(message: string | tsApi.DiagnosticMessageChain15, index = 0): string {
-	if (typeof message === 'undefined') {
-		return '';
-	} else if (typeof message === 'string') {
-		return message;
-	} else {
-		let result: string;
-		if (index === 0) {
-			result = message.messageText;
-		} else {
-			result = '\n> TS' + message.code + ' ' + message.messageText;
-		}
-		return result + flattenDiagnosticsVerbose(message.next, index + 1);
-	}
-}
-
 export function longReporter(): Reporter {
+	const typescript: typeof ts = require('typescript');
 	return {
 		error: (error: TypeScriptError) => {
 			if (error.tsFile) {
-				console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.red(error.fullFilename + '(' + error.startPosition.line + ',' + error.startPosition.character + '): ') + 'error TS' + error.diagnostic.code + ' ' + flattenDiagnosticsVerbose(error.diagnostic.messageText));
+				console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.red(error.fullFilename
+					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
+					+ 'error TS' + error.diagnostic.code + ' ' + typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
 			} else {
 				console.error(error.message);
 			}
@@ -113,11 +105,12 @@ export function longReporter(): Reporter {
 	}
 }
 export function fullReporter(fullFilename: boolean = false): Reporter {
+	const typescript: typeof ts = require('typescript');
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.error('[' + gutil.colors.gray('gulp-typescript') + '] '
 				+ gutil.colors.bgRed(error.diagnostic.code + '')
-				+ ' ' + gutil.colors.red(flattenDiagnosticsVerbose(error.diagnostic.messageText))
+				+ ' ' + gutil.colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 
 			if (error.tsFile) {

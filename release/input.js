@@ -1,6 +1,5 @@
 "use strict";
 var path = require('path');
-var tsApi = require('./tsapi');
 var utils = require('./utils');
 (function (FileChangeState) {
     FileChangeState[FileChangeState["New"] = 0] = "New";
@@ -173,7 +172,7 @@ var FileCache = (function () {
                 return;
             }
         }
-        file.ts = tsApi.createSourceFile(this.typescript, file.fileNameOriginal, file.content, this.options.target, this.version + '');
+        file.ts = this.typescript.createSourceFile(file.fileNameOriginal, file.content, this.options.target);
     };
     FileCache.prototype.getFile = function (name) {
         return this.current.getFile(name);

@@ -22,9 +22,11 @@ export interface CompilationResult {
      * Only used when using isolatedModules.
      */
     transpileErrors: number;
+    optionsErrors: number;
     syntaxErrors: number;
     globalErrors: number;
     semanticErrors: number;
+    declarationErrors: number;
     emitErrors: number;
     emitSkipped: boolean;
 }

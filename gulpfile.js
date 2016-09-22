@@ -57,7 +57,7 @@ gulp.task('clean-release', function(cb) {
 // Compile sources
 gulp.task('scripts', ['clean'], function() {
 	var tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
-		.pipe(ts(tsProject));
+		.pipe(tsProject());
 
 	return mergeStream(tsResult.js, tsResult.dts)
 		.pipe(gulp.dest(paths.releaseBeta));
@@ -96,7 +96,7 @@ gulp.task('typecheck-dev', function() {
 	])).pipe(ts(tsOptions));
 });
 
-gulp.task('typecheck', ['typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', 'typecheck-dev']);
+gulp.task('typecheck', [/* 'typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', */ 'typecheck-dev']);
 
 // Tests
 
@@ -105,12 +105,12 @@ function runTest(name, callback) {
 	var newTS = require('./release-2/main');
 	// We run every test on multiple typescript versions:
 	var libs = [
-		['1.8', undefined],
-		['dev', require(tsVersions.dev)],
-		['1.4', require(tsVersions.release14)],
+		['2.0', undefined],
+		['dev', require(tsVersions.dev)]
+		/* ['1.4', require(tsVersions.release14)],
 		['1.5', require(tsVersions.release15)],
 		['1.6', require(tsVersions.release16)],
-		['1.7', require(tsVersions.release17)]
+		['1.7', require(tsVersions.release17)] */
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 

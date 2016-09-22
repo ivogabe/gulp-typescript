@@ -1,6 +1,3 @@
-import { Stats } from 'fs';
-import { Readable } from 'stream';
-
 export interface TsConfig {
 	files?: string[];
 	include?: string[];

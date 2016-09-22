@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
 		"declaration": true,
-		"module": "amd"
+		"module": "amd",
+		"outDir": "js",
+		"declarationDir": "dts"
 	},
 	"files": [
 		"test-3.ts",

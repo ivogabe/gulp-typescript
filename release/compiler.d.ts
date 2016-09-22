@@ -1,47 +1,34 @@
 import * as ts from 'typescript';
-import { RawSourceMap } from './types';
 import { File } from './input';
 import { Host } from './host';
-import { Project } from './project';
+import { ProjectInfo } from './project';
 export interface ICompiler {
-    prepare(_project: Project): void;
-    inputFile(file: File): any;
-    inputDone(): any;
-    /**
-     * Corrects the paths in the sourcemap.
-     * Returns true when the file is located
-     * under the base path.
-     */
-    correctSourceMap(map: RawSourceMap): boolean;
+    prepare(project: ProjectInfo): void;
+    inputFile(file: File): void;
+    inputDone(): void;
 }
 /**
  * Compiles a whole project, with full type checking
  */
 export declare class ProjectCompiler implements ICompiler {
     host: Host;
-    project: Project;
+    project: ProjectInfo;
     program: ts.Program;
-    prepare(_project: Project): void;
+    prepare(project: ProjectInfo): void;
     inputFile(file: File): void;
     inputDone(): void;
-    private _commonBaseDiff;
-    /**
-     * Calculates the difference between the common base directory calculated based on the base paths of the input files
-     * and the common source directory calculated by TypeScript.
-     */
-    private commonBaseDiff;
-    correctSourceMap(map: RawSourceMap): boolean;
+    private emitFile(result, currentDirectory, file?);
+    private reportDiagnostics(diagnostics);
     private removeSourceMapComment(content);
 }
 export declare class FileCompiler implements ICompiler {
     host: Host;
-    project: Project;
-    program: ts.Program;
-    private errorsPerFile;
-    private previousErrorsPerFile;
+    project: ProjectInfo;
+    private output;
+    private previousOutput;
     private compilationResult;
-    prepare(_project: Project): void;
+    prepare(project: ProjectInfo): void;
+    private write(file, fileName, diagnostics, content, sourceMap);
     inputFile(file: File): void;
     inputDone(): void;
-    correctSourceMap(map: RawSourceMap): boolean;
 }

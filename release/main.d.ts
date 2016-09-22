@@ -1,15 +1,11 @@
+/// <reference path="../typings/tsd.d.ts" />
 import * as ts from 'typescript';
-import * as stream from 'stream';
-import * as project from './project';
+import * as _project from './project';
 import * as _reporter from './reporter';
 declare function compile(): compile.CompileStream;
-declare function compile(proj: project.Project, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
-declare function compile(settings: compile.Settings, filters?: compile.FilterSettings, theReporter?: _reporter.Reporter): compile.CompileStream;
+declare function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
+declare function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
 declare module compile {
-    interface CompileStream extends stream.Readable {
-        js: stream.Readable;
-        dts: stream.Readable;
-    }
     interface Settings {
         out?: string;
         outFile?: string;
@@ -40,13 +36,11 @@ declare module compile {
         rootDir?: string;
         sourceRoot?: string;
     }
-    interface FilterSettings {
-        referencedFrom: string[];
-    }
-    export import Project = project.Project;
+    type Project = _project.Project;
+    type CompileStream = _project.ICompileStream;
     export import reporter = _reporter;
     function createProject(settings?: Settings): any;
     function createProject(tsConfigFileName: string, settings?: Settings): any;
-    function filter(project: Project, filters: FilterSettings): NodeJS.ReadWriteStream;
+    function filter(...args: any[]): void;
 }
 export = compile;

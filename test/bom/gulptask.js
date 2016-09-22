@@ -2,10 +2,10 @@ var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 
 module.exports = function(newTS, lib, output, reporter) {
-	var tsProject = newTS.createProject('test/bom/tsconfig.json');
+	var tsProject = newTS.createProject('test/bom/tsconfig.json', { typescript: lib });
 	
 	var tsResult = tsProject.src()
-		.pipe(newTS(tsProject, undefined, reporter));
+		.pipe(tsProject(reporter));
 
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js

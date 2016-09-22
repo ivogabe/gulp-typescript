@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
 import * as path from 'path';
-import * as tsApi from './tsapi';
 import * as utils from './utils';
 import { VinylFile } from './types';
 
@@ -192,7 +191,7 @@ export class FileCache {
 				return;
 			}
 		}
-		file.ts = tsApi.createSourceFile(this.typescript, file.fileNameOriginal, file.content, this.options.target, this.version + '')
+		file.ts = this.typescript.createSourceFile(file.fileNameOriginal, file.content, this.options.target);
 	}
 
 	getFile(name: string) {

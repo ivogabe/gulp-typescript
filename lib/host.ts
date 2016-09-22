@@ -1,14 +1,10 @@
 import * as ts from 'typescript';
-import * as tsApi from './tsapi';
-import { Project } from './project';
-import { File, FileCache } from './input';
+import { FileCache } from './input';
 import * as utils from './utils';
-import * as fs from 'fs';
-import * as path from 'path';
 
-const libDirectory = '__lib/';
 export class Host implements ts.CompilerHost {
-	static libDefault: utils.Map<ts.SourceFile> = {};
+	// TODO: Cache lib.d.ts between compilations. Old code:
+	/* static libDefault: utils.Map<ts.SourceFile> = {};
 	static getLibDefault(typescript: typeof ts, libFileName: string, originalFileName: string) {
 		let fileName: string;
 		for (const i in require.cache) {
@@ -28,34 +24,20 @@ export class Host implements ts.CompilerHost {
 
 		const content = fs.readFileSync(fileName).toString('utf8');
 		return this.libDefault[fileName] = tsApi.createSourceFile(typescript, originalFileName, content, typescript.ScriptTarget.ES3); // Will also work for ES5 & 6
-	}
+	} */
 
 	typescript: typeof ts;
+	fallback: ts.CompilerHost;
 
 	currentDirectory: string;
-	private externalResolve: boolean;
-	private libFileName: string;
 	input: FileCache;
-	output: utils.Map<string>;
 
-	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, externalResolve: boolean, libFileName: string) {
+	constructor(typescript: typeof ts, currentDirectory: string, input: FileCache, options: ts.CompilerOptions) {
 		this.typescript = typescript;
+		this.fallback = typescript.createCompilerHost(options);
 
 		this.currentDirectory = currentDirectory;
 		this.input = input;
-
-		this.externalResolve = externalResolve;
-		this.libFileName = libFileName;
-		
-		const fallback = typescript.createCompilerHost({});
-		this.realpath = fallback['realpath'];
-		this.getDirectories = fallback['getDirectories'];
-
-		this.reset();
-	}
-
-	private reset() {
-		this.output = {};
 	}
 
 	getNewLine() {
@@ -71,90 +53,42 @@ export class Host implements ts.CompilerHost {
 	getCanonicalFileName(filename: string) {
 		return utils.normalizePath(filename);
 	}
-	getDefaultLibFilename() {
-		return '__lib.d.ts';
-	}
-	getDefaultLibFileName() {
-		return '__lib.d.ts';
+	getDefaultLibFileName(options: ts.CompilerOptions) {
+		return this.fallback.getDefaultLibFileName(options);
 	}
 	getDefaultLibLocation() {
-		return libDirectory;
+		return this.fallback.getDefaultLibLocation();
 	}
 
-	writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {
-		this.output[fileName] = data;
-	}
+	writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) => {}
 
-	fileExists(fileName: string) {
-		if (fileName === '__lib.d.ts') {
-			return true;
-		}
-
+	fileExists = (fileName: string) => {
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return true;
 
-		if (this.externalResolve) {
-			try {
-				const stat = fs.statSync(fileName);
-				if (!stat) return false;
-				return stat.isFile();
-			} catch (ex) {
-
-			}
-		}
-		return false;
+		return this.fallback.fileExists(fileName);
 	}
 
-	readFile(fileName: string) {
-		const normalizedFileName = utils.normalizePath(fileName);
-
+	readFile = (fileName: string) => {
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return sourceFile.content;
 
-		if (this.externalResolve) {
-			// Read the whole file (and cache contents) to prevent race conditions.
-			let text: string;
-			try {
-				text = fs.readFileSync(fileName).toString('utf8');
-			} catch (ex) {
-				return undefined;
-			}
-			return text;
-		}
-		return undefined;
+		return this.fallback.readFile(fileName);
 	}
 
 	getSourceFile = (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile => {
-		if (fileName === '__lib.d.ts') {
-			return Host.getLibDefault(this.typescript, this.libFileName, fileName);
-		}
-		if (fileName.substring(0, libDirectory.length) === libDirectory) {
-			try {
-				return Host.getLibDefault(this.typescript, fileName.substring(libDirectory.length), fileName);
-			} catch (e) {}
-			try {
-				return Host.getLibDefault(this.typescript, 'lib.' + fileName.substring(libDirectory.length), fileName);
-			} catch (e) {}
-			return undefined;
-		}
-
+		// TODO: Cache lib.d.ts files between compilations
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return sourceFile.ts;
 
-		if (this.externalResolve) {
-			let text: string;
-			try {
-				text = fs.readFileSync(fileName).toString('utf8');
-			} catch (ex) {
-				return undefined;
-			}
-			this.input.addContent(fileName, text);
-
-			let sourceFile = this.input.getFile(fileName);
-			if (sourceFile) return sourceFile.ts;
-		}
+		return this.fallback.getSourceFile(fileName, languageVersion, onError);
 	}
-	
-	realpath: any;
-	getDirectories: any;
+
+	realpath = (path: string) => {
+		return this.fallback.realpath(path);
+	}
+
+	getDirectories = (path: string) => {
+		return this.fallback.getDirectories(path);
+	}
 }
