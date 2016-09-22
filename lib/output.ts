@@ -21,7 +21,7 @@ export class Output {
 	streamJs: stream.Readable;
 	streamDts: stream.Readable;
 
-	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original?: input.File) {
+	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
 		const file = <VinylFile> new gutil.File({
 			path: fileName,
 			contents: new Buffer(content),

@@ -189,7 +189,7 @@ export class FileCompiler implements ICompiler {
 		}
 		this.compilationResult.transpileErrors += diagnostics.length;
 		
-		this.project.output.writeJs(file.gulp.base, fileName, content, sourceMap, file.gulp.cwd);
+		this.project.output.writeJs(file.gulp.base, fileName, content, sourceMap, file.gulp.cwd, file);
 	}
 
 	inputFile(file: File) {
