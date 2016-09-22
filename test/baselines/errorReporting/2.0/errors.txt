@@ -5,9 +5,11 @@ TypeScript error: [31mtest/errorReporting/test-4.ts(7,1): [39merror TS2322: Ty
       Property 'x' is missing in type '{ y: string; }'.
 {
     "transpileErrors": 0,
+    "optionsErrors": 0,
     "syntaxErrors": 0,
     "globalErrors": 0,
     "semanticErrors": 2,
+    "declarationErrors": 0,
     "emitErrors": 0,
     "emitSkipped": false
 }
