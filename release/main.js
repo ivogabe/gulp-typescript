@@ -131,5 +131,6 @@ function deprecate(title, alternative, description) {
         alternative);
     if (description)
         console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
+    console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
 }
 module.exports = compile;
