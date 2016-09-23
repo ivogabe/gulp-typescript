@@ -113,7 +113,13 @@ export class ProjectCompiler implements ICompiler {
 
 		result.emitErrors += emitOutput.diagnostics.length;
 		this.reportDiagnostics(emitOutput.diagnostics);
-		
+
+		if (emitOutput.emitSkipped) {
+			result.emitSkipped = true;
+		}
+
+		if (!jsFileName) return;
+
 		let base: string;
 		let baseDeclarations: string;
 		if (file) {
@@ -137,10 +143,6 @@ export class ProjectCompiler implements ICompiler {
 		}
 		if (dtsContent !== undefined) {
 			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
-		}
-
-		if (emitOutput.emitSkipped) {
-			result.emitSkipped = true;
 		}
 	}
 
