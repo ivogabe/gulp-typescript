@@ -65,7 +65,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 
 		const stream = new CompileStream(projectInfo);
 		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts);
-		projectInfo.reporter = reporter || defaultReporter;
+		projectInfo.reporter = reporter || defaultReporter();
 
 		stream.on('finish', () => {
 			running = false;
