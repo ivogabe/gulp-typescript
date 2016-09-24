@@ -82,6 +82,11 @@ var ProjectCompiler = (function () {
         });
         result.emitErrors += emitOutput.diagnostics.length;
         this.reportDiagnostics(emitOutput.diagnostics);
+        if (emitOutput.emitSkipped) {
+            result.emitSkipped = true;
+        }
+        if (!jsFileName)
+            return;
         var base;
         var baseDeclarations;
         if (file) {
@@ -105,9 +110,6 @@ var ProjectCompiler = (function () {
         }
         if (dtsContent !== undefined) {
             this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
-        }
-        if (emitOutput.emitSkipped) {
-            result.emitSkipped = true;
         }
     };
     ProjectCompiler.prototype.reportDiagnostics = function (diagnostics) {

@@ -32,7 +32,7 @@ function setupProject(projectDirectory, config, options, typescript) {
         compiler.prepare(projectInfo);
         var stream = new CompileStream(projectInfo);
         projectInfo.output = new output_1.Output(projectInfo, stream, stream.js, stream.dts);
-        projectInfo.reporter = reporter || reporter_1.defaultReporter;
+        projectInfo.reporter = reporter || reporter_1.defaultReporter();
         stream.on('finish', function () {
             running = false;
         });
