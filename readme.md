@@ -24,9 +24,9 @@ npm install --global gulp
 ```shell
 npm install gulp
 ```
-##### 3. Install gulp-typescript
+##### 3. Install gulp-typescript & TypeScript
 ```shell
-npm install gulp-typescript
+npm install gulp-typescript typescript
 ```
 
 Options
