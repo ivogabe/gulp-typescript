@@ -84,11 +84,9 @@ export class Host implements ts.CompilerHost {
 		return this.fallback.getSourceFile(fileName, languageVersion, onError);
 	}
 
-	realpath = (path: string) => {
-		return this.fallback.realpath(path);
-	}
+	realpath = (path: string) => this.fallback.realpath(path);
 
-	getDirectories = (path: string) => {
-		return this.fallback.getDirectories(path);
-	}
+	getDirectories = (path: string) => this.fallback.getDirectories(path);
+
+	directoryExists = (path: string) => this.fallback.directoryExists(path);
 }
