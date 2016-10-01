@@ -14,6 +14,7 @@ export declare class ProjectCompiler implements ICompiler {
     host: Host;
     project: ProjectInfo;
     program: ts.Program;
+    private hasSourceMap;
     prepare(project: ProjectInfo): void;
     inputFile(file: File): void;
     inputDone(): void;

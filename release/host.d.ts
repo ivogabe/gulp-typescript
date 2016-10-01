@@ -18,4 +18,5 @@ export declare class Host implements ts.CompilerHost {
     getSourceFile: (fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) => ts.SourceFile;
     realpath: (path: string) => string;
     getDirectories: (path: string) => string[];
+    directoryExists: (path: string) => boolean;
 }

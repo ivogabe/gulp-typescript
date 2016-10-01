@@ -26,12 +26,9 @@ var Host = (function () {
                 return sourceFile.ts;
             return _this.fallback.getSourceFile(fileName, languageVersion, onError);
         };
-        this.realpath = function (path) {
-            return _this.fallback.realpath(path);
-        };
-        this.getDirectories = function (path) {
-            return _this.fallback.getDirectories(path);
-        };
+        this.realpath = function (path) { return _this.fallback.realpath(path); };
+        this.getDirectories = function (path) { return _this.fallback.getDirectories(path); };
+        this.directoryExists = function (path) { return _this.fallback.directoryExists(path); };
         this.typescript = typescript;
         this.fallback = typescript.createCompilerHost(options);
         this.currentDirectory = currentDirectory;

@@ -12,8 +12,12 @@ var ProjectCompiler = (function () {
     }
     ProjectCompiler.prototype.prepare = function (project) {
         this.project = project;
+        this.hasSourceMap = false;
     };
-    ProjectCompiler.prototype.inputFile = function (file) { };
+    ProjectCompiler.prototype.inputFile = function (file) {
+        if (file.gulp.sourceMap)
+            this.hasSourceMap = true;
+    };
     ProjectCompiler.prototype.inputDone = function () {
         var _this = this;
         if (!this.project.input.firstSourceFile) {
@@ -27,6 +31,7 @@ var ProjectCompiler = (function () {
                     .map(function (fileName) { return _this.project.input.getFile(fileName).gulp.base; }));
             }
         }
+        this.project.options.sourceMap = this.hasSourceMap;
         var currentDirectory = utils.getCommonBasePathOfArray(rootFilenames.map(function (fileName) { return _this.project.input.getFile(fileName).gulp.cwd; }));
         this.host = new host_1.Host(this.project.typescript, currentDirectory, this.project.input, this.project.options);
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
@@ -57,7 +62,6 @@ var ProjectCompiler = (function () {
         this.project.output.finish(result);
     };
     ProjectCompiler.prototype.emitFile = function (result, currentDirectory, file) {
-        var _this = this;
         var jsFileName;
         var dtsFileName;
         var jsContent;
@@ -69,7 +73,7 @@ var ProjectCompiler = (function () {
                 case 'js':
                 case 'jsx':
                     jsFileName = fileName;
-                    jsContent = _this.removeSourceMapComment(content);
+                    jsContent = content;
                     break;
                 case 'd.ts':
                     dtsFileName = fileName;
@@ -106,6 +110,9 @@ var ProjectCompiler = (function () {
             base = jsFileName.substring(0, jsFileName.length - outFile.length);
         }
         if (jsContent !== undefined) {
+            if (jsMapContent !== undefined) {
+                jsContent = this.removeSourceMapComment(jsContent);
+            }
             this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
         }
         if (dtsContent !== undefined) {

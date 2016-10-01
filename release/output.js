@@ -35,6 +35,8 @@ var Output = (function () {
     };
     Output.prototype.applySourceMap = function (sourceMapContent, original, output) {
         var _this = this;
+        if (sourceMapContent === undefined)
+            return undefined;
         var map = JSON.parse(sourceMapContent);
         var directory = path.dirname(output.path);
         // gulp-sourcemaps docs:
@@ -62,7 +64,7 @@ var Output = (function () {
                 continue;
             for (var i = 0; i < inputMap.sources.length; i++) {
                 var absolute = path.resolve(sourceFile.gulp.base, inputMap.sources[i]);
-                var relative = path.relative(directory, absolute);
+                var relative = path.relative(output.base, absolute);
                 generator.setSourceContent(relative, inputMap.sourcesContent[i]);
             }
         }
