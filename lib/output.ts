@@ -51,6 +51,8 @@ export class Output {
 	}
 
 	private applySourceMap(sourceMapContent: string, original: input.File, output: VinylFile) {
+		if (sourceMapContent === undefined) return undefined;
+
 		const map = JSON.parse(sourceMapContent);
 		const directory = path.dirname(output.path);
 		

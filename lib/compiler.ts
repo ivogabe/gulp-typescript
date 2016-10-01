@@ -20,12 +20,16 @@ export class ProjectCompiler implements ICompiler {
 	host: Host;
 	project: ProjectInfo;
 	program: ts.Program;
+	private hasSourceMap: boolean;
 
 	prepare(project: ProjectInfo) {
 		this.project = project;
+		this.hasSourceMap = false;
 	}
 
-	inputFile(file: File) { }
+	inputFile(file: File) {
+		if (file.gulp.sourceMap) this.hasSourceMap = true;
+	}
 
 	inputDone() {
 		if (!this.project.input.firstSourceFile) {
@@ -42,6 +46,8 @@ export class ProjectCompiler implements ICompiler {
 				);
 			}
 		}
+
+		this.project.options.sourceMap = this.hasSourceMap;
 
 		const currentDirectory = utils.getCommonBasePathOfArray(
 			rootFilenames.map(fileName => this.project.input.getFile(fileName).gulp.cwd)
@@ -99,7 +105,7 @@ export class ProjectCompiler implements ICompiler {
 				case 'js':
 				case 'jsx':
 					jsFileName = fileName;
-					jsContent = this.removeSourceMapComment(content);
+					jsContent = content;
 					break;
 				case 'd.ts':
 					dtsFileName = fileName;
@@ -139,6 +145,9 @@ export class ProjectCompiler implements ICompiler {
 		}
 
 		if (jsContent !== undefined) {
+			if (jsMapContent !== undefined) {
+				jsContent = this.removeSourceMapComment(jsContent);
+			}
 			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 		if (dtsContent !== undefined) {
