@@ -130,6 +130,12 @@ module compile {
 		isolatedModules?: boolean;
 
 		rootDir?: string;
+		rootDirs?: any;
+
+		lib?: string[];
+		experimentalDecorators?: boolean;
+
+		[ name: string ]: any;
 
 		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
