@@ -115,7 +115,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 
 			if (error.tsFile) {
 				console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
-				const lines = error.tsFile.text.split(/(\r\n|\r|\n)/);
+				const lines = error.tsFile.text.split(/(?:\r\n|\r|\n)/);
 
 				const logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
 					const line = lines[lineIndex];
