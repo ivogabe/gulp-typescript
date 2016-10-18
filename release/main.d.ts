@@ -1,4 +1,3 @@
-/// <reference path="../typings/tsd.d.ts" />
 import * as ts from 'typescript';
 import * as _project from './project';
 import * as _reporter from './reporter';
@@ -34,6 +33,10 @@ declare module compile {
         typescript?: typeof ts;
         isolatedModules?: boolean;
         rootDir?: string;
+        rootDirs?: any;
+        lib?: string[];
+        experimentalDecorators?: boolean;
+        [name: string]: any;
         sourceRoot?: string;
     }
     type Project = _project.Project;
