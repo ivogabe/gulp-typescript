@@ -25,6 +25,6 @@ export interface RawSourceMap {
 	version: string;
 	sources: string[];
 	names: string[];
-	sourcesContent?: string;
+	sourcesContent?: string[];
 	mappings: string;
 }
