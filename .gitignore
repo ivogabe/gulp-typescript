@@ -1,4 +1,12 @@
-node_modules/*
+# Dependencies
+node_modules/
+typings/
+
+# Other
 .DS_Store
 release-2
 test/output
+
+# Webstorm
+.idea/
+*.iml

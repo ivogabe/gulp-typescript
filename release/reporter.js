@@ -75,7 +75,7 @@ function fullReporter(fullFilename) {
                 + ' ' + gutil.colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n')));
             if (error.tsFile) {
                 console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
-                var lines_1 = error.tsFile.text.split(/(\r\n|\r|\n)/);
+                var lines_1 = error.tsFile.text.split(/(?:\r\n|\r|\n)/);
                 var logLine = function (lineIndex, errorStart, errorEnd) {
                     var line = lines_1[lineIndex];
                     if (errorEnd === undefined)

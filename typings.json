@@ -1,0 +1,14 @@
+{
+  "name": "gulp-typescript",
+  "globalDependencies": {
+    "node": "registry:env/node#6.0.0+20161015001438"
+  },
+  "dependencies": {
+    "chalk": "registry:npm/chalk#1.1.1+20160812215109",
+    "gulp-util": "github:demurgos/typed-gulp-util#64329478f6252624b05a84b4a28b8524985d8706",
+    "source-map": "registry:npm/source-map#0.4.0+20160723033700",
+    "through2": "registry:npm/through2#2.0.0+20160817101636",
+    "vinyl": "registry:npm/vinyl#1.2.0+20160817093728",
+    "vinyl-fs": "registry:npm/vinyl-fs#2.4.3+20160817102725"
+  }
+}
