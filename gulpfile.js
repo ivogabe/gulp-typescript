@@ -33,7 +33,7 @@ var tsOptions = {
 var tsProject = ts.createProject(tsOptions);
 
 var paths = {
-	scripts: ['lib/**.ts', 'typings/**/**.ts'],
+	scripts: ['lib/**.ts'],
 	definitionTypeScript: [findTSDefinition('typescript')],
 	releaseBeta: 'release-2',
 	release: 'release'
