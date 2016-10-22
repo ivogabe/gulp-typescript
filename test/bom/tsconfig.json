@@ -1,6 +1,7 @@
 ﻿{
 	"compilerOptions": {
-		"module": "amd"
+		"module": "amd",
+		"types": []
 	},
 	"files": [
 		"test-bom.ts"

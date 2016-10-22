@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
-		"noLib": true
+		"noLib": true,
+		"types": []
 	}
 }
