@@ -8,6 +8,10 @@ export interface Map<T> {
 	[key: string]: T;
 }
 
+export function forwardSlashes(fileName: string) {
+	return fileName.replace(/\\/g, '/')
+}
+
 export function normalizePath(pathString: string) {
 	return path.normalize(pathString).toLowerCase();
 }

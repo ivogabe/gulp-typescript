@@ -58,7 +58,7 @@ export class Output {
 		
 		// gulp-sourcemaps docs:
 		// paths in the generated source map (`file` and `sources`) are relative to `file.base` (e.g. use `file.relative`).
-		map.file = output.relative;
+		map.file = utils.forwardSlashes(output.relative);
 		map.sources = map.sources.map(relativeToOutput);
 
 		delete map.sourceRoot;
@@ -93,8 +93,8 @@ export class Output {
 		return generator.toString();
 
 		function relativeToOutput(fileName: string) {
-			const absolute = path.resolve(directory, fileName.replace(/\\/g, '/'));
-			return path.relative(output.base, absolute);
+			const absolute = path.resolve(directory, fileName);
+			return utils.forwardSlashes(path.relative(output.base, absolute));
 		}
 	}
 
