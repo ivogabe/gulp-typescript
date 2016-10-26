@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as stream from 'stream';
 import * as ts from 'typescript';
 import { Reporter } from './reporter';

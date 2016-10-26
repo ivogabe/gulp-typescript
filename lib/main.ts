@@ -1,5 +1,3 @@
-/// <reference path="../typings/tsd.d.ts" />
-
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -51,7 +49,7 @@ function getTypeScript(typescript: typeof ts) {
 
 function getCompilerOptions(settings: compile.Settings, projectPath: string, configFileName: string): ts.CompilerOptions {
 	let typescript = getTypeScript(settings.typescript);
-	
+
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
@@ -66,7 +64,7 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 			"your project might work without it",
 			"The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
 	}
-	
+
 	// Copy settings and remove several options
 	const newSettings: compile.Settings = {};
 	for (const option of Object.keys(settings)) {
@@ -81,10 +79,10 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 			option === 'inlineSourceMap' ||
 			option === 'sourceRoot' ||
 			option === 'inlineSources') continue;
-		
+
 		newSettings[option] = settings[option];
 	}
-	
+
 	const result = typescript.convertCompilerOptionsFromJson(newSettings, projectPath, configFileName);
 	const reporter = _reporter.defaultReporter();
 	for (const error of result.errors) {

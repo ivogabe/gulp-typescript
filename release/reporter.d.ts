@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as ts from 'typescript';
 import { VinylFile } from './types';
 export interface TypeScriptError extends Error {

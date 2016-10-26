@@ -55,7 +55,7 @@ export class Output {
 
 		const map = JSON.parse(sourceMapContent);
 		const directory = path.dirname(output.path);
-		
+
 		// gulp-sourcemaps docs:
 		// paths in the generated source map (`file` and `sources`) are relative to `file.base` (e.g. use `file.relative`).
 		map.file = utils.forwardSlashes(output.relative);
@@ -69,7 +69,7 @@ export class Output {
 			? this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName))
 			: [original];
 
-		
+
 		for (const sourceFile of sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 
@@ -113,7 +113,7 @@ export class Output {
 	private getError(info: ts.Diagnostic): reporter.TypeScriptError {
 		let fileName = info.file && info.file.fileName;
 		const file = fileName && this.project.input.getFile(fileName);
-		
+
 		return utils.getError(info, this.project.typescript, file);
 	}
 	diagnostic(info: ts.Diagnostic) {
