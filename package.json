@@ -58,7 +58,7 @@
   "dependencies": {
     "@types/chalk": "^0.4.31",
     "@types/gulp-util": "^3.0.29",
-    "@types/node": "^6.0.45",
+    "@types/node": "*",
     "@types/source-map": "^0.1.28",
     "@types/through2": "^2.0.31",
     "@types/vinyl": "^1.2.30",
