@@ -4,6 +4,7 @@ import * as reporter from './reporter';
 export interface Map<T> {
     [key: string]: T;
 }
+export declare function forwardSlashes(fileName: string): string;
 export declare function normalizePath(pathString: string): string;
 /**
  * Splits a filename into an extensionless filename and an extension.

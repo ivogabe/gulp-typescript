@@ -58,7 +58,9 @@ function getCompilerOptions(settings, projectPath, configFileName) {
             option === 'sortOutput' ||
             option === 'typescript' ||
             option === 'sourceMap' ||
-            option === 'inlineSourceMap')
+            option === 'inlineSourceMap' ||
+            option === 'sourceRoot' ||
+            option === 'inlineSources')
             continue;
         newSettings[option] = settings[option];
     }

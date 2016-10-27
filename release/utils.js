@@ -1,6 +1,10 @@
 "use strict";
 var path = require('path');
 var gutil = require('gulp-util');
+function forwardSlashes(fileName) {
+    return fileName.replace(/\\/g, '/');
+}
+exports.forwardSlashes = forwardSlashes;
 function normalizePath(pathString) {
     return path.normalize(pathString).toLowerCase();
 }
