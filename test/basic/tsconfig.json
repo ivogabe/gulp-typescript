@@ -3,7 +3,8 @@
 		"declaration": true,
 		"module": "amd",
 		"outDir": "js",
-		"declarationDir": "dts"
+		"declarationDir": "dts",
+		"types": []
 	},
 	"files": [
 		"test-3.ts",
