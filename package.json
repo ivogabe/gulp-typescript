@@ -58,7 +58,6 @@
   "dependencies": {
     "@types/chalk": "^0.4.31",
     "@types/gulp-util": "^3.0.29",
-    "@types/node": "*",
     "@types/source-map": "^0.1.28",
     "@types/through2": "^2.0.31",
     "@types/vinyl": "^1.2.30",
@@ -69,6 +68,7 @@
     "vinyl-fs": "~2.4.3"
   },
   "devDependencies": {
+    "@types/node": "^6.0.45",
     "gulp": "~3.9.1",
     "gulp-concat": "~2.6.0",
     "gulp-diff": "~1.0.0",
