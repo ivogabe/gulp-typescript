@@ -1,6 +1,6 @@
 {
   "name": "gulp-typescript",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "A typescript compiler for gulp with incremental compilation support.",
   "homepage": "https://github.com/ivogabe/gulp-typescript",
   "bugs": "https://github.com/ivogabe/gulp-typescript/issues",
