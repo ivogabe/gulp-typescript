@@ -66,6 +66,11 @@ var Output = (function () {
                 var absolute = path.resolve(sourceFile.gulp.base, inputMap.sources[i]);
                 var relative = path.relative(output.base, absolute);
                 generator.setSourceContent(relative, inputMap.sourcesContent[i]);
+                if (inputMap.mappings === '') {
+                    if (!generator._sources.has(relative)) {
+                        generator._sources.add(relative);
+                    }
+                }
             }
         }
         return generator.toString();
