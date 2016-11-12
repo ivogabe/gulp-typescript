@@ -20,9 +20,9 @@ export interface VinylFile {
 }
 
 export interface RawSourceMap {
-	file?: string;
+	file: string;
 	sourceRoot?: string;
-	version: string;
+	version: number;
 	sources: string[];
 	names: string[];
 	sourcesContent?: string[];
