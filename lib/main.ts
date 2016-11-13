@@ -1,7 +1,6 @@
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as gutil from 'gulp-util';
 import * as _project from './project';
 import * as utils from './utils';
 import * as _reporter from './reporter';
@@ -12,7 +11,7 @@ function compile(proj: _project.Project, theReporter?: _reporter.Reporter): comp
 function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(param?: any, theReporter?: _reporter.Reporter): compile.CompileStream {
 	if (arguments.length >= 3) {
-		deprecate("Reporter are now passed as the second argument",
+		utils.deprecate("Reporter are now passed as the second argument",
 			"remove the second argument",
 			"Filters have been removed as of gulp-typescript 3.0.\nThe reporter is now passed as the second argument instead of the third argument.");
 	}
@@ -21,11 +20,11 @@ function compile(param?: any, theReporter?: _reporter.Reporter): compile.Compile
 	if (typeof param === "function") {
 		proj = param;
 		if (arguments.length >= 2) {
-			deprecate("ts(tsProject, ...) has been deprecated",
+			utils.deprecate("ts(tsProject, ...) has been deprecated",
 				"use .pipe(tsProject(reporter)) instead",
 				"As of gulp-typescript 3.0, .pipe(ts(tsProject, ...)) should be written as .pipe(tsProject(reporter)).");
 		} else {
-			deprecate("ts(tsProject) has been deprecated",
+			utils.deprecate("ts(tsProject) has been deprecated",
 				"use .pipe(tsProject(reporter)) instead",
 				"As of gulp-typescript 3.0, .pipe(ts(tsProject)) should be written as .pipe(tsProject()).");
 		}
@@ -40,7 +39,7 @@ function getTypeScript(typescript: typeof ts) {
 	try {
 		return require('typescript');
 	} catch (e) {
-		deprecate("TypeScript not installed",
+		utils.deprecate("TypeScript not installed",
 			"install with `npm install typescript --save-dev`",
 			"As of gulp-typescript 3.0, TypeScript isn't bundled with gulp-typescript any more.\nInstall the latest stable version with `npm install typescript --save-dev`\nor a nightly with `npm install typescript@next --save-dev`");
 		throw new Error("TypeScript not installed");
@@ -55,12 +54,12 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 	}
 
 	if (settings.noExternalResolve !== undefined) {
-		deprecate("noExternalResolve is deprecated",
+		utils.deprecate("noExternalResolve is deprecated",
 			"use noResolve instead",
 			"The non-standard option noExternalResolve has been removed as of gulp-typescript 3.0.\nUse noResolve instead.");
 	}
 	if (settings.sortOutput !== undefined) {
-		deprecate("sortOutput is deprecated",
+		utils.deprecate("sortOutput is deprecated",
 			"your project might work without it",
 			"The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
 	}
@@ -185,21 +184,10 @@ module compile {
 	}
 
 	export function filter(...args: any[]) {
-		deprecate('ts.filter() is deprecated',
+		utils.deprecate('ts.filter() is deprecated',
 			'soon you can use tsProject.resolve()',
 			'Filters have been removed as of gulp-typescript 3.0.\nSoon tsProject.resolve() will be available as an alternative.\nSee https://github.com/ivogabe/gulp-typescript/issues/190.');
 	}
-}
-
-function deprecate(title: string, alternative: string, description: string) {
-	console.log(
-		gutil.colors.red('gulp-typescript').toString() +
-		gutil.colors.gray(': ') +
-		title +
-		gutil.colors.gray(' - ') +
-		alternative);
-	if (description) console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
-	console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
 }
 
 export = compile;

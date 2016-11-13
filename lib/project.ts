@@ -2,7 +2,6 @@ import * as stream from 'stream';
 import * as ts from 'typescript';
 import * as vfs from 'vinyl-fs';
 import * as path from 'path';
-import * as through2 from 'through2';
 import * as gutil from 'gulp-util';
 import * as utils from './utils';
 import { Reporter, defaultReporter } from './reporter';
@@ -97,6 +96,10 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 }
 
 function src(this: Project) {
+	if (arguments.length >= 1) {
+		utils.message("tsProject.src() takes no arguments", "Use gulp.src(..) if you need to specify a glob");
+	}
+
 	let base: string;
 	if (this.options["rootDir"]) {
 		base = path.resolve(this.projectDirectory, this.options["rootDir"]);

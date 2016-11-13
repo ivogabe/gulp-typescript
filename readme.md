@@ -146,12 +146,14 @@ var tsProject = ts.createProject('tsconfig.json', { noImplicitAny: true });
 The task will look like:
 ```javascript
 gulp.task('scripts', function() {
-    var tsResult = tsProject.src() // instead of gulp.src(...)
+    var tsResult = gulp.src("lib/**/*.ts") // or tsProject.src()
         .pipe(tsProject());
 
     return tsResult.js.pipe(gulp.dest('release'));
 });
 ```
+
+You can replace `gulp.src(...)` with `tsProject.src()` to load files based on the tsconfig file (based on `files`, `excludes` and `includes`).
 
 TypeScript version
 ------------------

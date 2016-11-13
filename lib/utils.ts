@@ -109,3 +109,17 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 
 	return err;
 }
+
+export function deprecate(title: string, alternative: string, description?: string) {
+	message(title, alternative, description);
+	console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
+}
+export function message(title: string, alternative: string, description?: string) {
+	console.log(
+		gutil.colors.red('gulp-typescript').toString() +
+		gutil.colors.gray(': ') +
+		title +
+		gutil.colors.gray(' - ') +
+		alternative);
+	if (description) console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
+}
