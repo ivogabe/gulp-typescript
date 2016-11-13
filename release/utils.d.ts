@@ -19,3 +19,5 @@ export declare function splitExtension(fileName: string, knownExtensions?: strin
 export declare function getCommonBasePath(a: string, b: string): string;
 export declare function getCommonBasePathOfArray(paths: string[]): string;
 export declare function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File): reporter.TypeScriptError;
+export declare function deprecate(title: string, alternative: string, description?: string): void;
+export declare function message(title: string, alternative: string, description?: string): void;

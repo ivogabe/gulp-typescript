@@ -97,3 +97,18 @@ function getError(info, typescript, file) {
     return err;
 }
 exports.getError = getError;
+function deprecate(title, alternative, description) {
+    message(title, alternative, description);
+    console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
+}
+exports.deprecate = deprecate;
+function message(title, alternative, description) {
+    console.log(gutil.colors.red('gulp-typescript').toString() +
+        gutil.colors.gray(': ') +
+        title +
+        gutil.colors.gray(' - ') +
+        alternative);
+    if (description)
+        console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
+}
+exports.message = message;

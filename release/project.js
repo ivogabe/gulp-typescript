@@ -58,6 +58,9 @@ function setupProject(projectDirectory, config, options, typescript) {
 }
 exports.setupProject = setupProject;
 function src() {
+    if (arguments.length >= 1) {
+        utils.message("tsProject.src() takes no arguments", "Use gulp.src(..) if you need to specify a glob");
+    }
     var base;
     if (this.options["rootDir"]) {
         base = path.resolve(this.projectDirectory, this.options["rootDir"]);
