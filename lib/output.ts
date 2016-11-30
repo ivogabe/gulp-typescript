@@ -80,7 +80,7 @@ export class Output {
 			// since `generator.applySourceMap` has a really bad performance on big inputs.
 			if (inputMap.mappings !== '') {
 				const consumer = new sourceMap.SourceMapConsumer(inputMap);
-				generator.applySourceMap(consumer, sourceFile.fileNameOriginal, sourceFile.gulp.base);
+				generator.applySourceMap(consumer);
 			}
 
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
