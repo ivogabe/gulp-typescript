@@ -38,6 +38,7 @@ export interface ProjectInfo {
 	singleOutput: boolean;
 	options: ts.CompilerOptions;
 	typescript: typeof ts;
+	directory: string;
 	reporter: Reporter;
 }
 
@@ -87,6 +88,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 		compiler,
 		options,
 		typescript,
+		directory: projectDirectory,
 		// Set when `project` is called
 		output: undefined,
 		reporter: undefined

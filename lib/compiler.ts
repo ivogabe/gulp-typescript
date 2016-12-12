@@ -139,8 +139,10 @@ export class ProjectCompiler implements ICompiler {
 				const baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
 				baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
 			}
+		} else if (this.project.options.outFile) {
+			base = this.project.directory;
 		} else {
-			const outFile = this.project.options.outFile || this.project.options.out;
+			const outFile = this.project.options.out;
 			base = jsFileName.substring(0, jsFileName.length - outFile.length);
 		}
 
