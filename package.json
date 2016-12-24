@@ -54,6 +54,7 @@
     }
   ],
   "main": "release/main.js",
+  "types": "release/main.d.ts",
   "typings": "release/main.d.ts",
   "dependencies": {
     "gulp-util": "~3.0.7",
