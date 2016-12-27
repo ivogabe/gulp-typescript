@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
-		"outFile": "outFile.js"
+		"outFile": "outFile.js",
+		"types": []
 	}
 }

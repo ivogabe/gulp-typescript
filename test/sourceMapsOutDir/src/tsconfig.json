@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
-		"outDir": "dist"
+		"outDir": "dist",
+		"types": []
 	}
 }
