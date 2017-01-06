@@ -50,6 +50,7 @@ function setupProject(projectDirectory, config, options, typescript) {
         compiler: compiler,
         options: options,
         typescript: typescript,
+        directory: projectDirectory,
         // Set when `project` is called
         output: undefined,
         reporter: undefined

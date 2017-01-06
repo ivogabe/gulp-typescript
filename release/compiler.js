@@ -105,8 +105,11 @@ var ProjectCompiler = (function () {
                 baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
             }
         }
+        else if (this.project.options.outFile) {
+            base = this.project.directory;
+        }
         else {
-            var outFile = this.project.options.outFile || this.project.options.out;
+            var outFile = this.project.options.out;
             base = jsFileName.substring(0, jsFileName.length - outFile.length);
         }
         if (jsContent !== undefined) {

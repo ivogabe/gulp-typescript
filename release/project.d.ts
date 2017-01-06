@@ -21,6 +21,7 @@ export interface ProjectInfo {
     singleOutput: boolean;
     options: ts.CompilerOptions;
     typescript: typeof ts;
+    directory: string;
     reporter: Reporter;
 }
 export declare function setupProject(projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts): Project;

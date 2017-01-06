@@ -58,14 +58,14 @@ var Output = (function () {
             // since `generator.applySourceMap` has a really bad performance on big inputs.
             if (inputMap.mappings !== '') {
                 var consumer = new sourceMap.SourceMapConsumer(inputMap);
-                generator.applySourceMap(consumer, sourceFile.fileNameOriginal, sourceFile.gulp.base);
+                generator.applySourceMap(consumer);
             }
             if (!inputMap.sources || !inputMap.sourcesContent)
                 continue;
             for (var i = 0; i < inputMap.sources.length; i++) {
                 var absolute = path.resolve(sourceFile.gulp.base, inputMap.sources[i]);
                 var relative = path.relative(output.base, absolute);
-                generator.setSourceContent(relative, inputMap.sourcesContent[i]);
+                generator.setSourceContent(utils.forwardSlashes(relative), inputMap.sourcesContent[i]);
             }
         }
         return generator.toString();
