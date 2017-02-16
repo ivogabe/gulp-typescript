@@ -107,10 +107,12 @@ var ProjectCompiler = (function () {
         }
         else if (this.project.options.outFile) {
             base = this.project.directory;
+            baseDeclarations = base;
         }
         else {
             var outFile = this.project.options.out;
             base = jsFileName.substring(0, jsFileName.length - outFile.length);
+            baseDeclarations = base;
         }
         if (jsContent !== undefined) {
             if (jsMapContent !== undefined) {
