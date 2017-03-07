@@ -61,22 +61,15 @@ export class ProjectCompiler implements ICompiler {
 		);
 
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
-		const preEmitDiagnostics = this.project.typescript.getPreEmitDiagnostics(this.program);
-		
+
 		const result = emptyCompilationResult();
-		result.optionsErrors = this.program.getOptionsDiagnostics().length;
-		result.syntaxErrors = this.program.getSyntacticDiagnostics().length;
-		result.globalErrors = this.program.getGlobalDiagnostics().length;
-		result.semanticErrors = this.program.getSemanticDiagnostics().length;
+		result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
+		result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
+		result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
+		result.semanticErrors = this.reportDiagnostics(this.program.getSemanticDiagnostics());
 		if (this.project.options.declaration) {
 			result.declarationErrors = this.program.getDeclarationDiagnostics().length;
 		}
-
-		this.reportDiagnostics(preEmitDiagnostics);
-
-		const emitOutput = this.program.emit();
-		result.emitErrors = emitOutput.diagnostics.length;
-		result.emitSkipped = emitOutput.emitSkipped;
 
 		if (this.project.singleOutput) {
 			this.emitFile(result, currentDirectory);
@@ -163,6 +156,7 @@ export class ProjectCompiler implements ICompiler {
 		for (const error of diagnostics) {
 			this.project.output.diagnostic(error);
 		}
+		return diagnostics.length;
 	}
 
 	private removeSourceMapComment(content: string): string {
