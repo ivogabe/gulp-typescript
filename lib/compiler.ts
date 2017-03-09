@@ -13,6 +13,16 @@ export interface ICompiler {
 	inputDone(): void;
 }
 
+interface OutputFile {
+	file: File | undefined;
+
+	jsFileName?: string;
+	dtsFileName?: string;
+	jsContent?: string;
+	jsMapContent?: string;
+	dtsContent?: string;
+}
+
 /**
  * Compiles a whole project, with full type checking
  */
@@ -72,51 +82,74 @@ export class ProjectCompiler implements ICompiler {
 		}
 
 		if (this.project.singleOutput) {
-			this.emitFile(result, currentDirectory);
+			const output: OutputFile = {
+				file: undefined
+			};
+
+			this.emit(result, (fileName, content) => {
+				this.attachContentToFile(output, fileName, content);
+			});
+
+			this.emitFile(output, currentDirectory);
 		} else {
-			// Emit files one by one
-			for (const fileName of this.host.input.getFileNames(true)) {
+			const output: utils.Map<OutputFile> = {};
+
+			const input = this.host.input.getFileNames(true);
+
+			for (let i = 0; i < input.length; i++) {
+				const fileName = utils.normalizePath(input[i]);
 				const file = this.project.input.getFile(fileName);
 
-				this.emitFile(result, currentDirectory, file);
+				output[fileName] = { file };
+			}
+
+			this.emit(result, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
+				if (sourceFiles.length !== 1) {
+					throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
+				}
+				
+				const fileNameOriginal = utils.normalizePath(sourceFiles[0].fileName);
+				const file = output[fileNameOriginal];
+				if (!file) return;
+
+				this.attachContentToFile(file, fileName, content);
+			});
+
+			for (let i = 0; i < input.length; i++) {
+				const fileName = utils.normalizePath(input[i]);
+				this.emitFile(output[fileName], currentDirectory);
 			}
 		}
 
 		this.project.output.finish(result);
 	}
 
-	private emitFile(result: CompilationResult, currentDirectory: string, file?: File) {
-		let jsFileName: string;
-		let dtsFileName: string;
-		let jsContent: string;
-		let dtsContent: string;
-		let jsMapContent: string;
-
-		const emitOutput = this.program.emit(file && file.ts, (fileName: string, content: string) => {
-			const [, extension] = utils.splitExtension(fileName, ['d.ts']);
-			switch (extension) {
-				case 'js':
-				case 'jsx':
-					jsFileName = fileName;
-					jsContent = content;
-					break;
-				case 'd.ts':
-					dtsFileName = fileName;
-					dtsContent = content;
-					break;
-				case 'map':
-					jsMapContent = content;
-					break;
-			}
-		});
+	private attachContentToFile(file: OutputFile, fileName: string, content: string) {
+		const [, extension] = utils.splitExtension(fileName, ['d.ts']);
+		switch (extension) {
+			case 'js':
+			case 'jsx':
+				file.jsFileName = fileName;
+				file.jsContent = content;
+				break;
+			case 'd.ts':
+				file.dtsFileName = fileName;
+				file.dtsContent = content;
+				break;
+			case 'map':
+				file.jsMapContent = content;
+				break;
+		}
+	}
+	private emit(result: CompilationResult, callback: ts.WriteFileCallback) {
+		const emitOutput = this.program.emit(undefined, callback);
 
 		result.emitErrors += emitOutput.diagnostics.length;
 		this.reportDiagnostics(emitOutput.diagnostics);
 
-		if (emitOutput.emitSkipped) {
-			result.emitSkipped = true;
-		}
-
+		result.emitSkipped = emitOutput.emitSkipped;
+	}
+	private emitFile({ file, jsFileName, dtsFileName, jsContent, dtsContent, jsMapContent }: OutputFile, currentDirectory: string) {
 		if (!jsFileName) return;
 
 		let base: string;
