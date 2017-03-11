@@ -186,17 +186,12 @@ module compile {
 					console.log(tsConfig.error.messageText);
 				}
 
-				// We merge the settings passed as parameters with those in the JSON file.
-				// By doing it here we ensure that the settings passed as parameters are checked
-				// just like the ones in the JSON file.
-				shallowAssign(tsConfig.config, settings);
-
 				let parsed: ts.ParsedCommandLine = tsConfig.config &&
 					typescript.parseJsonConfigFileContent(
 						tsConfig.config,
 						typescript.sys,
 						path.resolve(projectDirectory),
-						{},
+						settings,
 						path.resolve(tsConfigFileName));
 
 				tsConfigContent = {
