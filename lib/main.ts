@@ -192,7 +192,7 @@ module compile {
 						typescript.sys,
 						path.resolve(projectDirectory),
 						settings,
-						path.resolve(tsConfigFileName));
+						path.basename(tsConfigFileName));
 
 				tsConfigContent = {
 					compilerOptions: parsed.options,
