@@ -18,7 +18,9 @@ export declare class ProjectCompiler implements ICompiler {
     prepare(project: ProjectInfo): void;
     inputFile(file: File): void;
     inputDone(): void;
-    private emitFile(result, currentDirectory, file?);
+    private attachContentToFile(file, fileName, content);
+    private emit(result, callback);
+    private emitFile({file, jsFileName, dtsFileName, jsContent, dtsContent, jsMapContent}, currentDirectory);
     private reportDiagnostics(diagnostics);
     private removeSourceMapComment(content);
 }

@@ -35,60 +35,73 @@ var ProjectCompiler = (function () {
         var currentDirectory = utils.getCommonBasePathOfArray(rootFilenames.map(function (fileName) { return _this.project.input.getFile(fileName).gulp.cwd; }));
         this.host = new host_1.Host(this.project.typescript, currentDirectory, this.project.input, this.project.options);
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
-        var preEmitDiagnostics = this.project.typescript.getPreEmitDiagnostics(this.program);
         var result = reporter_1.emptyCompilationResult();
-        result.optionsErrors = this.program.getOptionsDiagnostics().length;
-        result.syntaxErrors = this.program.getSyntacticDiagnostics().length;
-        result.globalErrors = this.program.getGlobalDiagnostics().length;
-        result.semanticErrors = this.program.getSemanticDiagnostics().length;
+        result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
+        result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
+        result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
+        result.semanticErrors = this.reportDiagnostics(this.program.getSemanticDiagnostics());
         if (this.project.options.declaration) {
             result.declarationErrors = this.program.getDeclarationDiagnostics().length;
         }
-        this.reportDiagnostics(preEmitDiagnostics);
-        var emitOutput = this.program.emit();
-        result.emitErrors = emitOutput.diagnostics.length;
-        result.emitSkipped = emitOutput.emitSkipped;
         if (this.project.singleOutput) {
-            this.emitFile(result, currentDirectory);
+            var output_1 = {
+                file: undefined
+            };
+            this.emit(result, function (fileName, content) {
+                _this.attachContentToFile(output_1, fileName, content);
+            });
+            this.emitFile(output_1, currentDirectory);
         }
         else {
-            // Emit files one by one
-            for (var _i = 0, _a = this.host.input.getFileNames(true); _i < _a.length; _i++) {
-                var fileName = _a[_i];
+            var output_2 = {};
+            var input = this.host.input.getFileNames(true);
+            for (var i = 0; i < input.length; i++) {
+                var fileName = utils.normalizePath(input[i]);
                 var file = this.project.input.getFile(fileName);
-                this.emitFile(result, currentDirectory, file);
+                output_2[fileName] = { file: file };
+            }
+            this.emit(result, function (fileName, content, writeByteOrderMark, onError, sourceFiles) {
+                if (sourceFiles.length !== 1) {
+                    throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
+                }
+                var fileNameOriginal = utils.normalizePath(sourceFiles[0].fileName);
+                var file = output_2[fileNameOriginal];
+                if (!file)
+                    return;
+                _this.attachContentToFile(file, fileName, content);
+            });
+            for (var i = 0; i < input.length; i++) {
+                var fileName = utils.normalizePath(input[i]);
+                this.emitFile(output_2[fileName], currentDirectory);
             }
         }
         this.project.output.finish(result);
     };
-    ProjectCompiler.prototype.emitFile = function (result, currentDirectory, file) {
-        var jsFileName;
-        var dtsFileName;
-        var jsContent;
-        var dtsContent;
-        var jsMapContent;
-        var emitOutput = this.program.emit(file && file.ts, function (fileName, content) {
-            var _a = utils.splitExtension(fileName, ['d.ts']), extension = _a[1];
-            switch (extension) {
-                case 'js':
-                case 'jsx':
-                    jsFileName = fileName;
-                    jsContent = content;
-                    break;
-                case 'd.ts':
-                    dtsFileName = fileName;
-                    dtsContent = content;
-                    break;
-                case 'map':
-                    jsMapContent = content;
-                    break;
-            }
-        });
+    ProjectCompiler.prototype.attachContentToFile = function (file, fileName, content) {
+        var _a = utils.splitExtension(fileName, ['d.ts']), extension = _a[1];
+        switch (extension) {
+            case 'js':
+            case 'jsx':
+                file.jsFileName = fileName;
+                file.jsContent = content;
+                break;
+            case 'd.ts':
+                file.dtsFileName = fileName;
+                file.dtsContent = content;
+                break;
+            case 'map':
+                file.jsMapContent = content;
+                break;
+        }
+    };
+    ProjectCompiler.prototype.emit = function (result, callback) {
+        var emitOutput = this.program.emit(undefined, callback);
         result.emitErrors += emitOutput.diagnostics.length;
         this.reportDiagnostics(emitOutput.diagnostics);
-        if (emitOutput.emitSkipped) {
-            result.emitSkipped = true;
-        }
+        result.emitSkipped = emitOutput.emitSkipped;
+    };
+    ProjectCompiler.prototype.emitFile = function (_a, currentDirectory) {
+        var file = _a.file, jsFileName = _a.jsFileName, dtsFileName = _a.dtsFileName, jsContent = _a.jsContent, dtsContent = _a.dtsContent, jsMapContent = _a.jsMapContent;
         if (!jsFileName)
             return;
         var base;
@@ -129,6 +142,7 @@ var ProjectCompiler = (function () {
             var error = diagnostics_1[_i];
             this.project.output.diagnostic(error);
         }
+        return diagnostics.length;
     };
     ProjectCompiler.prototype.removeSourceMapComment = function (content) {
         // By default the TypeScript automaticly inserts a source map comment.
