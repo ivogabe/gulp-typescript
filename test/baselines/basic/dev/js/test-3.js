@@ -1,5 +1,6 @@
-define(["require", "exports", './other-3'], function (require, exports, other) {
+define(["require", "exports", "./other-3"], function (require, exports, other) {
     "use strict";
+    exports.__esModule = true;
     var a = new other.Hello();
     console.log(a.value);
 });

@@ -1,7 +1,8 @@
 "use strict";
+exports.__esModule = true;
 /// <reference path="referenced.d.ts"/>
-var other = require('./other-2');
-var someModule = require('someModule');
+var other = require("./other-2");
+var someModule = require("someModule");
 var a = new other.Hello();
 console.log(a.value);
 console.log(someModule);
