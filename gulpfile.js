@@ -107,10 +107,6 @@ function runTest(name, callback) {
 	var libs = [
 		['2.0', undefined],
 		['dev', require(tsVersions.dev)]
-		/* ['1.4', require(tsVersions.release14)],
-		['1.5', require(tsVersions.release15)],
-		['1.6', require(tsVersions.release16)],
-		['1.7', require(tsVersions.release17)] */
 	];
 	var test = require('./test/' + name + '/gulptask.js');
 
