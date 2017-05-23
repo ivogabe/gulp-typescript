@@ -73,7 +73,7 @@ gulp.task('default', function () {
     return gulp.src('src/**/*.ts')
         .pipe(ts({
             noImplicitAny: true,
-            out: 'output.js'
+            outFile: 'output.js'
         }))
         .pipe(gulp.dest('built/local'));
 });
