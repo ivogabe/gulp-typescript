@@ -6,9 +6,9 @@ import * as utils from './utils';
 import * as _reporter from './reporter';
 import { TsConfig } from './types';
 
-function compile(): compile.CompileStream;
 function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
+function compile(): compile.CompileStream;
 function compile(param?: any, theReporter?: _reporter.Reporter): compile.CompileStream {
 	if (arguments.length >= 3) {
 		utils.deprecate("Reporter are now passed as the second argument",
@@ -143,8 +143,8 @@ module compile {
 	export type CompileStream = _project.ICompileStream;
 	export import reporter = _reporter;
 
-	export function createProject(settings?: Settings);
-	export function createProject(tsConfigFileName: string, settings?: Settings);
+	export function createProject(tsConfigFileName: string, settings?: Settings): Project;
+	export function createProject(settings?: Settings): Project;
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
