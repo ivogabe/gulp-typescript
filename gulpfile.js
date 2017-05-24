@@ -100,14 +100,15 @@ gulp.task('typecheck', [/* 'typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', */
 
 // Tests
 
+// We run every test on multiple typescript versions:
+var libs = [
+	['2.0', undefined],
+	['dev', require(tsVersions.dev)]
+];
+
 // helper function for running a test.
 function runTest(name, callback) {
 	var newTS = require('./release-2/main');
-	// We run every test on multiple typescript versions:
-	var libs = [
-		['2.0', undefined],
-		['dev', require(tsVersions.dev)]
-	];
 	var test = require('./test/' + name + '/gulptask.js');
 
 	var done = 0;
@@ -154,7 +155,7 @@ function runTest(name, callback) {
 gulp.task('test-run', ['clean-test', 'scripts'], function(cb) {
 	fs.mkdirSync('test/output/');
 
-	var pending = tests.length;
+	var pending = tests.length * libs.length;
 	if (pending === 0) {
 		cb();
 		return;
@@ -171,6 +172,10 @@ gulp.task('test-run', ['clean-test', 'scripts'], function(cb) {
 				} else {
 					cb();
 				}
+			}
+			// This allows catching possible counting errors.
+			else if (pending < 0) {
+				throw new Error('Callback called more than expected!');
 			}
 		});
 	}
