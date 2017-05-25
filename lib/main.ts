@@ -81,18 +81,6 @@ function normalizeCompilerOptions(options: ts.CompilerOptions): void {
 	(options as any).suppressOutputPathCheck = true;
 }
 
-function shallowAssign<T>(a: T, b?: T): T {
-	if (!b) {
-		return a;
-	}
-
-	for(const key of Object.keys(b)) {
-		a[key] = b[key];
-	}
-
-	return a;
-}
-
 function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts): void {
 	const reporter = _reporter.defaultReporter();
 	for (const error of errors) {
@@ -159,7 +147,7 @@ module compile {
 		let typescript;
 		let compilerOptions: ts.CompilerOptions;
 		let fileName: string;
-		settings = shallowAssign({}, settings);
+		settings = { ...settings }; // Shallow copy the settings.
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				fileName = fileNameOrSettings;
