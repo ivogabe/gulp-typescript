@@ -1,19 +1,20 @@
 "use strict";
-var path = require('path');
-var utils = require('./utils');
+Object.defineProperty(exports, "__esModule", { value: true });
+var path = require("path");
+var utils = require("./utils");
+var FileChangeState;
 (function (FileChangeState) {
     FileChangeState[FileChangeState["New"] = 0] = "New";
     FileChangeState[FileChangeState["Equal"] = 1] = "Equal";
     FileChangeState[FileChangeState["Modified"] = 2] = "Modified";
     FileChangeState[FileChangeState["Deleted"] = 3] = "Deleted";
     FileChangeState[FileChangeState["NotFound"] = 4] = "NotFound";
-})(exports.FileChangeState || (exports.FileChangeState = {}));
-var FileChangeState = exports.FileChangeState;
+})(FileChangeState = exports.FileChangeState || (exports.FileChangeState = {}));
+var FileKind;
 (function (FileKind) {
     FileKind[FileKind["Source"] = 0] = "Source";
     FileKind[FileKind["Config"] = 1] = "Config";
-})(exports.FileKind || (exports.FileKind = {}));
-var FileKind = exports.FileKind;
+})(FileKind = exports.FileKind || (exports.FileKind = {}));
 var File;
 (function (File) {
     function fromContent(fileName, content) {

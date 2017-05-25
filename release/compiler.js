@@ -1,9 +1,10 @@
 "use strict";
-var path = require('path');
-var input_1 = require('./input');
-var host_1 = require('./host');
-var reporter_1 = require('./reporter');
-var utils = require('./utils');
+Object.defineProperty(exports, "__esModule", { value: true });
+var path = require("path");
+var input_1 = require("./input");
+var host_1 = require("./host");
+var reporter_1 = require("./reporter");
+var utils = require("./utils");
 /**
  * Compiles a whole project, with full type checking
  */

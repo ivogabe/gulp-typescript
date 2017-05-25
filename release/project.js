@@ -1,18 +1,24 @@
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var stream = require('stream');
-var vfs = require('vinyl-fs');
-var path = require('path');
-var gutil = require('gulp-util');
-var utils = require('./utils');
-var reporter_1 = require('./reporter');
-var input_1 = require('./input');
-var output_1 = require('./output');
-var compiler_1 = require('./compiler');
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var stream = require("stream");
+var vfs = require("vinyl-fs");
+var path = require("path");
+var gutil = require("gulp-util");
+var utils = require("./utils");
+var reporter_1 = require("./reporter");
+var input_1 = require("./input");
+var output_1 = require("./output");
+var compiler_1 = require("./compiler");
 function setupProject(projectDirectory, config, options, typescript) {
     var input = new input_1.FileCache(typescript, options);
     var compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
@@ -89,12 +95,13 @@ function src() {
 var CompileStream = (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(project) {
-        _super.call(this, { objectMode: true });
-        this.js = new CompileOutputStream();
-        this.dts = new CompileOutputStream();
-        this.project = project;
+        var _this = _super.call(this, { objectMode: true }) || this;
+        _this.js = new CompileOutputStream();
+        _this.dts = new CompileOutputStream();
+        _this.project = project;
         // Prevent "Unhandled stream error in pipe" when a compilation error occurs.
-        this.on('error', function () { });
+        _this.on('error', function () { });
+        return _this;
     }
     CompileStream.prototype._write = function (file, encoding, cb) {
         if (cb === void 0) { cb = function (err) { }; }
@@ -130,7 +137,7 @@ var CompileStream = (function (_super) {
 var CompileOutputStream = (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
-        _super.call(this, { objectMode: true });
+        return _super.call(this, { objectMode: true }) || this;
     }
     CompileOutputStream.prototype._read = function () {
     };

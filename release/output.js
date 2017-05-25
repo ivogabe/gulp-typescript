@@ -1,8 +1,9 @@
 "use strict";
-var path = require('path');
-var sourceMap = require('source-map');
-var gutil = require('gulp-util');
-var utils = require('./utils');
+Object.defineProperty(exports, "__esModule", { value: true });
+var path = require("path");
+var sourceMap = require("source-map");
+var gutil = require("gulp-util");
+var utils = require("./utils");
 var Output = (function () {
     function Output(_project, streamFull, streamJs, streamDts) {
         this.project = _project;

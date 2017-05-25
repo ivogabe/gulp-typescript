@@ -1,6 +1,7 @@
 "use strict";
-var path = require('path');
-var gutil = require('gulp-util');
+Object.defineProperty(exports, "__esModule", { value: true });
+var path = require("path");
+var gutil = require("gulp-util");
 function forwardSlashes(fileName) {
     return fileName.replace(/\\/g, '/');
 }

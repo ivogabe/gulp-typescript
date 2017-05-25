@@ -1,5 +1,6 @@
 "use strict";
-var gutil = require('gulp-util');
+Object.defineProperty(exports, "__esModule", { value: true });
+var gutil = require("gulp-util");
 function emptyCompilationResult() {
     return {
         transpileErrors: 0,

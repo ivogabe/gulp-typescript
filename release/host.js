@@ -1,5 +1,6 @@
 "use strict";
-var utils = require('./utils');
+Object.defineProperty(exports, "__esModule", { value: true });
+var utils = require("./utils");
 var Host = (function () {
     function Host(typescript, currentDirectory, input, options) {
         var _this = this;

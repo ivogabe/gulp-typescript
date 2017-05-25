@@ -1,9 +1,9 @@
 import * as ts from 'typescript';
 import * as _project from './project';
 import * as _reporter from './reporter';
-declare function compile(): compile.CompileStream;
 declare function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 declare function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
+declare function compile(): compile.CompileStream;
 declare module compile {
     interface Settings {
         out?: string;
@@ -42,8 +42,8 @@ declare module compile {
     type Project = _project.Project;
     type CompileStream = _project.ICompileStream;
     export import reporter = _reporter;
-    function createProject(settings?: Settings): any;
-    function createProject(tsConfigFileName: string, settings?: Settings): any;
+    function createProject(tsConfigFileName: string, settings?: Settings): Project;
+    function createProject(settings?: Settings): Project;
     function filter(...args: any[]): void;
 }
 export = compile;

@@ -1,9 +1,9 @@
 "use strict";
-var fs = require('fs');
-var path = require('path');
-var _project = require('./project');
-var utils = require('./utils');
-var _reporter = require('./reporter');
+var fs = require("fs");
+var path = require("path");
+var _project = require("./project");
+var utils = require("./utils");
+var _reporter = require("./reporter");
 function compile(param, theReporter) {
     if (arguments.length >= 3) {
         utils.deprecate("Reporter are now passed as the second argument", "remove the second argument", "Filters have been removed as of gulp-typescript 3.0.\nThe reporter is now passed as the second argument instead of the third argument.");
@@ -73,7 +73,6 @@ function getCompilerOptions(settings, projectPath, configFileName) {
     result.options.suppressOutputPathCheck = true;
     return result.options;
 }
-var compile;
 (function (compile) {
     compile.reporter = _reporter;
     function createProject(fileNameOrSettings, settings) {
@@ -118,7 +117,7 @@ var compile;
     function filter() {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
         utils.deprecate('ts.filter() is deprecated', 'soon you can use tsProject.resolve()', 'Filters have been removed as of gulp-typescript 3.0.\nSoon tsProject.resolve() will be available as an alternative.\nSee https://github.com/ivogabe/gulp-typescript/issues/190.');
     }
