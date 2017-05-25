@@ -79,9 +79,9 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 	project.src = src;
 	project.typescript = typescript;
 	project.projectDirectory = projectDirectory;
-	project.config = config;
+	project.config = config || {};
 	project.options = options;
-	
+
 	const projectInfo: ProjectInfo = {
 		input,
 		singleOutput,
