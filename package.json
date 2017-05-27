@@ -57,6 +57,7 @@
   "types": "release/main.d.ts",
   "typings": "release/main.d.ts",
   "dependencies": {
+    "@types/node": "7.0.22",
     "gulp-util": "~3.0.7",
     "source-map": "~0.5.3",
     "through2": "~2.0.1",
@@ -65,7 +66,6 @@
   "devDependencies": {
     "@types/chalk": "0.4.31",
     "@types/gulp-util": "3.0.31",
-    "@types/node": "7.0.22",
     "@types/source-map": "0.5.0",
     "@types/through2": "2.0.33",
     "@types/vinyl": "2.0.0",
