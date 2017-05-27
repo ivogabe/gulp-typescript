@@ -105,6 +105,8 @@ function src(this: Project) {
 	let base: string;
 	if (this.options["rootDir"]) {
 		base = path.resolve(this.projectDirectory, this.options["rootDir"]);
+	} else if (!this.options["outDir"]) {
+		base = this.projectDirectory;
 	}
 
 	const content: any = {};
