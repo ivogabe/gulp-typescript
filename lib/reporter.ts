@@ -105,7 +105,6 @@ export function longReporter(): Reporter {
 	}
 }
 export function fullReporter(fullFilename: boolean = false): Reporter {
-	const typescript: typeof ts = require('typescript');
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.error('[' + gutil.colors.gray('gulp-typescript') + '] '

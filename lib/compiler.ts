@@ -59,7 +59,7 @@ export class ProjectCompiler implements ICompiler {
 
 		this.project.options.sourceMap = this.hasSourceMap;
 
-		const currentDirectory = utils.getCommonBasePathOfArray(
+		const currentDirectory = this.project.cwd || utils.getCommonBasePathOfArray(
 			rootFilenames.map(fileName => this.project.input.getFile(fileName).gulp.cwd)
 		);
 

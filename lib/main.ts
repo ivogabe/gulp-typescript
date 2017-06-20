@@ -177,8 +177,10 @@ module compile {
 				settings = fileNameOrSettings;
 			}
 		}
-
-		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript));
+    
+    const cwd = settings.cwd
+    delete settings.cwd
+		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript), cwd);
 
 		return project;
 	}
