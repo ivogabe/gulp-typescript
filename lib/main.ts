@@ -46,9 +46,7 @@ function getTypeScript(typescript: typeof ts) {
 	}
 }
 
-function getCompilerOptions(settings: compile.Settings, projectPath: string, configFileName: string): ts.CompilerOptions {
-	let typescript = getTypeScript(settings.typescript);
-
+function checkAndNormalizeSettings(settings: compile.Settings): void {
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
@@ -64,33 +62,30 @@ function getCompilerOptions(settings: compile.Settings, projectPath: string, con
 			"The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
 	}
 
-	// Copy settings and remove several options
-	const newSettings: compile.Settings = {};
-	for (const option of Object.keys(settings)) {
-		if (option === 'declarationFiles') {
-			newSettings.declaration = settings.declarationFiles;
-			continue;
-		}
-		if (option === 'noExternalResolve' ||
-			option === 'sortOutput' ||
-			option === 'typescript' ||
-			option === 'sourceMap' ||
-			option === 'inlineSourceMap' ||
-			option === 'sourceRoot' ||
-			option === 'inlineSources') continue;
-
-		newSettings[option] = settings[option];
+	if (settings.declarationFiles) {
+		settings.declaration = settings.declarationFiles;
+		delete settings.declarationFiles;
 	}
 
-	const result = typescript.convertCompilerOptionsFromJson(newSettings, projectPath, configFileName);
+	delete settings.noExternalResolve;
+	delete settings.sortOutput;
+	delete settings.typescript;
+	delete (settings as any).sourceMap;
+	delete (settings as any).inlineSourceMap;
+	delete settings.sourceRoot;
+	delete (settings as any).inlineSources;
+}
+
+function normalizeCompilerOptions(options: ts.CompilerOptions): void {
+	options.sourceMap = true;
+	(options as any).suppressOutputPathCheck = true;
+}
+
+function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts): void {
 	const reporter = _reporter.defaultReporter();
-	for (const error of result.errors) {
+	for (const error of errors) {
 		reporter.error(utils.getError(error, typescript), typescript);
 	}
-	result.options.sourceMap = true;
-	(result.options as any).suppressOutputPathCheck = true;
-
-	return result.options;
 }
 
 module compile {
@@ -149,36 +144,59 @@ module compile {
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
+		let typescript;
+		let compilerOptions: ts.CompilerOptions;
+		let fileName: string;
+		settings = { ...settings }; // Shallow copy the settings.
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
+				fileName = fileNameOrSettings;
+			} else {
+				settings = fileNameOrSettings || {};
+			}
+
+			typescript = getTypeScript(settings.typescript);
+			checkAndNormalizeSettings(settings);
+
+			const settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
+
+			if (settingsResult.errors) {
+				reportErrors(settingsResult.errors, typescript);
+			}
+
+			compilerOptions = settingsResult.options;
+
+			if (fileName) {
 				tsConfigFileName = path.resolve(process.cwd(), fileNameOrSettings);
 				projectDirectory = path.dirname(tsConfigFileName);
-				// Load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
-				let tsConfigText = fs.readFileSync(tsConfigFileName).toString();
-				const typescript = getTypeScript(settings && settings.typescript);
-				const tsConfig = typescript.parseConfigFileTextToJson(tsConfigFileName, tsConfigText);
-				tsConfigContent = tsConfig.config || {};
+				let tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
 				if (tsConfig.error) {
 					console.log(tsConfig.error.messageText);
 				}
-				let newSettings: any = {};
-				if (tsConfigContent.compilerOptions) {
-					for (const key of Object.keys(tsConfigContent.compilerOptions)) {
-						newSettings[key] = tsConfigContent.compilerOptions[key];
-					}
+
+				let parsed: ts.ParsedCommandLine = tsConfig.config &&
+					typescript.parseJsonConfigFileContent(
+						tsConfig.config,
+						typescript.sys,
+						path.resolve(projectDirectory),
+						settings,
+						path.basename(tsConfigFileName));
+
+				tsConfigContent = {
+					compilerOptions: parsed.options,
+					files: parsed.fileNames,
+				};
+
+				if (parsed.errors) {
+					reportErrors(parsed.errors, typescript);
 				}
-				if (settings) {
-					for (const key of Object.keys(settings)) {
-						newSettings[key] = settings[key];
-					}
-				}
-				settings = newSettings;
-			} else {
-				settings = fileNameOrSettings;
+
+				compilerOptions = parsed.options;
 			}
 		}
 
-		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript));
+		normalizeCompilerOptions(compilerOptions);
+		const project = _project.setupProject(projectDirectory, tsConfigContent, compilerOptions, typescript);
 
 		return project;
 	}

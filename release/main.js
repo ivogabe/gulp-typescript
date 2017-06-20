@@ -1,5 +1,12 @@
 "use strict";
-var fs = require("fs");
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 var path = require("path");
 var _project = require("./project");
 var utils = require("./utils");
@@ -34,8 +41,7 @@ function getTypeScript(typescript) {
         throw new Error("TypeScript not installed");
     }
 }
-function getCompilerOptions(settings, projectPath, configFileName) {
-    var typescript = getTypeScript(settings.typescript);
+function checkAndNormalizeSettings(settings) {
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
     }
@@ -45,33 +51,28 @@ function getCompilerOptions(settings, projectPath, configFileName) {
     if (settings.sortOutput !== undefined) {
         utils.deprecate("sortOutput is deprecated", "your project might work without it", "The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
     }
-    // Copy settings and remove several options
-    var newSettings = {};
-    for (var _i = 0, _a = Object.keys(settings); _i < _a.length; _i++) {
-        var option = _a[_i];
-        if (option === 'declarationFiles') {
-            newSettings.declaration = settings.declarationFiles;
-            continue;
-        }
-        if (option === 'noExternalResolve' ||
-            option === 'sortOutput' ||
-            option === 'typescript' ||
-            option === 'sourceMap' ||
-            option === 'inlineSourceMap' ||
-            option === 'sourceRoot' ||
-            option === 'inlineSources')
-            continue;
-        newSettings[option] = settings[option];
+    if (settings.declarationFiles) {
+        settings.declaration = settings.declarationFiles;
+        delete settings.declarationFiles;
     }
-    var result = typescript.convertCompilerOptionsFromJson(newSettings, projectPath, configFileName);
+    delete settings.noExternalResolve;
+    delete settings.sortOutput;
+    delete settings.typescript;
+    delete settings.sourceMap;
+    delete settings.inlineSourceMap;
+    delete settings.sourceRoot;
+    delete settings.inlineSources;
+}
+function normalizeCompilerOptions(options) {
+    options.sourceMap = true;
+    options.suppressOutputPathCheck = true;
+}
+function reportErrors(errors, typescript) {
     var reporter = _reporter.defaultReporter();
-    for (var _b = 0, _c = result.errors; _b < _c.length; _b++) {
-        var error = _c[_b];
+    for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
+        var error = errors_1[_i];
         reporter.error(utils.getError(error, typescript), typescript);
     }
-    result.options.sourceMap = true;
-    result.options.suppressOutputPathCheck = true;
-    return result.options;
 }
 (function (compile) {
     compile.reporter = _reporter;
@@ -79,38 +80,45 @@ function getCompilerOptions(settings, projectPath, configFileName) {
         var tsConfigFileName = undefined;
         var tsConfigContent = undefined;
         var projectDirectory = process.cwd();
+        var typescript;
+        var compilerOptions;
+        var fileName;
+        settings = __assign({}, settings); // Shallow copy the settings.
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
+                fileName = fileNameOrSettings;
+            }
+            else {
+                settings = fileNameOrSettings || {};
+            }
+            typescript = getTypeScript(settings.typescript);
+            checkAndNormalizeSettings(settings);
+            var settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
+            if (settingsResult.errors) {
+                reportErrors(settingsResult.errors, typescript);
+            }
+            compilerOptions = settingsResult.options;
+            if (fileName) {
                 tsConfigFileName = path.resolve(process.cwd(), fileNameOrSettings);
                 projectDirectory = path.dirname(tsConfigFileName);
-                // Load file and strip BOM, since JSON.parse fails to parse if there's a BOM present
-                var tsConfigText = fs.readFileSync(tsConfigFileName).toString();
-                var typescript = getTypeScript(settings && settings.typescript);
-                var tsConfig = typescript.parseConfigFileTextToJson(tsConfigFileName, tsConfigText);
-                tsConfigContent = tsConfig.config || {};
+                var tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
                 if (tsConfig.error) {
                     console.log(tsConfig.error.messageText);
                 }
-                var newSettings = {};
-                if (tsConfigContent.compilerOptions) {
-                    for (var _i = 0, _a = Object.keys(tsConfigContent.compilerOptions); _i < _a.length; _i++) {
-                        var key = _a[_i];
-                        newSettings[key] = tsConfigContent.compilerOptions[key];
-                    }
+                var parsed = tsConfig.config &&
+                    typescript.parseJsonConfigFileContent(tsConfig.config, typescript.sys, path.resolve(projectDirectory), settings, path.basename(tsConfigFileName));
+                tsConfigContent = {
+                    compilerOptions: parsed.options,
+                    files: parsed.fileNames,
+                };
+                if (parsed.errors) {
+                    reportErrors(parsed.errors, typescript);
                 }
-                if (settings) {
-                    for (var _b = 0, _c = Object.keys(settings); _b < _c.length; _b++) {
-                        var key = _c[_b];
-                        newSettings[key] = settings[key];
-                    }
-                }
-                settings = newSettings;
-            }
-            else {
-                settings = fileNameOrSettings;
+                compilerOptions = parsed.options;
             }
         }
-        var project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript));
+        normalizeCompilerOptions(compilerOptions);
+        var project = _project.setupProject(projectDirectory, tsConfigContent, compilerOptions, typescript);
         return project;
     }
     compile.createProject = createProject;
