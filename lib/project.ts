@@ -32,6 +32,7 @@ export interface Project {
 }
 
 export interface ProjectInfo {
+  cwd: string | undefined
 	input: FileCache;
 	output: Output;
 	compiler: ICompiler;
@@ -42,7 +43,7 @@ export interface ProjectInfo {
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts) {
+export function setupProject(projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts, cwd: string | undefined) {
 	const input = new FileCache(typescript, options);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
@@ -87,6 +88,7 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 		singleOutput,
 		compiler,
 		options,
+    cwd,
 		typescript,
 		directory: projectDirectory,
 		// Set when `project` is called

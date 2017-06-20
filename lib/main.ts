@@ -178,7 +178,7 @@ module compile {
 			}
 		}
 
-		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript));
+		const project = _project.setupProject(projectDirectory, tsConfigContent, getCompilerOptions(settings, projectDirectory, tsConfigFileName), getTypeScript(settings.typescript), settings.cwd);
 
 		return project;
 	}
