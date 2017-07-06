@@ -58,14 +58,13 @@ function checkAndNormalizeSettings(settings) {
     delete settings.noExternalResolve;
     delete settings.sortOutput;
     delete settings.typescript;
-    delete settings.sourceMap;
-    delete settings.inlineSourceMap;
-    delete settings.sourceRoot;
-    delete settings.inlineSources;
 }
 function normalizeCompilerOptions(options) {
     options.sourceMap = true;
     options.suppressOutputPathCheck = true;
+    options.inlineSourceMap = false;
+    options.sourceRoot = undefined;
+    options.inlineSources = false;
 }
 function reportErrors(errors, typescript) {
     var reporter = _reporter.defaultReporter();
