@@ -70,15 +70,14 @@ function checkAndNormalizeSettings(settings: compile.Settings): void {
 	delete settings.noExternalResolve;
 	delete settings.sortOutput;
 	delete settings.typescript;
-	delete (settings as any).sourceMap;
-	delete (settings as any).inlineSourceMap;
-	delete settings.sourceRoot;
-	delete (settings as any).inlineSources;
 }
 
 function normalizeCompilerOptions(options: ts.CompilerOptions): void {
 	options.sourceMap = true;
 	(options as any).suppressOutputPathCheck = true;
+	options.inlineSourceMap = false;
+	options.sourceRoot = undefined;
+	options.inlineSources = false;
 }
 
 function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts): void {
