@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"outFile": "out.js"
+	},
+	"files": [
+		"file.ts"
+	],
+	"include": [
+		"include.ts"
+	]
+}
