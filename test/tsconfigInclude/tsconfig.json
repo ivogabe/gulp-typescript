@@ -6,6 +6,6 @@
 		"file.ts"
 	],
 	"include": [
-		"*.ts"
+		"include.ts"
 	]
 }

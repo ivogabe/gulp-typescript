@@ -17,6 +17,8 @@ interface PartialProject {
 
 	typescript?: typeof ts;
 	projectDirectory?: string;
+	configFileName?: string;
+	rawConfig?: any;
 	config?: TsConfig;
 	options?: ts.CompilerOptions;
 }
@@ -27,6 +29,8 @@ export interface Project {
 
 	readonly typescript?: typeof ts;
 	readonly projectDirectory: string;
+	readonly configFileName: string;
+	readonly rawConfig: any;
 	readonly config: TsConfig;
 	readonly options: ts.CompilerOptions;
 }
@@ -42,7 +46,7 @@ export interface ProjectInfo {
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts) {
+export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts) {
 	const input = new FileCache(typescript, options);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
@@ -79,6 +83,8 @@ export function setupProject(projectDirectory: string, config: TsConfig, options
 	project.src = src;
 	project.typescript = typescript;
 	project.projectDirectory = projectDirectory;
+	project.configFileName = configFileName;
+	project.rawConfig = rawConfig;
 	project.config = config;
 	project.options = options;
 	
@@ -107,15 +113,12 @@ function src(this: Project) {
 		base = path.resolve(this.projectDirectory, this.options["rootDir"]);
 	}
 
-	const content: any = {};
-	if (this.config.include) content.include = this.config.include;
-	if (this.config.exclude) content.exclude = this.config.exclude;
-	if (this.config.files) content.files = this.config.files;
-	if (this.options['allowJs']) content.compilerOptions = { allowJs: true };
 	const { fileNames, errors } = this.typescript.parseJsonConfigFileContent(
-		content,
-		this.typescript.sys,
-		this.projectDirectory);
+						this.rawConfig,
+						this.typescript.sys,
+						path.resolve(this.projectDirectory),
+						this.options,
+						path.basename(this.configFileName));
 
 	for (const error of errors) {
 		console.log(error.messageText);

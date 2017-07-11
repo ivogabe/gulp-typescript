@@ -147,6 +147,9 @@ module compile {
 		let compilerOptions: ts.CompilerOptions;
 		let fileName: string;
 		settings = { ...settings }; // Shallow copy the settings.
+
+		let rawConfig: any;
+
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				fileName = fileNameOrSettings;
@@ -173,18 +176,17 @@ module compile {
 					console.log(tsConfig.error.messageText);
 				}
 
-				let parsed: ts.ParsedCommandLine = tsConfig.config &&
+				let parsed: ts.ParsedCommandLine =
 					typescript.parseJsonConfigFileContent(
-						tsConfig.config,
+						tsConfig.config || {},
 						typescript.sys,
 						path.resolve(projectDirectory),
 						compilerOptions,
 						path.basename(tsConfigFileName));
 
-				tsConfigContent = {
-					compilerOptions: parsed.options,
-					files: parsed.fileNames,
-				};
+				rawConfig = tsConfig.config;
+
+				tsConfigContent = parsed.raw;
 
 				if (parsed.errors) {
 					reportErrors(parsed.errors, typescript);
@@ -195,7 +197,7 @@ module compile {
 		}
 
 		normalizeCompilerOptions(compilerOptions);
-		const project = _project.setupProject(projectDirectory, tsConfigContent, compilerOptions, typescript);
+		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
 
 		return project;
 	}
