@@ -83,6 +83,7 @@ function reportErrors(errors, typescript) {
         var compilerOptions;
         var fileName;
         settings = __assign({}, settings); // Shallow copy the settings.
+        var rawConfig;
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
                 fileName = fileNameOrSettings;
@@ -104,12 +105,9 @@ function reportErrors(errors, typescript) {
                 if (tsConfig.error) {
                     console.log(tsConfig.error.messageText);
                 }
-                var parsed = tsConfig.config &&
-                    typescript.parseJsonConfigFileContent(tsConfig.config, typescript.sys, path.resolve(projectDirectory), settings, path.basename(tsConfigFileName));
-                tsConfigContent = {
-                    compilerOptions: parsed.options,
-                    files: parsed.fileNames,
-                };
+                var parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, typescript.sys, path.resolve(projectDirectory), compilerOptions, path.basename(tsConfigFileName));
+                rawConfig = tsConfig.config;
+                tsConfigContent = parsed.raw;
                 if (parsed.errors) {
                     reportErrors(parsed.errors, typescript);
                 }
@@ -117,7 +115,7 @@ function reportErrors(errors, typescript) {
             }
         }
         normalizeCompilerOptions(compilerOptions);
-        var project = _project.setupProject(projectDirectory, tsConfigContent, compilerOptions, typescript);
+        var project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
         return project;
     }
     compile.createProject = createProject;

@@ -19,7 +19,7 @@ var reporter_1 = require("./reporter");
 var input_1 = require("./input");
 var output_1 = require("./output");
 var compiler_1 = require("./compiler");
-function setupProject(projectDirectory, config, options, typescript) {
+function setupProject(projectDirectory, configFileName, rawConfig, config, options, typescript) {
     var input = new input_1.FileCache(typescript, options);
     var compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
     var running = false;
@@ -48,6 +48,8 @@ function setupProject(projectDirectory, config, options, typescript) {
     project.src = src;
     project.typescript = typescript;
     project.projectDirectory = projectDirectory;
+    project.configFileName = configFileName;
+    project.rawConfig = rawConfig;
     project.config = config;
     project.options = options;
     var projectInfo = {
@@ -72,16 +74,7 @@ function src() {
     if (this.options["rootDir"]) {
         base = path.resolve(this.projectDirectory, this.options["rootDir"]);
     }
-    var content = {};
-    if (this.config.include)
-        content.include = this.config.include;
-    if (this.config.exclude)
-        content.exclude = this.config.exclude;
-    if (this.config.files)
-        content.files = this.config.files;
-    if (this.options['allowJs'])
-        content.compilerOptions = { allowJs: true };
-    var _a = this.typescript.parseJsonConfigFileContent(content, this.typescript.sys, this.projectDirectory), fileNames = _a.fileNames, errors = _a.errors;
+    var _a = this.typescript.parseJsonConfigFileContent(this.rawConfig, this.typescript.sys, path.resolve(this.projectDirectory), this.options, path.basename(this.configFileName)), fileNames = _a.fileNames, errors = _a.errors;
     for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
         var error = errors_1[_i];
         console.log(error.messageText);

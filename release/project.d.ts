@@ -11,6 +11,8 @@ export interface Project {
     src(this: Project): NodeJS.ReadWriteStream;
     readonly typescript?: typeof ts;
     readonly projectDirectory: string;
+    readonly configFileName: string;
+    readonly rawConfig: any;
     readonly config: TsConfig;
     readonly options: ts.CompilerOptions;
 }
@@ -24,7 +26,7 @@ export interface ProjectInfo {
     directory: string;
     reporter: Reporter;
 }
-export declare function setupProject(projectDirectory: string, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts): Project;
+export declare function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts): Project;
 export interface ICompileStream extends NodeJS.ReadWriteStream {
     js: stream.Readable;
     dts: stream.Readable;
