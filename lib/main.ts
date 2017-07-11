@@ -143,7 +143,7 @@ module compile {
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
-		let typescript;
+		let typescript: typeof ts;
 		let compilerOptions: ts.CompilerOptions;
 		let fileName: string;
 		settings = { ...settings }; // Shallow copy the settings.
@@ -178,7 +178,7 @@ module compile {
 						tsConfig.config,
 						typescript.sys,
 						path.resolve(projectDirectory),
-						settings,
+						compilerOptions,
 						path.basename(tsConfigFileName));
 
 				tsConfigContent = {
