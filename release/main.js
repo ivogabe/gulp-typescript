@@ -1,10 +1,11 @@
 "use strict";
-var __assign = (this && this.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
     return t;
 };
 var path = require("path");
@@ -42,22 +43,20 @@ function getTypeScript(typescript) {
     }
 }
 function checkAndNormalizeSettings(settings) {
+    var declarationFiles = settings.declarationFiles, noExternalResolve = settings.noExternalResolve, sortOutput = settings.sortOutput, typescript = settings.typescript, standardSettings = __rest(settings, ["declarationFiles", "noExternalResolve", "sortOutput", "typescript"]);
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
     }
-    if (settings.noExternalResolve !== undefined) {
+    if (noExternalResolve !== undefined) {
         utils.deprecate("noExternalResolve is deprecated", "use noResolve instead", "The non-standard option noExternalResolve has been removed as of gulp-typescript 3.0.\nUse noResolve instead.");
     }
-    if (settings.sortOutput !== undefined) {
+    if (sortOutput !== undefined) {
         utils.deprecate("sortOutput is deprecated", "your project might work without it", "The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
     }
-    if (settings.declarationFiles) {
-        settings.declaration = settings.declarationFiles;
-        delete settings.declarationFiles;
+    if (declarationFiles) {
+        standardSettings.declaration = settings.declarationFiles;
     }
-    delete settings.noExternalResolve;
-    delete settings.sortOutput;
-    delete settings.typescript;
+    return standardSettings;
 }
 function normalizeCompilerOptions(options) {
     options.sourceMap = true;
@@ -82,7 +81,6 @@ function reportErrors(errors, typescript) {
         var typescript;
         var compilerOptions;
         var fileName;
-        settings = __assign({}, settings); // Shallow copy the settings.
         var rawConfig;
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
@@ -92,7 +90,7 @@ function reportErrors(errors, typescript) {
                 settings = fileNameOrSettings || {};
             }
             typescript = getTypeScript(settings.typescript);
-            checkAndNormalizeSettings(settings);
+            settings = checkAndNormalizeSettings(settings);
             var settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
             if (settingsResult.errors) {
                 reportErrors(settingsResult.errors, typescript);
@@ -106,7 +104,7 @@ function reportErrors(errors, typescript) {
                     console.log(tsConfig.error.messageText);
                 }
                 var parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, typescript.sys, path.resolve(projectDirectory), compilerOptions, path.basename(tsConfigFileName));
-                rawConfig = tsConfig.config;
+                rawConfig = parsed.raw;
                 tsConfigContent = parsed.raw;
                 if (parsed.errors) {
                     reportErrors(parsed.errors, typescript);

@@ -113,11 +113,13 @@ function src(this: Project) {
 		base = path.resolve(this.projectDirectory, this.options["rootDir"]);
 	}
 
+	const { extends: _extends, ...config } = this.rawConfig;
+
 	const { fileNames, errors } = this.typescript.parseJsonConfigFileContent(
-						this.rawConfig,
+						config,
 						this.typescript.sys,
 						path.resolve(this.projectDirectory),
-						this.options,
+						undefined,
 						path.basename(this.configFileName));
 
 	for (const error of errors) {

@@ -46,30 +46,29 @@ function getTypeScript(typescript: typeof ts) {
 	}
 }
 
-function checkAndNormalizeSettings(settings: compile.Settings): void {
+function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings {
+	const { declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
+
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
 	}
 
-	if (settings.noExternalResolve !== undefined) {
+	if (noExternalResolve !== undefined) {
 		utils.deprecate("noExternalResolve is deprecated",
 			"use noResolve instead",
 			"The non-standard option noExternalResolve has been removed as of gulp-typescript 3.0.\nUse noResolve instead.");
 	}
-	if (settings.sortOutput !== undefined) {
+	if (sortOutput !== undefined) {
 		utils.deprecate("sortOutput is deprecated",
 			"your project might work without it",
 			"The non-standard option sortOutput has been removed as of gulp-typescript 3.0.\nYour project will probably compile without this option.\nOtherwise, if you're using gulp-concat, you should remove gulp-concat and use the outFile option instead.");
 	}
 
-	if (settings.declarationFiles) {
-		settings.declaration = settings.declarationFiles;
-		delete settings.declarationFiles;
+	if (declarationFiles) {
+		standardSettings.declaration = settings.declarationFiles;
 	}
 
-	delete settings.noExternalResolve;
-	delete settings.sortOutput;
-	delete settings.typescript;
+	return standardSettings;
 }
 
 function normalizeCompilerOptions(options: ts.CompilerOptions): void {
@@ -146,7 +145,6 @@ module compile {
 		let typescript: typeof ts;
 		let compilerOptions: ts.CompilerOptions;
 		let fileName: string;
-		settings = { ...settings }; // Shallow copy the settings.
 
 		let rawConfig: any;
 
@@ -158,7 +156,7 @@ module compile {
 			}
 
 			typescript = getTypeScript(settings.typescript);
-			checkAndNormalizeSettings(settings);
+			settings = checkAndNormalizeSettings(settings);
 
 			const settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
 
@@ -184,7 +182,7 @@ module compile {
 						compilerOptions,
 						path.basename(tsConfigFileName));
 
-				rawConfig = tsConfig.config;
+				rawConfig = parsed.raw;
 
 				tsConfigContent = parsed.raw;
 
