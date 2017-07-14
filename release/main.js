@@ -43,6 +43,7 @@ function getTypeScript(typescript) {
     }
 }
 function checkAndNormalizeSettings(settings) {
+    if (settings === void 0) { settings = {}; }
     var declarationFiles = settings.declarationFiles, noExternalResolve = settings.noExternalResolve, sortOutput = settings.sortOutput, typescript = settings.typescript, standardSettings = __rest(settings, ["declarationFiles", "noExternalResolve", "sortOutput", "typescript"]);
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
@@ -65,10 +66,13 @@ function normalizeCompilerOptions(options) {
     options.sourceRoot = undefined;
     options.inlineSources = false;
 }
-function reportErrors(errors, typescript) {
+function reportErrors(errors, typescript, ignore) {
+    if (ignore === void 0) { ignore = []; }
     var reporter = _reporter.defaultReporter();
     for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
         var error = errors_1[_i];
+        if (ignore.indexOf(error.code) !== -1)
+            continue;
         reporter.error(utils.getError(error, typescript), typescript);
     }
 }
@@ -103,11 +107,11 @@ function reportErrors(errors, typescript) {
                 if (tsConfig.error) {
                     console.log(tsConfig.error.messageText);
                 }
-                var parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, typescript.sys, path.resolve(projectDirectory), compilerOptions, path.basename(tsConfigFileName));
+                var parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, getTsconfigSystem(typescript), path.resolve(projectDirectory), compilerOptions, path.basename(tsConfigFileName));
                 rawConfig = parsed.raw;
                 tsConfigContent = parsed.raw;
                 if (parsed.errors) {
-                    reportErrors(parsed.errors, typescript);
+                    reportErrors(parsed.errors, typescript, [18003]);
                 }
                 compilerOptions = parsed.options;
             }
@@ -126,4 +130,12 @@ function reportErrors(errors, typescript) {
     }
     compile.filter = filter;
 })(compile || (compile = {}));
+function getTsconfigSystem(typescript) {
+    return {
+        useCaseSensitiveFileNames: false,
+        readDirectory: function () { return []; },
+        fileExists: typescript.sys.fileExists,
+        readFile: typescript.sys.readFile
+    };
+}
 module.exports = compile;
