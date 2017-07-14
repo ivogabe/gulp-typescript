@@ -68,7 +68,6 @@ function longReporter() {
 exports.longReporter = longReporter;
 function fullReporter(fullFilename) {
     if (fullFilename === void 0) { fullFilename = false; }
-    var typescript = require('typescript');
     return {
         error: function (error, typescript) {
             console.error('[' + gutil.colors.gray('gulp-typescript') + '] '
