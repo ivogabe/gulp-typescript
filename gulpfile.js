@@ -13,24 +13,18 @@ var diff = require('gulp-diff');
 
 var tsVersions = {
 	dev: './typescript/dev',
-	release14: './typescript/1-4',
-	release15: './typescript/1-5',
-	release16: './typescript/1-6',
-	release17: './typescript/1-7'
+	release23: './typescript/2.3',
 };
 
 function findTSDefinition(location) {
 	return path.join(path.dirname(require.resolve(location)), 'typescript.d.ts');
 }
 
-var tsOptions = {
-	target: 'es5',
-	module: 'commonjs',
-	declaration: true,
-	preserveConstEnums: true,
-	typescript: require('./typescript/dev')
-};
-var tsProject = ts.createProject(tsOptions);
+function createProject() {
+	return ts.createProject('lib/tsconfig.json', {});
+}
+
+var tsProject = createProject();
 
 var paths = {
 	scripts: ['lib/**.ts'],
@@ -64,45 +58,28 @@ gulp.task('scripts', ['clean'], function() {
 });
 
 // Type checking against multiple versions of TypeScript
-// Checking against the current release of TypeScript on NPM can be done using `gulp scripts`.
-gulp.task('typecheck-1.4', function() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		findTSDefinition(tsVersions.release14)
-	])).pipe(ts(tsOptions));
-});
-gulp.task('typecheck-1.5', function() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		findTSDefinition(tsVersions.release15)
-	])).pipe(ts(tsOptions));
-});
-gulp.task('typecheck-1.6', function() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		findTSDefinition(tsVersions.release16)
-	])).pipe(ts(tsOptions));
-});
-gulp.task('typecheck-1.7', function() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		findTSDefinition(tsVersions.release17)
-	])).pipe(ts(tsOptions));
-});
 gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.dev)
-	])).pipe(ts(tsOptions));
+	])).pipe(createProject()());
 });
 
-gulp.task('typecheck', [/* 'typecheck-1.4', 'typecheck-1.5', 'typecheck-1.6', */ 'typecheck-dev']);
+gulp.task('typecheck-2.3', function() {
+	return gulp.src(paths.scripts.concat([
+		'!definitions/typescript.d.ts',
+		findTSDefinition(tsVersions.release23)
+	])).pipe(createProject()());
+});
+
+gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 
 // Tests
 
 // We run every test on multiple typescript versions:
 var libs = [
-	['2.0', undefined],
+	['2.4', undefined],
+	['2.3', require(tsVersions.release23)],
 	['dev', require(tsVersions.dev)]
 ];
 

@@ -3,6 +3,9 @@
 		"target": "ES5",
 		"module": "commonjs",
 		"noUnusedLocals": true,
-		"declaration": true
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"declaration": true,
+		"preserveConstEnums": true
 	}
 }

@@ -78,7 +78,7 @@
     "gulp-sourcemaps": "~1.6.0",
     "merge-stream": "~1.0.0",
     "rimraf": "~2.5.2",
-    "typescript": "2.3.3"
+    "typescript": "2.4.1"
   },
   "peerDependencies": {
     "typescript": "~2.0.3 || >=2.0.0-dev || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev"

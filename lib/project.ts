@@ -150,8 +150,8 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 
 	private project: ProjectInfo;
 
-	_write(file: any, encoding, cb: (err?) => void);
-	_write(file: VinylFile, encoding, cb = (err?) => {}) {
+	_write(file: any, encoding: string, cb: (err?: any) => void): void;
+	_write(file: VinylFile, encoding: string, cb = (err?: any) => {}) {
 		if (!file) return cb();
 
 		if (file.isNull()) {
@@ -172,7 +172,7 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 
 	}
 
-	end(chunk?, encoding?, callback?) {
+	end(chunk?: any, encoding?: any, callback?: any) {
 		if (typeof chunk === 'function') {
 			this._write(null, null, chunk);
 		} else if (typeof encoding === 'function') {
