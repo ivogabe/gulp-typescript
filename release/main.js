@@ -43,7 +43,6 @@ function getTypeScript(typescript) {
     }
 }
 function checkAndNormalizeSettings(settings) {
-    if (settings === void 0) { settings = {}; }
     var declarationFiles = settings.declarationFiles, noExternalResolve = settings.noExternalResolve, sortOutput = settings.sortOutput, typescript = settings.typescript, standardSettings = __rest(settings, ["declarationFiles", "noExternalResolve", "sortOutput", "typescript"]);
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
@@ -89,6 +88,8 @@ function reportErrors(errors, typescript, ignore) {
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
                 fileName = fileNameOrSettings;
+                if (settings === undefined)
+                    settings = {};
             }
             else {
                 settings = fileNameOrSettings || {};

@@ -21,7 +21,7 @@ function findTSDefinition(location) {
 }
 
 function createProject() {
-	return ts.createProject('lib/tsconfig.json', {});
+	return ts.createProject('lib/tsconfig.json');
 }
 
 var tsProject = createProject();

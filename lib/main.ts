@@ -45,7 +45,7 @@ function getTypeScript(typescript: typeof ts) {
 	}
 }
 
-function checkAndNormalizeSettings(settings: compile.Settings = {}): compile.Settings {
+function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings {
 	const { declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
 
 	if (settings.sourceRoot !== undefined) {
@@ -152,6 +152,7 @@ module compile {
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				fileName = fileNameOrSettings;
+				if (settings === undefined) settings = {};
 			} else {
 				settings = fileNameOrSettings || {};
 			}
