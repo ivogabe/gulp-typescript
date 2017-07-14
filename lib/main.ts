@@ -79,9 +79,11 @@ function normalizeCompilerOptions(options: ts.CompilerOptions): void {
 	options.inlineSources = false;
 }
 
-function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts): void {
+function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts, ignore: number[] = []): void {
 	const reporter = _reporter.defaultReporter();
 	for (const error of errors) {
+		if (ignore.indexOf(error.code) !== -1) continue;
+
 		reporter.error(utils.getError(error, typescript), typescript);
 	}
 }
@@ -177,7 +179,7 @@ module compile {
 				let parsed: ts.ParsedCommandLine =
 					typescript.parseJsonConfigFileContent(
 						tsConfig.config || {},
-						typescript.sys,
+						getTsconfigSystem(typescript),
 						path.resolve(projectDirectory),
 						compilerOptions,
 						path.basename(tsConfigFileName));
@@ -187,7 +189,7 @@ module compile {
 				tsConfigContent = parsed.raw;
 
 				if (parsed.errors) {
-					reportErrors(parsed.errors, typescript);
+					reportErrors(parsed.errors, typescript, [18003]);
 				}
 
 				compilerOptions = parsed.options;
@@ -205,6 +207,15 @@ module compile {
 			'soon you can use tsProject.resolve()',
 			'Filters have been removed as of gulp-typescript 3.0.\nSoon tsProject.resolve() will be available as an alternative.\nSee https://github.com/ivogabe/gulp-typescript/issues/190.');
 	}
+}
+
+function getTsconfigSystem(typescript: typeof ts): ts.ParseConfigHost {
+	return {
+		useCaseSensitiveFileNames: false,
+		readDirectory: () => [],
+		fileExists: typescript.sys.fileExists,
+		readFile: typescript.sys.readFile
+	};
 }
 
 export = compile;
