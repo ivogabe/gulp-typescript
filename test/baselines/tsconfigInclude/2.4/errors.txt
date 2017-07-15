@@ -1,4 +1,4 @@
-TypeScript error: [31mtest/tsconfigInclude/file.ts(1,1): [39merror TS2304: Cannot find name 'file'.
+TypeScript error: [31mtest/tsconfigInclude/file.ts(1,1): [39merror TS2552: Cannot find name 'file'. Did you mean 'File'?
 TypeScript error: [31mtest/tsconfigInclude/include.ts(1,1): [39merror TS2304: Cannot find name 'include'.
 {
     "transpileErrors": 0,
