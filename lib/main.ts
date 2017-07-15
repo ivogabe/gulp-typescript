@@ -211,7 +211,7 @@ module compile {
 
 function getTsconfigSystem(typescript: typeof ts): ts.ParseConfigHost {
 	return {
-		useCaseSensitiveFileNames: false,
+		useCaseSensitiveFileNames: typescript.sys.useCaseSensitiveFileNames,
 		readDirectory: () => [],
 		fileExists: typescript.sys.fileExists,
 		readFile: typescript.sys.readFile
