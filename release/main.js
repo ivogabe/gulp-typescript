@@ -133,7 +133,7 @@ function reportErrors(errors, typescript, ignore) {
 })(compile || (compile = {}));
 function getTsconfigSystem(typescript) {
     return {
-        useCaseSensitiveFileNames: false,
+        useCaseSensitiveFileNames: typescript.sys.useCaseSensitiveFileNames,
         readDirectory: function () { return []; },
         fileExists: typescript.sys.fileExists,
         readFile: typescript.sys.readFile
