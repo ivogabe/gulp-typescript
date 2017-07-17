@@ -31,7 +31,7 @@ npm install gulp-typescript typescript
 
 Options
 -------
-Allmost all options from TypeScript are supported.
+Almost all options from TypeScript are supported.
 - `outFile` (string) - Generate one javascript and one definition file. Only works when no module system is used.
 - `outDir` (string) - Move output to a different (virtual) directory. Note that you still need `gulp.dest` to write output to disk.
 - `noImplicitAny` (boolean) - Warn on expressions and declarations with an implied 'any' type.
