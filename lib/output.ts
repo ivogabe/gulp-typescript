@@ -95,7 +95,7 @@ export class Output {
 		function relativeToOutput(fileName: string) {
 		        const sourceDirAbsolute = path.parse(path.resolve(directory, fileName)).dir;
             		const destDirAbsolute = path.parse(output.path).dir;
-            		const fileName = path.parse(fileName).base;
+            		fileName = path.parse(fileName).base;
             		const sourcePathRelativeToDestPath = path.relative( destDirAbsolute, sourceDirAbsolute);
             		const fullRelativeSourcePath = utils.forwardSlashes(sourcePathRelativeToDestPath) + "/" +  fileName;
             		return fullRelativeSourcePath;
