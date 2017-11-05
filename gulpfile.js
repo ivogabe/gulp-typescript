@@ -1,17 +1,14 @@
-var gulp = require('gulp');
-var rimraf = require('rimraf');
-var fs = require('fs');
-var path = require('path');
-var mergeStream = require('merge-stream');
-var ts = require('./release/main');
+const gulp = require('gulp');
+const rimraf = require('rimraf');
+const fs = require('fs');
+const path = require('path');
+const mergeStream = require('merge-stream');
+const ts = require('./release/main');
 
-var plumber = require('gulp-plumber');
-var sourcemaps = require('gulp-sourcemaps');
-var concat = require('gulp-concat');
-var header = require('gulp-header');
-var diff = require('gulp-diff');
+const plumber = require('gulp-plumber');
+const diff = require('gulp-diff');
 
-var tsVersions = {
+const tsVersions = {
 	dev: './typescript/dev',
 	release23: './typescript/2.3',
 };
@@ -24,16 +21,16 @@ function createProject() {
 	return ts.createProject('lib/tsconfig.json');
 }
 
-var tsProject = createProject();
+const tsProject = createProject();
 
-var paths = {
+const paths = {
 	scripts: ['lib/**.ts'],
 	definitionTypeScript: [findTSDefinition('typescript')],
 	releaseBeta: 'release-2',
 	release: 'release'
 };
 
-var tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
+const tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
 	return dir !== 'baselines' && dir !== 'output' && dir.substr(0, 1) !== '.';
 });
 
@@ -50,7 +47,7 @@ gulp.task('clean-release', function(cb) {
 
 // Compile sources
 gulp.task('scripts', ['clean'], function() {
-	var tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
+	const tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
 		.pipe(tsProject());
 
 	return mergeStream(tsResult.js, tsResult.dts)
@@ -77,89 +74,75 @@ gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 // Tests
 
 // We run every test on multiple typescript versions:
-var libs = [
+const libs = [
 	['2.4', undefined],
 	['2.3', require(tsVersions.release23)],
 	['dev', require(tsVersions.dev)]
 ];
 
-// helper function for running a test.
-function runTest(name, callback) {
-	var newTS = require('./release-2/main');
-	var test = require('./test/' + name + '/gulptask.js');
+/**
+ * Runs the tests in the directory `test/${name}/` with all the supported versions of TS
+ *
+ * This function loads the gulp task from the `gulptask.js` file in the corresponding directory.
+ * Then, for each supported Typescript version, it executes it. The result is emitted in the
+ * `test/output/${name}/${tsVersion}` directories. It consists of a `dts` directory, `js` directory and
+ * `errors.txt`.
+ *
+ * @param name {string} Name of the test, corresponds to its directory name in `test/`
+ */
+async function runTest(name) {
+	const testDir = path.posix.join('test', name);
+	const outputDir = path.posix.join('test', 'output', name);
 
-	var done = 0;
+	const newGulpTs = require('./release-2/main');
+	const testTask = require(`./${path.posix.join(testDir, 'gulptask.js')}`);
 
-	fs.mkdirSync('test/output/' + name);
-	for (var i = 0; i < libs.length; i++) {
-		(function(i) {
-			var lib = libs[i];
-			var output = 'test/output/' + name + '/' + lib[0] + '/';
-			var errors = [];
-			var finishInfo;
-			var reporter = {
-				error: function(err) {
-					(function() {
-						if (path.sep === '\\') { //filenames embedded in error output contain OS-dependent path separators
-							var colon = err.message.indexOf(":");
-							if (colon === -1 || !err.diagnostic || err.message.indexOf(path.sep) === -1) {
-								return;
-							}
-
-							var fileName = err.message.slice(0, colon);
-							var detail = err.message.slice(colon);
-							fileName = fileName.replace(/\\/g, '/');
-							err.message = fileName + detail;
+	fs.mkdirSync(outputDir);
+	return Promise.all(libs.map(([tsVersion, tsLib]) => {
+		return new Promise((resolve, reject) => {
+			const errors = [];
+			let finishInfo;
+			const reporter = {
+				error (err) {
+					// File names embedded in error output contain OS-dependent path separators, normalize from Windows to Posix
+					if (path.sep === '\\') {
+						const colonIndex = err.message.indexOf(':');
+						if (colonIndex >= 0 && err.diagnostic && err.message.indexOf(path.sep) >= 0) {
+							const detail = err.message.slice(colonIndex);
+							const fileName = err.message.slice(0, colonIndex).replace(/\\/g, '/');
+							err.message= `${fileName}${detail}`;
 						}
-					})();
-
+					}
 					errors.push(err);
 				},
-				finish: function(info) {
+				finish(info) {
 					finishInfo = info;
 				}
 			};
-			fs.mkdirSync(output);
-			test(newTS, lib[1], output, reporter).on('finish', function() {
-				fs.writeFileSync(output + 'errors.txt', errors.join('\n') + '\n' + JSON.stringify(finishInfo, null, 4));
-				done++;
-				callback();
+			const curOutputDir = path.posix.join(outputDir, tsVersion);
+			fs.mkdirSync(curOutputDir);
+			testTask(newGulpTs, tsLib, `${curOutputDir}/`, reporter).on('finish', () => {
+				const result = [...errors, JSON.stringify(finishInfo, null, 4)].join('\n');
+				fs.writeFileSync(path.posix.join(curOutputDir, 'errors.txt'), result);
+				resolve();
 			});
-		})(i);
-	}
+		});
+	}));
 }
 
-gulp.task('test-run', ['clean-test', 'scripts'], function(cb) {
+gulp.task('test-run', ['clean-test', 'scripts'], async function() {
 	fs.mkdirSync('test/output/');
-
-	var pending = tests.length * libs.length;
-	if (pending === 0) {
-		cb();
-		return;
+	for (const testName of tests) {
+		await runTest(testName);
 	}
+});
 
-	var isFailed = false;
-	for (var i = 0; i < tests.length; i++) {
-		runTest(tests[i], function(failed) {
-			isFailed = isFailed || failed;
-			pending--;
-			if (pending === 0) {
-				if (isFailed) {
-					cb(new Error('Tests failed'));
-				} else {
-					cb();
-				}
-			}
-			// This allows catching possible counting errors.
-			else if (pending < 0) {
-				throw new Error('Callback called more than expected!');
-			}
-		});
-	}
-})
-
-gulp.task('test', ['test-run'], function(cb) {
-	var failed = false;
+/**
+ * Executes all the test tasks and then compares their output against the expected output (defined in
+ * `test/baseline`).
+ */
+gulp.task('test', ['test-run'], function() {
+	let failed = false;
 	function onError(error) {
 		failed = true;
 	}
