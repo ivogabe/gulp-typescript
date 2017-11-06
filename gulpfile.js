@@ -153,7 +153,7 @@ gulp.task('test', ['test-run'], function() {
 		.pipe(diff.reporter({ fail: true }))
 		.on('error', onError)
 		.on('finish', function() {
-			if (failure !== null) {
+			if (failure !== undefined) {
 				throw failure;
 			}
 		});

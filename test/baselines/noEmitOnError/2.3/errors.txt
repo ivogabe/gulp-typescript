@@ -6,6 +6,6 @@ TypeScript error: [31mtest/noEmitOnError/a.ts(1,7): [39merror TS2322: Type '1'
     "globalErrors": 0,
     "semanticErrors": 1,
     "declarationErrors": 0,
-    "emitErrors": 1,
+    "emitErrors": 0,
     "emitSkipped": true
 }
