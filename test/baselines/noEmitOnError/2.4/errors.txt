@@ -1,0 +1,11 @@
+TypeScript error: [31mtest/noEmitOnError/a.ts(1,7): [39merror TS2322: Type '1' is not assignable to type 'string'.
+{
+    "transpileErrors": 0,
+    "optionsErrors": 0,
+    "syntaxErrors": 0,
+    "globalErrors": 0,
+    "semanticErrors": 1,
+    "declarationErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": true
+}

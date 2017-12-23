@@ -75,7 +75,7 @@ gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 
 // We run every test on multiple typescript versions:
 const libs = [
-	['2.4', undefined],
+	['2.4', undefined], // Autodetect: load from `node_modules`
 	['2.3', require(tsVersions.release23)],
 	['dev', require(tsVersions.dev)]
 ];
@@ -142,9 +142,9 @@ gulp.task('test-run', ['clean-test', 'scripts'], async function() {
  * `test/baseline`).
  */
 gulp.task('test', ['test-run'], function() {
-	let failed = false;
+	let failure = undefined;
 	function onError(error) {
-		failed = true;
+		failure = error;
 	}
 	return gulp.src('test/output/**/*.*')
 		.pipe(plumber())
@@ -153,8 +153,8 @@ gulp.task('test', ['test-run'], function() {
 		.pipe(diff.reporter({ fail: true }))
 		.on('error', onError)
 		.on('finish', function() {
-			if (failed) {
-				throw new Error('Tests failed');
+			if (failure !== undefined) {
+				throw failure;
 			}
 		});
 });

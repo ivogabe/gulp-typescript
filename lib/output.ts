@@ -9,12 +9,32 @@ import * as reporter from './reporter';
 import * as project from './project';
 import { VinylFile, RawSourceMap } from './types';
 
+/**
+ * Converts a `ts.Diagnostic` object to a string identifying it.
+ *
+ * @param diagnostic Diagnostic object to hash
+ * @return Hash the diagnostic object
+ */
+function hashDiagnostic(diagnostic: ts.Diagnostic): string {
+	const plain = {
+		fileName: diagnostic.file && diagnostic.file.fileName,
+		start: diagnostic.start,
+		length: diagnostic.length,
+		messageText: diagnostic.messageText,
+		category: diagnostic.category,
+		code: diagnostic.code,
+		source: diagnostic.source,
+	};
+	return JSON.stringify(plain);
+}
+
 export class Output {
 	constructor(_project: project.ProjectInfo, streamFull: stream.Readable, streamJs: stream.Readable, streamDts: stream.Readable) {
 		this.project = _project;
 		this.streamFull = streamFull;
 		this.streamJs = streamJs;
 		this.streamDts = streamDts;
+		this.diagnostics = {};
 	}
 
 	project: project.ProjectInfo;
@@ -25,6 +45,11 @@ export class Output {
 	streamJs: stream.Readable;
 	// .d.ts files
 	streamDts: stream.Readable;
+
+	/**
+	 * Set of hashes of reported diagnostics, used to detect duplicates.
+	 */
+	private diagnostics: {[diagnosticHash: string]: boolean};
 
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
 		const file = <VinylFile> new gutil.File({
@@ -116,8 +141,25 @@ export class Output {
 
 		return utils.getError(info, this.project.typescript, file);
 	}
-	diagnostic(info: ts.Diagnostic) {
+
+	/**
+	 * Report a new diagnostic
+	 *
+	 * By default, it only reports unique diagnostics. You can disable this behavior
+	 * by setting `skipUniqueCheck` to `true`.
+	 *
+	 * @param info Diagnostic to report.
+	 * @param skipUniqueCheck Force reporting even if the diagnostic was already reported.
+	 * @return Boolean indicating if the diagnostic was reported.
+	 */
+	diagnostic(info: ts.Diagnostic, skipUniqueCheck: boolean = false): boolean {
+		const hash: string = hashDiagnostic(info);
+		if (!skipUniqueCheck && hash in this.diagnostics) {
+			return false;
+		}
+		this.diagnostics[hash] = true;
 		this.error(this.getError(info));
+		return true;
 	}
 	error(error: reporter.TypeScriptError) {
 		if (!error) return;
