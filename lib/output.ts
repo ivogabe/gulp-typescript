@@ -2,12 +2,11 @@ import * as stream from 'stream';
 import * as path from 'path';
 import * as ts from 'typescript';
 import * as sourceMap from 'source-map';
-import * as gutil from 'gulp-util';
+import * as VinylFile from 'vinyl';
 import * as utils from './utils';
 import * as input from './input';
 import * as reporter from './reporter';
 import * as project from './project';
-import { VinylFile, RawSourceMap } from './types';
 
 export class Output {
 	constructor(_project: project.ProjectInfo, streamFull: stream.Readable, streamJs: stream.Readable, streamDts: stream.Readable) {
@@ -27,7 +26,7 @@ export class Output {
 	streamDts: stream.Readable;
 
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
-		const file = <VinylFile> new gutil.File({
+		const file = new VinylFile({
 			path: fileName,
 			contents: new Buffer(content),
 			cwd,
@@ -40,7 +39,7 @@ export class Output {
 	}
 
 	writeDts(base: string, fileName: string, content: string, cwd: string) {
-		const file = new gutil.File({
+		const file = new VinylFile({
 			path: fileName,
 			contents: new Buffer(content),
 			cwd,
@@ -74,7 +73,7 @@ export class Output {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 
 			const inputOriginalMap = sourceFile.gulp.sourceMap;
-			const inputMap: RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
+			const inputMap: sourceMap.RawSourceMap = typeof inputOriginalMap === 'object' ? inputOriginalMap : JSON.parse(inputOriginalMap);
 
 			// We should only apply the input mappings if the input mapping isn't empty,
 			// since `generator.applySourceMap` has a really bad performance on big inputs.

@@ -6,6 +6,10 @@
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
 		"declaration": true,
-		"preserveConstEnums": true
+		"preserveConstEnums": true,
+		"baseUrl": ".",
+		"paths" :{
+			"*": ["../typings/*"]
+		}
 	}
 }

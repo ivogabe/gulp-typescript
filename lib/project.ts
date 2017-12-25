@@ -2,13 +2,14 @@ import * as stream from 'stream';
 import * as ts from 'typescript';
 import * as vfs from 'vinyl-fs';
 import * as path from 'path';
-import * as gutil from 'gulp-util';
+import * as PluginError from 'plugin-error';
+import * as VinylFile from 'vinyl';
 import * as utils from './utils';
 import { Reporter, defaultReporter } from './reporter';
 import { FileCache } from './input';
 import { Output } from './output';
 import { ICompiler, ProjectCompiler, FileCompiler } from './compiler';
-import { TsConfig, VinylFile } from './types';
+import { TsConfig } from './types';
 
 interface PartialProject {
 	(reporter?: Reporter): ICompileStream;
@@ -87,7 +88,7 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 	project.rawConfig = rawConfig;
 	project.config = config;
 	project.options = options;
-	
+
 	const projectInfo: ProjectInfo = {
 		input,
 		singleOutput,
@@ -159,7 +160,7 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 			return;
 		}
 		if (file.isStream()) {
-			return cb(new gutil.PluginError('gulp-typescript', 'Streaming not supported'));
+			return cb(new PluginError('gulp-typescript', 'Streaming not supported'));
 		}
 
 		const inputFile = this.project.input.addGulp(file);
