@@ -47,10 +47,8 @@ gulp.task('clean-release', function(cb) {
 
 // Compile sources
 gulp.task('scripts', ['clean'], function() {
-	const tsResult = gulp.src(paths.scripts.concat(paths.definitionTypeScript))
-		.pipe(tsProject());
-
-	return mergeStream(tsResult.js, tsResult.dts)
+	return gulp.src(paths.scripts.concat(paths.definitionTypeScript))
+		.pipe(tsProject())
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
