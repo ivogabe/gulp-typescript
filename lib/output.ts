@@ -92,8 +92,12 @@ export class Output {
 		return generator.toString();
 
 		function relativeToOutput(fileName: string) {
-			const absolute = path.resolve(directory, fileName);
-			return utils.forwardSlashes(path.relative(output.base, absolute));
+		        const sourceDirAbsolute = path.parse(path.resolve(directory, fileName)).dir;
+            		const destDirAbsolute = path.parse(output.path).dir;
+            		fileName = path.parse(fileName).base;
+            		const sourcePathRelativeToDestPath = path.relative( destDirAbsolute, sourceDirAbsolute);
+            		const fullRelativeSourcePath = utils.forwardSlashes(sourcePathRelativeToDestPath) + "/" +  fileName;
+            		return fullRelativeSourcePath;
 		}
 	}
 
