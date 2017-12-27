@@ -101,9 +101,8 @@ export class Output {
 		this.result = result;
 		if (this.project.reporter.finish) this.project.reporter.finish(result);
 
+		this.streamFull.emit('end');
 		this.streamFull.emit('finish');
-		this.streamJs.emit('finish');
-		this.streamDts.emit('finish');
 		this.streamFull.push(null);
 		this.streamJs.push(null);
 		this.streamDts.push(null);
