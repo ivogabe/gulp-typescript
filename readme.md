@@ -200,8 +200,13 @@ gulp.task('scripts', function() {
 });
 ```
 
-Instead of inlining the source maps, you must configure the `sourceRoot` field of the generated source maps. It should point to the source directory, containing your TypeScript files (usually where the glob starts in `gulp.src`). It can be an absolute path or a relative path from the output path, the argument of `gulp.dest`. I'd recommend the latter for development. The following example shows how a relative path can be used:
+When you are not inlining the source content, you should specify the `sourceRoot` property. It can be configured with the following rule:
 
+- If you don't provide the `outDir` option to TypeScript, the `sourceRoot` option of gulp-sourcemaps should be the relative path from the `gulp.dest` path to the source directory (from `gulp.src`)
+- If you set the `outDir` option to the same value as the directory in `gulp.dest`, you should set the `sourceRoot` to `./`.
+- If you set the `outDir` option to a different value, there is no easy rule to configure gulp-sourcemaps. I'd advise to change the value of outDir if possible.
+
+Furthermore you should set `includeContent: false`. Here's an example where `outDir` isn't set:
 ```js
 gulp.task('scripts', function() {
     return gulp.src('lib/*.ts')
@@ -209,10 +214,12 @@ gulp.task('scripts', function() {
         .pipe(ts({
             // ...
         }))
-        .pipe(sourcemaps.write('.', { sourceRoot: '../lib' }))
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../lib' }))
         .pipe(gulp.dest('dist'));
 });
 ```
+
+Some examples can be found in [ivogabe/gulp-typescript-sourcemaps-demo](https://github.com/ivogabe/gulp-typescript-sourcemaps-demo).
 
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
 
