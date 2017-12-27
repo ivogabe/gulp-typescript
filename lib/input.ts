@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import * as path from 'path';
 import * as utils from './utils';
-import { VinylFile } from './types';
+import * as VinylFile from 'vinyl';
 
 export enum FileChangeState {
 	New,
@@ -134,7 +134,7 @@ export class FileDictionary {
 	// This empty setter will prevent that TS emits 'readonly' modifier.
 	// 'readonly' is not supported in current stable release.
 	set commonBasePath(value) {}
-	
+
 	get commonSourceDirectory() {
 		const fileNames = this.getSourceFileNames();
 		return utils.getCommonBasePathOfArray(
@@ -223,12 +223,12 @@ export class FileCache {
 	// This empty setter will prevent that TS emits 'readonly' modifier.
 	// 'readonly' is not supported in current stable release.
 	set firstSourceFile(value) {}
-	
+
 	get commonBasePath() {
 		return this.current.commonBasePath;
 	}
 	set commonBasePath(value) {}
-	
+
 	get commonSourceDirectory() {
 		return this.current.commonSourceDirectory;
 	}

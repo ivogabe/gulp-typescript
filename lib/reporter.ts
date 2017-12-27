@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
-import * as gutil from 'gulp-util';
-import { VinylFile } from './types';
+import * as colors from 'ansi-colors';
+import * as VinylFile from 'vinyl';
 
 export interface TypeScriptError extends Error {
 	fullFilename?: string;
@@ -58,7 +58,7 @@ function defaultFinishHandler(results: CompilationResult) {
 	const showErrorCount = (count: number, type: string) => {
 		if (count === 0) return;
 
-		gutil.log('TypeScript:', gutil.colors.magenta(count.toString()), (type !== '' ? type + ' ' : '') + (count === 1 ? 'error' : 'errors'));
+		console.log('TypeScript:', colors.magenta(count.toString()), (type !== '' ? type + ' ' : '') + (count === 1 ? 'error' : 'errors'));
 		hasError = true;
 	};
 
@@ -71,9 +71,9 @@ function defaultFinishHandler(results: CompilationResult) {
 	showErrorCount(results.emitErrors, 'emit');
 
 	if (results.emitSkipped) {
-		gutil.log('TypeScript: emit', gutil.colors.red('failed'));
+		console.log('TypeScript: emit', colors.red('failed'));
 	} else if (hasError) {
-		gutil.log('TypeScript: emit', gutil.colors.cyan('succeeded'), '(with errors)');
+		console.log('TypeScript: emit', colors.cyan('succeeded'), '(with errors)');
 	}
 }
 
@@ -94,7 +94,7 @@ export function longReporter(): Reporter {
 	return {
 		error: (error: TypeScriptError) => {
 			if (error.tsFile) {
-				console.error('[' + gutil.colors.gray('gulp-typescript') + '] ' + gutil.colors.red(error.fullFilename
+				console.error('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
 					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
 					+ 'error TS' + error.diagnostic.code + ' ' + typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
 			} else {
@@ -107,21 +107,21 @@ export function longReporter(): Reporter {
 export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
-			console.error('[' + gutil.colors.gray('gulp-typescript') + '] '
-				+ gutil.colors.bgRed(error.diagnostic.code + '')
-				+ ' ' + gutil.colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
+			console.error('[' + colors.gray('gulp-typescript') + '] '
+				+ colors.bgred(error.diagnostic.code + '')
+				+ ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 
 			if (error.tsFile) {
-				console.error('> ' + gutil.colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + gutil.colors.gray(':'));
+				console.error('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
 				const lines = error.tsFile.text.split(/(?:\r\n|\r|\n)/);
 
 				const logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
 					const line = lines[lineIndex];
 					if (errorEnd === undefined) errorEnd = line.length;
-					console.error('> ' + gutil.colors.gray('[' + lineIndex + '] ')
+					console.error('> ' + colors.gray('[' + lineIndex + '] ')
 						+ line.substring(0, errorStart)
-						+ gutil.colors.red(line.substring(errorStart, errorEnd))
+						+ colors.red(line.substring(errorStart, errorEnd))
 						+ line.substring(errorEnd)
 					);
 				}
