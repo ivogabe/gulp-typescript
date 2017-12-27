@@ -152,6 +152,8 @@ module compile {
 		if (fileNameOrSettings !== undefined) {
 			if (typeof fileNameOrSettings === 'string') {
 				fileName = fileNameOrSettings;
+				tsConfigFileName = path.resolve(process.cwd(), fileName);
+				projectDirectory = path.dirname(tsConfigFileName);
 				if (settings === undefined) settings = {};
 			} else {
 				settings = fileNameOrSettings || {};
@@ -168,9 +170,7 @@ module compile {
 
 			compilerOptions = settingsResult.options;
 
-			if (fileName) {
-				tsConfigFileName = path.resolve(process.cwd(), fileNameOrSettings);
-				projectDirectory = path.dirname(tsConfigFileName);
+			if (fileName !== undefined) {
 				let tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
 				if (tsConfig.error) {
 					console.log(tsConfig.error.messageText);
