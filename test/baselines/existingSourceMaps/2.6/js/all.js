@@ -1,9 +1,9 @@
-var Apple = (function () {
+var Apple = /** @class */ (function () {
     function Apple() {
     }
     return Apple;
 }());
-var Banana = (function () {
+var Banana = /** @class */ (function () {
     function Banana() {
     }
     return Banana;

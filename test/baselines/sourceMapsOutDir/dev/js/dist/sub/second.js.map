@@ -1,1 +1,1 @@
-{"version":3,"sources":["../app/sub/second.ts"],"names":[],"mappings":"AAAA,IAAM,CAAC,GAAG,CAAC,CAAC","file":"sub/second.js","sourcesContent":["const y = 2;\n"],"sourceRoot":"/source/"}
+{"version":3,"sources":["../app/sub/second.ts"],"names":[],"mappings":"AAAA,IAAM,CAAC,GAAG,CAAC,CAAC","file":"second.js","sourcesContent":["const y = 2;\n"]}
