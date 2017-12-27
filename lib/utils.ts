@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as ts from 'typescript';
 import { File } from './input';
 import * as reporter from './reporter';
-import * as gutil from 'gulp-util';
+import * as colors from 'ansi-colors';
 
 export interface Map<T> {
 	[key: string]: T;
@@ -75,7 +75,7 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 	}
 
 	let fileName = info.file.fileName;
-	
+
 	if (file) {
 		err.tsFile = file.ts;
 		err.fullFilename = file.fileNameOriginal;
@@ -104,7 +104,7 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 		character: endPos.character
 	};
 
-	err.message = gutil.colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
+	err.message = colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
 		+ codeAndMessageText;
 
 	return err;
@@ -112,14 +112,14 @@ export function getError(info: ts.Diagnostic, typescript: typeof ts, file?: File
 
 export function deprecate(title: string, alternative: string, description?: string) {
 	message(title, alternative, description);
-	console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
+	console.log('  ' + colors.gray('More information: ' + colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
 }
 export function message(title: string, alternative: string, description?: string) {
 	console.log(
-		gutil.colors.red('gulp-typescript').toString() +
-		gutil.colors.gray(': ') +
+		colors.red('gulp-typescript').toString() +
+		colors.gray(': ') +
 		title +
-		gutil.colors.gray(' - ') +
+		colors.gray(' - ') +
 		alternative);
-	if (description) console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
+	if (description) console.log('  ' + colors.gray(description.replace(/\n/g, '\n  ')));
 }

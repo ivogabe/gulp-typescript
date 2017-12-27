@@ -51,34 +51,37 @@
     {
       "name": "Yui Tanglertsampan",
       "email": "yuisu@microsoft.com"
+    },
+    {
+      "name": "Rogier Schouten",
+      "email": "github@workingcode.ninja"
     }
   ],
   "main": "release/main.js",
   "types": "release/main.d.ts",
   "typings": "release/main.d.ts",
   "dependencies": {
-    "gulp-util": "~3.0.7",
-    "source-map": "~0.5.3",
-    "through2": "~2.0.1",
-    "vinyl-fs": "~2.4.3"
+    "ansi-colors": "^1.0.1",
+    "plugin-error": "^0.1.2",
+    "source-map": "^0.6.1",
+    "through2": "^2.0.3",
+    "vinyl-fs": "^3.0.0"
   },
   "devDependencies": {
-    "@types/chalk": "0.4.31",
-    "@types/gulp-util": "3.0.31",
-    "@types/node": "7.0.22",
-    "@types/source-map": "0.5.0",
-    "@types/through2": "2.0.33",
-    "@types/vinyl": "2.0.0",
-    "@types/vinyl-fs": "2.4.5",
-    "gulp": "~3.9.1",
-    "gulp-concat": "~2.6.0",
-    "gulp-diff": "~1.0.0",
-    "gulp-header": "~1.7.1",
-    "gulp-plumber": "~1.1.0",
-    "gulp-sourcemaps": "~1.6.0",
-    "merge-stream": "~1.0.0",
-    "rimraf": "~2.5.2",
-    "typescript": "2.4.1"
+    "@types/node": "^8.5.2",
+    "@types/source-map": "^0.5.2",
+    "@types/through2": "^2.0.33",
+    "@types/vinyl": "^2.0.2",
+    "@types/vinyl-fs": "^2.4.8",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-diff": "^1.0.0",
+    "gulp-header": "^1.8.9",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sourcemaps": "^2.6.2",
+    "merge-stream": "^1.0.1",
+    "rimraf": "^2.6.2",
+    "typescript": "^2.6.2"
   },
   "peerDependencies": {
     "typescript": "~2.0.3 || >=2.0.0-dev || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev"
