@@ -61,6 +61,16 @@ These options are not supported:
 - `project` - See "Using `tsconfig.json`".
 - Obvious: `help`, `version`
 
+API overview
+------------
+gulp-typescript can be imported using `const ts = require('gulp-typescript');`. It provides the following functions:
+
+- `ts(options?)` - Returns a gulp stream that compiles TypeScript files using the specified options.
+- `ts.createProject(options?)`, `ts.createProject(tsconfig filename, options?)` - Returns a project. The intended usage is to create a project outside of a task with `const tsProject = ts.createProject(..);`. Within a task, `tsProject()` can be used to compile a stream of TypeScript files.
+- `tsProject.src()` - Returns a stream containing the source files (.ts) from a tsconfig file. It can only be used if you create a project with a `tsconfig.json` file. It is a replacement for `gulp.src(..)`.
+
+Both `ts(..)` and `tsProject()` provide sub-streams that only contain the JavaScript or declaration files. An example is shown later in the readme.
+
 Basic Usage
 ----------
 Below is a minimal `gulpfile.js` which will compile all TypeScript file in folder `src` and emit a single output file called `output.js` in  `built/local`. To invoke, simple run `gulp`.
@@ -100,11 +110,11 @@ gulp.task('scripts', function() {
 In many situations, some plugins need to be executed on the JavaScript files.
 For these situations, the stream has sub-streams, namely a JavaScript stream (`tsResult.js`) and a definition file stream (`tsResult.dts`). 
 You need to set the `declaration` option to generate definition files.
-If you don't need the definition files, you can use a configuration as seen in the first example.
+If you don't need the definition files, you can use a configuration as seen in the first example, and you don't need to store the result into a variable as `tsResult`.
 
 Incremental compilation
 -----------------------
-Instead of calling `ts(options)`, you can create a project first, and then call `tsProject()`. An example:
+Instead of calling `ts(options)`, you can create a project first outside of the task. Inside the task, you should then use `tsProject()`. An example:
 ```javascript
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
@@ -115,13 +125,9 @@ var tsProject = ts.createProject({
 });
 
 gulp.task('scripts', function() {
-    var tsResult = gulp.src('lib/*.ts')
-        .pipe(tsProject());
-
-    return merge([ // Merge the two output streams, so this task is finished when the IO of both operations is done.
-        tsResult.dts.pipe(gulp.dest('release/definitions')),
-        tsResult.js.pipe(gulp.dest('release/js'))
-    ]);
+    return gulp.src('lib/*.ts')
+        .pipe(tsProject())
+        .pipe(gulp.dest('dist'));
 });
 
 gulp.task('watch', ['scripts'], function() {
@@ -131,7 +137,7 @@ gulp.task('watch', ['scripts'], function() {
 When you run `gulp watch`, the source will be compiled as usual. Then, when you make a change and save the file, your TypeScript files will be compiled in about half the time.
 
 You must create the project outside of the task. You can't use the same project in multiple tasks.
-Instead, create multiple projects or use a single task to compile your sources.
+Instead, create multiple projects or use a single task to compile your sources. Usually it is not worth to create different tasks for the client side, backend or tests.
 
 Using `tsconfig.json`
 -------------
@@ -175,8 +181,7 @@ var tsProject = ts.createProject('tsconfig.json', {
 
 Source maps
 ----------
-Example of ```gulpfile.js``` which will compile typescript to javascript as well as generate
-associated sourcemap.
+gulp-typescript supports source maps by the usage of the gulp-sourcemaps plugin. Configuring the paths of source maps can be hard. The easiest way to get working source maps is to inline the sources of your TypeScript files in the source maps. This will of course increase the size of the source maps. The following example demonstrates this approach:
 
 ```javascript
 var gulp = require('gulp')
@@ -184,18 +189,31 @@ var ts = require('gulp-typescript');
 var sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('scripts', function() {
-    var tsResult = gulp.src('lib/*.ts')
+    return gulp.src('lib/*.ts')
         .pipe(sourcemaps.init()) // This means sourcemaps will be generated
         .pipe(ts({
             // ...
-        }));
-
-    return tsResult.js
+        }))
         .pipe( ... ) // You can use other plugins that also support gulp-sourcemaps
         .pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
-        .pipe(gulp.dest('release/js'));
+        .pipe(gulp.dest('dist'));
 });
 ```
+
+Instead of inlining the source maps, you must configure the `sourceRoot` field of the generated source maps. It should point to the source directory, containing your TypeScript files (usually where the glob starts in `gulp.src`). It can be an absolute path or a relative path from the output path, the argument of `gulp.dest`. I'd recommend the latter for development. The following example shows how a relative path can be used:
+
+```js
+gulp.task('scripts', function() {
+    return gulp.src('lib/*.ts')
+        .pipe(sourcemaps.init())
+        .pipe(ts({
+            // ...
+        }))
+        .pipe(sourcemaps.write('.', { sourceRoot: '../lib' }))
+        .pipe(gulp.dest('dist'));
+});
+```
+
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
 
 Reporters
