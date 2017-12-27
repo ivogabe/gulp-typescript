@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils = require("./utils");
-var Host = (function () {
+var Host = /** @class */ (function () {
     function Host(typescript, currentDirectory, input, options) {
         var _this = this;
         this.getCurrentDirectory = function () {

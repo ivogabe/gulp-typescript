@@ -22,7 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var stream = require("stream");
 var vfs = require("vinyl-fs");
 var path = require("path");
-var gutil = require("gulp-util");
+var PluginError = require("plugin-error");
 var utils = require("./utils");
 var reporter_1 = require("./reporter");
 var input_1 = require("./input");
@@ -95,7 +95,7 @@ function src() {
     var vinylOptions = { base: base, allowEmpty: true };
     return vfs.src(fileNames, vinylOptions);
 }
-var CompileStream = (function (_super) {
+var CompileStream = /** @class */ (function (_super) {
     __extends(CompileStream, _super);
     function CompileStream(project) {
         var _this = _super.call(this, { objectMode: true }) || this;
@@ -115,7 +115,7 @@ var CompileStream = (function (_super) {
             return;
         }
         if (file.isStream()) {
-            return cb(new gutil.PluginError('gulp-typescript', 'Streaming not supported'));
+            return cb(new PluginError('gulp-typescript', 'Streaming not supported'));
         }
         var inputFile = this.project.input.addGulp(file);
         this.project.compiler.inputFile(inputFile);
@@ -137,7 +137,7 @@ var CompileStream = (function (_super) {
     };
     return CompileStream;
 }(stream.Duplex));
-var CompileOutputStream = (function (_super) {
+var CompileOutputStream = /** @class */ (function (_super) {
     __extends(CompileOutputStream, _super);
     function CompileOutputStream() {
         return _super.call(this, { objectMode: true }) || this;

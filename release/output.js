@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var path = require("path");
 var sourceMap = require("source-map");
-var gutil = require("gulp-util");
+var VinylFile = require("vinyl");
 var utils = require("./utils");
-var Output = (function () {
+var Output = /** @class */ (function () {
     function Output(_project, streamFull, streamJs, streamDts) {
         this.project = _project;
         this.streamFull = streamFull;
@@ -12,7 +12,7 @@ var Output = (function () {
         this.streamDts = streamDts;
     }
     Output.prototype.writeJs = function (base, fileName, content, sourceMapContent, cwd, original) {
-        var file = new gutil.File({
+        var file = new VinylFile({
             path: fileName,
             contents: new Buffer(content),
             cwd: cwd,
@@ -25,7 +25,7 @@ var Output = (function () {
         this.streamJs.push(file);
     };
     Output.prototype.writeDts = function (base, fileName, content, cwd) {
-        var file = new gutil.File({
+        var file = new VinylFile({
             path: fileName,
             contents: new Buffer(content),
             cwd: cwd,
@@ -79,9 +79,8 @@ var Output = (function () {
         this.result = result;
         if (this.project.reporter.finish)
             this.project.reporter.finish(result);
+        this.streamFull.emit('end');
         this.streamFull.emit('finish');
-        this.streamJs.emit('finish');
-        this.streamDts.emit('finish');
         this.streamFull.push(null);
         this.streamJs.push(null);
         this.streamDts.push(null);

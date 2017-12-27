@@ -57,7 +57,7 @@ var File;
     }
     File.getChangeState = getChangeState;
 })(File = exports.File || (exports.File = {}));
-var FileDictionary = (function () {
+var FileDictionary = /** @class */ (function () {
     function FileDictionary(typescript) {
         this.files = {};
         this.firstSourceFile = undefined;
@@ -138,7 +138,7 @@ var FileDictionary = (function () {
     return FileDictionary;
 }());
 exports.FileDictionary = FileDictionary;
-var FileCache = (function () {
+var FileCache = /** @class */ (function () {
     function FileCache(typescript, options) {
         this.previous = undefined;
         this.noParse = false; // true when using a file based compiler.

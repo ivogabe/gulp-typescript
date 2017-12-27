@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var path = require("path");
-var gutil = require("gulp-util");
+var colors = require("ansi-colors");
 function forwardSlashes(fileName) {
     return fileName.replace(/\\/g, '/');
 }
@@ -93,23 +93,23 @@ function getError(info, typescript, file) {
         line: endPos.line,
         character: endPos.character
     };
-    err.message = gutil.colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
+    err.message = colors.red(fileName + '(' + (startPos.line + 1) + ',' + (startPos.character + 1) + '): ').toString()
         + codeAndMessageText;
     return err;
 }
 exports.getError = getError;
 function deprecate(title, alternative, description) {
     message(title, alternative, description);
-    console.log('  ' + gutil.colors.gray('More information: ' + gutil.colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
+    console.log('  ' + colors.gray('More information: ' + colors.underline('http://dev.ivogabe.com/gulp-typescript-3/')));
 }
 exports.deprecate = deprecate;
 function message(title, alternative, description) {
-    console.log(gutil.colors.red('gulp-typescript').toString() +
-        gutil.colors.gray(': ') +
+    console.log(colors.red('gulp-typescript').toString() +
+        colors.gray(': ') +
         title +
-        gutil.colors.gray(' - ') +
+        colors.gray(' - ') +
         alternative);
     if (description)
-        console.log('  ' + gutil.colors.gray(description.replace(/\n/g, '\n  ')));
+        console.log('  ' + colors.gray(description.replace(/\n/g, '\n  ')));
 }
 exports.message = message;

@@ -1,5 +1,6 @@
+/// <reference types="vinyl" />
 import * as ts from 'typescript';
-import { VinylFile } from './types';
+import * as VinylFile from 'vinyl';
 export interface TypeScriptError extends Error {
     fullFilename?: string;
     relativeFilename?: string;

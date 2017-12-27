@@ -88,6 +88,8 @@ function reportErrors(errors, typescript, ignore) {
         if (fileNameOrSettings !== undefined) {
             if (typeof fileNameOrSettings === 'string') {
                 fileName = fileNameOrSettings;
+                tsConfigFileName = path.resolve(process.cwd(), fileName);
+                projectDirectory = path.dirname(tsConfigFileName);
                 if (settings === undefined)
                     settings = {};
             }
@@ -101,9 +103,7 @@ function reportErrors(errors, typescript, ignore) {
                 reportErrors(settingsResult.errors, typescript);
             }
             compilerOptions = settingsResult.options;
-            if (fileName) {
-                tsConfigFileName = path.resolve(process.cwd(), fileNameOrSettings);
-                projectDirectory = path.dirname(tsConfigFileName);
+            if (fileName !== undefined) {
                 var tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
                 if (tsConfig.error) {
                     console.log(tsConfig.error.messageText);

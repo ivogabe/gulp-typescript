@@ -8,7 +8,7 @@ var utils = require("./utils");
 /**
  * Compiles a whole project, with full type checking
  */
-var ProjectCompiler = (function () {
+var ProjectCompiler = /** @class */ (function () {
     function ProjectCompiler() {
     }
     ProjectCompiler.prototype.prepare = function (project) {
@@ -156,7 +156,7 @@ var ProjectCompiler = (function () {
     return ProjectCompiler;
 }());
 exports.ProjectCompiler = ProjectCompiler;
-var FileCompiler = (function () {
+var FileCompiler = /** @class */ (function () {
     function FileCompiler() {
         this.output = {};
         this.previousOutput = {};
