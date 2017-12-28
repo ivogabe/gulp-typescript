@@ -7,5 +7,6 @@ TypeScript error: [31mtest/noEmit/a.ts(1,14): [39merror TS6131: Cannot compile
     "semanticErrors": 1,
     "declarationErrors": 0,
     "emitErrors": 0,
+    "noEmit": true,
     "emitSkipped": true
 }
