@@ -33,9 +33,10 @@ export interface CompilationResult {
 	declarationErrors: number;
 	emitErrors: number;
 
+	noEmit: boolean;
 	emitSkipped: boolean;
 }
-export function emptyCompilationResult(): CompilationResult {
+export function emptyCompilationResult(noEmit: boolean): CompilationResult {
 	return {
 		transpileErrors: 0,
 		optionsErrors: 0,
@@ -44,6 +45,7 @@ export function emptyCompilationResult(): CompilationResult {
 		semanticErrors: 0,
 		declarationErrors: 0,
 		emitErrors: 0,
+		noEmit,
 		emitSkipped: false
 	}
 }
@@ -70,10 +72,12 @@ function defaultFinishHandler(results: CompilationResult) {
 	showErrorCount(results.declarationErrors, 'declaration');
 	showErrorCount(results.emitErrors, 'emit');
 
-	if (results.emitSkipped) {
-		console.log('TypeScript: emit', colors.red('failed'));
-	} else if (hasError) {
-		console.log('TypeScript: emit', colors.cyan('succeeded'), '(with errors)');
+	if (!results.noEmit) {
+		if (results.emitSkipped) {
+			console.log('TypeScript: emit', colors.red('failed'));
+		} else if (hasError) {
+			console.log('TypeScript: emit', colors.cyan('succeeded'), '(with errors)');
+		}
 	}
 }
 

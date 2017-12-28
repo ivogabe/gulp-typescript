@@ -43,7 +43,7 @@ export class ProjectCompiler implements ICompiler {
 
 	inputDone() {
 		if (!this.project.input.firstSourceFile) {
-			this.project.output.finish(emptyCompilationResult());
+			this.project.output.finish(emptyCompilationResult(this.project.options.noEmit));
 			return;
 		}
 
@@ -72,7 +72,7 @@ export class ProjectCompiler implements ICompiler {
 
 		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
 
-		const result = emptyCompilationResult();
+		const result = emptyCompilationResult(this.project.options.noEmit);
 		result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
 		result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
 		result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
@@ -220,7 +220,7 @@ export class FileCompiler implements ICompiler {
 	prepare(project: ProjectInfo) {
 		this.project = project;
 		this.project.input.noParse = true;
-		this.compilationResult = emptyCompilationResult();
+		this.compilationResult = emptyCompilationResult(this.project.options.noEmit);
 	}
 
 	private write(file: File, fileName: string, diagnostics: ts.Diagnostic[], content: string, sourceMap: string) {
