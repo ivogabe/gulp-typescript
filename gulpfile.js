@@ -17,8 +17,8 @@ function findTSDefinition(location) {
 	return path.join(path.dirname(require.resolve(location)), 'typescript.d.ts');
 }
 
-function createProject() {
-	return ts.createProject('lib/tsconfig.json');
+function createProject(options) {
+	return ts.createProject('lib/tsconfig.json', options);
 }
 
 const tsProject = createProject();
@@ -57,14 +57,14 @@ gulp.task('typecheck-dev', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.dev)
-	])).pipe(createProject()());
+	])).pipe(createProject({ noEmit: true })());
 });
 
 gulp.task('typecheck-2.3', function() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.release23)
-	])).pipe(createProject()());
+	])).pipe(createProject({ noEmit: true })());
 });
 
 gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
