@@ -29,9 +29,10 @@ export interface CompilationResult {
     semanticErrors: number;
     declarationErrors: number;
     emitErrors: number;
+    noEmit: boolean;
     emitSkipped: boolean;
 }
-export declare function emptyCompilationResult(): CompilationResult;
+export declare function emptyCompilationResult(noEmit: boolean): CompilationResult;
 export interface Reporter {
     error?: (error: TypeScriptError, typescript: typeof ts) => void;
     finish?: (results: CompilationResult) => void;

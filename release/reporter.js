@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var colors = require("ansi-colors");
-function emptyCompilationResult() {
+function emptyCompilationResult(noEmit) {
     return {
         transpileErrors: 0,
         optionsErrors: 0,
@@ -10,6 +10,7 @@ function emptyCompilationResult() {
         semanticErrors: 0,
         declarationErrors: 0,
         emitErrors: 0,
+        noEmit: noEmit,
         emitSkipped: false
     };
 }
@@ -29,11 +30,13 @@ function defaultFinishHandler(results) {
     showErrorCount(results.semanticErrors, 'semantic');
     showErrorCount(results.declarationErrors, 'declaration');
     showErrorCount(results.emitErrors, 'emit');
-    if (results.emitSkipped) {
-        console.log('TypeScript: emit', colors.red('failed'));
-    }
-    else if (hasError) {
-        console.log('TypeScript: emit', colors.cyan('succeeded'), '(with errors)');
+    if (!results.noEmit) {
+        if (results.emitSkipped) {
+            console.log('TypeScript: emit', colors.red('failed'));
+        }
+        else if (hasError) {
+            console.log('TypeScript: emit', colors.cyan('succeeded'), '(with errors)');
+        }
     }
 }
 function nullReporter() {

@@ -22,7 +22,7 @@ var ProjectCompiler = /** @class */ (function () {
     ProjectCompiler.prototype.inputDone = function () {
         var _this = this;
         if (!this.project.input.firstSourceFile) {
-            this.project.output.finish(reporter_1.emptyCompilationResult());
+            this.project.output.finish(reporter_1.emptyCompilationResult(this.project.options.noEmit));
             return;
         }
         var rootFilenames = this.project.input.getFileNames(true);
@@ -36,7 +36,7 @@ var ProjectCompiler = /** @class */ (function () {
         var currentDirectory = utils.getCommonBasePathOfArray(rootFilenames.map(function (fileName) { return _this.project.input.getFile(fileName).gulp.cwd; }));
         this.host = new host_1.Host(this.project.typescript, currentDirectory, this.project.input, this.project.options);
         this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
-        var result = reporter_1.emptyCompilationResult();
+        var result = reporter_1.emptyCompilationResult(this.project.options.noEmit);
         result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
         result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
         result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
@@ -165,7 +165,7 @@ var FileCompiler = /** @class */ (function () {
     FileCompiler.prototype.prepare = function (project) {
         this.project = project;
         this.project.input.noParse = true;
-        this.compilationResult = reporter_1.emptyCompilationResult();
+        this.compilationResult = reporter_1.emptyCompilationResult(this.project.options.noEmit);
     };
     FileCompiler.prototype.write = function (file, fileName, diagnostics, content, sourceMap) {
         this.output[file.fileNameNormalized] = { fileName: fileName, diagnostics: diagnostics, content: content, sourceMap: sourceMap };
