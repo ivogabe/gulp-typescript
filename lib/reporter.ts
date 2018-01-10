@@ -87,7 +87,7 @@ export function nullReporter(): Reporter {
 export function defaultReporter(): Reporter {
 	return {
 		error: (error: TypeScriptError) => {
-			console.error(error.message);
+			console.log(error.message);
 		},
 		finish: defaultFinishHandler
 	};
@@ -98,11 +98,11 @@ export function longReporter(): Reporter {
 	return {
 		error: (error: TypeScriptError) => {
 			if (error.tsFile) {
-				console.error('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
+				console.log('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
 					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
 					+ 'error TS' + error.diagnostic.code + ' ' + typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
 			} else {
-				console.error(error.message);
+				console.log(error.message);
 			}
 		},
 		finish: defaultFinishHandler
@@ -111,19 +111,19 @@ export function longReporter(): Reporter {
 export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
-			console.error('[' + colors.gray('gulp-typescript') + '] '
+			console.log('[' + colors.gray('gulp-typescript') + '] '
 				+ colors.bgred(error.diagnostic.code + '')
 				+ ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 
 			if (error.tsFile) {
-				console.error('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
+				console.log('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
 				const lines = error.tsFile.text.split(/(?:\r\n|\r|\n)/);
 
 				const logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
 					const line = lines[lineIndex];
 					if (errorEnd === undefined) errorEnd = line.length;
-					console.error('> ' + colors.gray('[' + lineIndex + '] ')
+					console.log('> ' + colors.gray('[' + lineIndex + '] ')
 						+ line.substring(0, errorStart)
 						+ colors.red(line.substring(errorStart, errorEnd))
 						+ line.substring(errorEnd)
