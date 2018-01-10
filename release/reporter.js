@@ -46,7 +46,7 @@ exports.nullReporter = nullReporter;
 function defaultReporter() {
     return {
         error: function (error) {
-            console.error(error.message);
+            console.log(error.message);
         },
         finish: defaultFinishHandler
     };
@@ -57,12 +57,12 @@ function longReporter() {
     return {
         error: function (error) {
             if (error.tsFile) {
-                console.error('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
+                console.log('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
                     + '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
                     + 'error TS' + error.diagnostic.code + ' ' + typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'));
             }
             else {
-                console.error(error.message);
+                console.log(error.message);
             }
         },
         finish: defaultFinishHandler
@@ -73,17 +73,17 @@ function fullReporter(fullFilename) {
     if (fullFilename === void 0) { fullFilename = false; }
     return {
         error: function (error, typescript) {
-            console.error('[' + colors.gray('gulp-typescript') + '] '
+            console.log('[' + colors.gray('gulp-typescript') + '] '
                 + colors.bgred(error.diagnostic.code + '')
                 + ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n')));
             if (error.tsFile) {
-                console.error('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
+                console.log('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
                 var lines_1 = error.tsFile.text.split(/(?:\r\n|\r|\n)/);
                 var logLine = function (lineIndex, errorStart, errorEnd) {
                     var line = lines_1[lineIndex];
                     if (errorEnd === undefined)
                         errorEnd = line.length;
-                    console.error('> ' + colors.gray('[' + lineIndex + '] ')
+                    console.log('> ' + colors.gray('[' + lineIndex + '] ')
                         + line.substring(0, errorStart)
                         + colors.red(line.substring(errorStart, errorEnd))
                         + line.substring(errorEnd));
