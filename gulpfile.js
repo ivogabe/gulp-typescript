@@ -73,7 +73,7 @@ gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 
 // We run every test on multiple typescript versions:
 const libs = [
-	['2.6', undefined],
+	['2.7', undefined],
 	['2.3', require(tsVersions.release23)],
 	['dev', require(tsVersions.dev)]
 ];
