@@ -65,7 +65,8 @@
     "plugin-error": "^0.1.2",
     "source-map": "^0.6.1",
     "through2": "^2.0.3",
-    "vinyl-fs": "^3.0.0"
+    "vinyl-fs": "^3.0.0",
+    "vinyl": "^2.1.0"
   },
   "devDependencies": {
     "@types/ansi-colors": "^1.0.0",

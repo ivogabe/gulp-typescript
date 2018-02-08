@@ -169,9 +169,12 @@ export class ProjectCompiler implements ICompiler {
 			base = this.project.directory;
 			baseDeclarations = base;
 		} else {
-			const outFile = this.project.options.out;
-			base = jsFileName.substring(0, jsFileName.length - outFile.length);
+			base = this.project.directory;
 			baseDeclarations = base;
+			jsFileName = path.resolve(base, jsFileName);
+			if (dtsFileName !== undefined) {
+				dtsFileName = path.resolve(base, dtsFileName);
+			}
 		}
 
 		if (jsContent !== undefined) {

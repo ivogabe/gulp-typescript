@@ -118,15 +118,24 @@ var ProjectCompiler = /** @class */ (function () {
                 var baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
                 baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
             }
+            if (base === '')
+                console.log(1, file.gulp.base, this.project.options.outDir);
         }
         else if (this.project.options.outFile) {
             base = this.project.directory;
             baseDeclarations = base;
+            if (base === '')
+                console.log(2, this.project);
         }
         else {
-            var outFile = this.project.options.out;
-            base = jsFileName.substring(0, jsFileName.length - outFile.length);
+            base = this.project.directory;
             baseDeclarations = base;
+            jsFileName = path.resolve(base, jsFileName);
+            if (dtsFileName !== undefined) {
+                dtsFileName = path.resolve(base, dtsFileName);
+            }
+            if (base === '')
+                console.log(3, this.project.options.out, jsFileName);
         }
         if (jsContent !== undefined) {
             if (jsMapContent !== undefined) {
