@@ -41,7 +41,7 @@ export class Host implements ts.CompilerHost {
 	}
 
 	getNewLine() {
-		return '\n';
+		return process.platform === "win32" ? "\r\n" : "\n";
 	}
 	useCaseSensitiveFileNames() {
 		return false;

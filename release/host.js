@@ -36,7 +36,7 @@ var Host = /** @class */ (function () {
         this.input = input;
     }
     Host.prototype.getNewLine = function () {
-        return '\n';
+        return process.platform === "win32" ? "\r\n" : "\n";
     };
     Host.prototype.useCaseSensitiveFileNames = function () {
         return false;
