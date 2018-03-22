@@ -87,7 +87,7 @@
     "typescript": "2.7.1"
   },
   "peerDependencies": {
-    "typescript": "~2.7.1 || >=2.8.0-dev"
+    "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev"
   },
   "scripts": {
     "test": "gulp"
