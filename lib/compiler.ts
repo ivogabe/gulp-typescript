@@ -18,9 +18,11 @@ interface OutputFile {
 
 	jsFileName?: string;
 	dtsFileName?: string;
+	dtsMapFileName?: string;
 	jsContent?: string;
 	jsMapContent?: string;
 	dtsContent?: string;
+	dtsMapContent?: string;
 }
 
 /**
@@ -149,7 +151,7 @@ export class ProjectCompiler implements ICompiler {
 
 		result.emitSkipped = emitOutput.emitSkipped;
 	}
-	private emitFile({ file, jsFileName, dtsFileName, jsContent, dtsContent, jsMapContent }: OutputFile, currentDirectory: string) {
+	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }: OutputFile, currentDirectory: string) {
 		if (!jsFileName) return;
 
 		let base: string;
@@ -185,6 +187,9 @@ export class ProjectCompiler implements ICompiler {
 		}
 		if (dtsContent !== undefined) {
 			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
+		}
+		if (dtsMapContent !== undefined) {
+			this.project.output.writeDts(baseDeclarations, dtsMapFileName, dtsMapContent, file ? file.gulp.cwd : currentDirectory);
 		}
 	}
 
