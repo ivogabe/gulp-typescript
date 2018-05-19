@@ -5,3 +5,9 @@
 [submodule "typescript/2.3"]
 	path = typescript/2.3
 	url = https://github.com/Microsoft/TypeScript.git
+[submodule "2.9"]
+	path = 2.9
+	url = https://github.com/Microsoft/TypeScript
+[submodule "typescript/2.9"]
+	path = typescript/2.9
+	url = https://github.com/Microsoft/TypeScript
