@@ -190,10 +190,7 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 		if (dtsContent !== undefined) {
-			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
-		}
-		if (dtsMapContent !== undefined) {
-			this.project.output.writeDts(baseDeclarations, dtsMapFileName, dtsMapContent, file ? file.gulp.cwd : currentDirectory);
+			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 	}
 

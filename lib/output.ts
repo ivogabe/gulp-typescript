@@ -38,13 +38,15 @@ export class Output {
 		this.streamJs.push(file);
 	}
 
-	writeDts(base: string, fileName: string, content: string, cwd: string) {
+	writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
 			contents: new Buffer(content),
 			cwd,
 			base
 		});
+		const appliedSourceMap = this.applySourceMap(declarationMapContent, original, file);
+		if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
 		this.streamFull.push(file);
 		this.streamDts.push(file);
 	}

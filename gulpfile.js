@@ -76,8 +76,8 @@ gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 const libs = [
 	 ['2.7', undefined],
 	 ['2.3', require(tsVersions.release23)],
-	['2.9', require(tsVersions.release29)],
-	['dev', require(tsVersions.dev)]
+	 ['2.9', require(tsVersions.release29)],
+	 ['dev', require(tsVersions.dev)]
 ];
 
 /**
