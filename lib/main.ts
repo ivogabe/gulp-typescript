@@ -70,12 +70,18 @@ function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings
 	return standardSettings;
 }
 
-function normalizeCompilerOptions(options: ts.CompilerOptions): void {
+function normalizeCompilerOptions(options: ts.CompilerOptions, typescript: typeof ts): void {
 	options.sourceMap = true;
 	(options as any).suppressOutputPathCheck = true;
 	options.inlineSourceMap = false;
 	options.sourceRoot = undefined;
 	options.inlineSources = false;
+
+	// For TS >=2.9, we set `declarationMap` to true, if `declaration` is set.
+	// We check for this version by checking whether `createFileLevelUniqueName` exists.
+	if ("createFileLevelUniqueName" in typescript && options.declaration && !options.isolatedModules) {
+		options.declarationMap = true;
+	}
 }
 
 function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts, ignore: number[] = []): void {
@@ -196,7 +202,7 @@ module compile {
 			}
 		}
 
-		normalizeCompilerOptions(compilerOptions);
+		normalizeCompilerOptions(compilerOptions, typescript);
 		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
 
 		return project;
