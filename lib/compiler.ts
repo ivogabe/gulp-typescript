@@ -276,7 +276,7 @@ export class FileCompiler implements ICompiler {
 
 		mapString = mapString.substring(start.length);
 
-		let map: RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
+		let map: RawSourceMap = JSON.parse(Buffer.from(mapString, 'base64').toString());
 		// TODO: Set paths correctly
 		// map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
 		// map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);

@@ -31,7 +31,7 @@ export class Output {
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
-			contents: new Buffer(content),
+			contents: Buffer.from(content),
 			cwd,
 			base
 		});
@@ -51,7 +51,7 @@ export class Output {
 	async writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
-			contents: new Buffer(content),
+			contents: Buffer.from(content),
 			cwd,
 			base
 		});
