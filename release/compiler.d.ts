@@ -20,7 +20,7 @@ export declare class ProjectCompiler implements ICompiler {
     inputDone(): void;
     private attachContentToFile(file, fileName, content);
     private emit(result, callback);
-    private emitFile({file, jsFileName, dtsFileName, jsContent, dtsContent, jsMapContent}, currentDirectory);
+    private emitFile({file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent}, currentDirectory);
     private reportDiagnostics(diagnostics);
     private removeSourceMapComment(content);
 }

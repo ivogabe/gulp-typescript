@@ -11,10 +11,12 @@ export declare class Output {
     streamFull: stream.Readable;
     streamJs: stream.Readable;
     streamDts: stream.Readable;
+    private pendingIO;
     writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File): void;
-    writeDts(base: string, fileName: string, content: string, cwd: string): void;
+    writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File): Promise<void>;
     private applySourceMap(sourceMapContent, original, output);
     finish(result: reporter.CompilationResult): void;
+    private mightFinish();
     private getError(info);
     diagnostic(info: ts.Diagnostic): void;
     error(error: reporter.TypeScriptError): void;
