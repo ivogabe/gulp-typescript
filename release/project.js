@@ -90,8 +90,6 @@ class CompileStream extends stream.Duplex {
         this.js = new CompileOutputStream();
         this.dts = new CompileOutputStream();
         this.project = project;
-        // Prevent "Unhandled stream error in pipe" when a compilation error occurs.
-        // this.on('error', () => {});
     }
     _write(file, encoding, cb = (err) => { }) {
         if (!file)
