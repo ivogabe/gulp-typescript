@@ -227,7 +227,9 @@ For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sou
 
 Reporters
 ---------
-You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
+By default, errors are logged to the console and the build crashes on compiler errors. In watch mode, the build does not throw, meaning that consequent builds are still ran. If you do not want to crash the gulp process, you must catch the error. You then need to add `.on('error', () => {})` after `.pipe(tsProject())` or `.pipe(ts(..))`.
+
+If you want to change the way that messages are logged to the console (or some other output), you can provide a reporter. You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
 ```javascript
 ts(options, reporter);
 tsProject(reporter);
