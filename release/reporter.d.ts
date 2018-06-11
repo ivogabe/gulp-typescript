@@ -37,6 +37,7 @@ export interface Reporter {
     error?: (error: TypeScriptError, typescript: typeof ts) => void;
     finish?: (results: CompilationResult) => void;
 }
+export declare function countErrors(results: CompilationResult): number;
 export declare function nullReporter(): Reporter;
 export declare function defaultReporter(): Reporter;
 export declare function longReporter(): Reporter;

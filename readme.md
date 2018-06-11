@@ -56,7 +56,7 @@ Almost all options from TypeScript are supported.
 
 See the [TypeScript wiki](https://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
 These options are not supported:
-- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use  [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps) instead.
+- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`, `declarationMap`) - Use  [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps) instead.
 - `watch` - Use `gulp.watch` instead. See the paragraph "Incremental compilation".
 - `project` - See "Using `tsconfig.json`".
 - Obvious: `help`, `version`
@@ -181,7 +181,9 @@ var tsProject = ts.createProject('tsconfig.json', {
 
 Source maps
 ----------
-gulp-typescript supports source maps by the usage of the gulp-sourcemaps plugin. Configuring the paths of source maps can be hard. The easiest way to get working source maps is to inline the sources of your TypeScript files in the source maps. This will of course increase the size of the source maps. The following example demonstrates this approach:
+gulp-typescript supports source maps by the usage of the gulp-sourcemaps plugin. It works for both JavaScript and definition (`.d.ts`) files. You don't have to set `sourceMap` or `declarationMap` in your configuration. When you use gulp-sourcemaps, they will be generated automatically.
+
+Configuring the paths of source maps can be hard. The easiest way to get working source maps is to inline the sources of your TypeScript files in the source maps. This will of course increase the size of the source maps. The following example demonstrates this approach:
 
 ```javascript
 var gulp = require('gulp')
@@ -225,7 +227,9 @@ For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sou
 
 Reporters
 ---------
-You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
+By default, errors are logged to the console and the build crashes on compiler errors. In watch mode, the build does not throw, meaning that consequent builds are still ran. If you do not want to crash the gulp process, you must catch the error. You then need to add `.on('error', () => {})` after `.pipe(tsProject())` or `.pipe(ts(..))`.
+
+If you want to change the way that messages are logged to the console (or some other output), you can provide a reporter. You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
 ```javascript
 ts(options, reporter);
 tsProject(reporter);

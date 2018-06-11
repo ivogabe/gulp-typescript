@@ -1,55 +1,53 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils = require("./utils");
-var Host = /** @class */ (function () {
-    function Host(typescript, currentDirectory, input, options) {
-        var _this = this;
-        this.getCurrentDirectory = function () {
-            return _this.currentDirectory;
+const utils = require("./utils");
+class Host {
+    constructor(typescript, currentDirectory, input, options) {
+        this.getCurrentDirectory = () => {
+            return this.currentDirectory;
         };
-        this.writeFile = function (fileName, data, writeByteOrderMark, onError) { };
-        this.fileExists = function (fileName) {
-            var sourceFile = _this.input.getFile(fileName);
+        this.writeFile = (fileName, data, writeByteOrderMark, onError) => { };
+        this.fileExists = (fileName) => {
+            let sourceFile = this.input.getFile(fileName);
             if (sourceFile)
                 return true;
-            return _this.fallback.fileExists(fileName);
+            return this.fallback.fileExists(fileName);
         };
-        this.readFile = function (fileName) {
-            var sourceFile = _this.input.getFile(fileName);
+        this.readFile = (fileName) => {
+            let sourceFile = this.input.getFile(fileName);
             if (sourceFile)
                 return sourceFile.content;
-            return _this.fallback.readFile(fileName);
+            return this.fallback.readFile(fileName);
         };
-        this.getSourceFile = function (fileName, languageVersion, onError) {
+        this.getSourceFile = (fileName, languageVersion, onError) => {
             // TODO: Cache lib.d.ts files between compilations
-            var sourceFile = _this.input.getFile(fileName);
+            let sourceFile = this.input.getFile(fileName);
             if (sourceFile)
                 return sourceFile.ts;
-            return _this.fallback.getSourceFile(fileName, languageVersion, onError);
+            return this.fallback.getSourceFile(fileName, languageVersion, onError);
         };
-        this.realpath = function (path) { return _this.fallback.realpath(path); };
-        this.getDirectories = function (path) { return _this.fallback.getDirectories(path); };
-        this.directoryExists = function (path) { return _this.fallback.directoryExists(path); };
+        this.realpath = (path) => this.fallback.realpath(path);
+        this.getDirectories = (path) => this.fallback.getDirectories(path);
+        this.directoryExists = (path) => this.fallback.directoryExists(path);
         this.typescript = typescript;
         this.fallback = typescript.createCompilerHost(options);
         this.currentDirectory = currentDirectory;
         this.input = input;
     }
-    Host.prototype.getNewLine = function () {
+    getNewLine() {
         return '\n';
-    };
-    Host.prototype.useCaseSensitiveFileNames = function () {
+    }
+    useCaseSensitiveFileNames() {
         return false;
-    };
-    Host.prototype.getCanonicalFileName = function (filename) {
+    }
+    getCanonicalFileName(filename) {
         return utils.normalizePath(filename);
-    };
-    Host.prototype.getDefaultLibFileName = function (options) {
+    }
+    getDefaultLibFileName(options) {
         return this.fallback.getDefaultLibFileName(options);
-    };
-    Host.prototype.getDefaultLibLocation = function () {
+    }
+    getDefaultLibLocation() {
         return this.fallback.getDefaultLibLocation();
-    };
-    return Host;
-}());
+    }
+}
 exports.Host = Host;

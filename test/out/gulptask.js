@@ -10,7 +10,9 @@ module.exports = function(newTS, lib, output, reporter) {
 			typescript: lib,
 			target: 'es6',
 			types: []
-		}, reporter));
+		}, reporter))
+		.on('error', () => {});
+
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js
 		.pipe(sourcemaps.write('.', { sourceRoot: '../../../../out/' }))

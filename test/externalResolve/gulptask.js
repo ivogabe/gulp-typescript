@@ -8,7 +8,8 @@ module.exports = function(newTS, lib, output, reporter) {
 			declarationFiles: true,
 			module: 'commonjs',
 			typescript: lib
-		}, reporter));
+		}, reporter))
+		.on('error', () => {});
 
 	tsResult.dts.pipe(gulp.dest(output + 'dts'));
 	return tsResult.js

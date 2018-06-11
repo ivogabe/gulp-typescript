@@ -25,31 +25,50 @@ export class Output {
 	// .d.ts files
 	streamDts: stream.Readable;
 
+	// Number of pending IO operatrions
+	private pendingIO = 0;
+
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
-			contents: new Buffer(content),
+			contents: Buffer.from(content),
 			cwd,
 			base
 		});
-		const appliedSourceMap = this.applySourceMap(sourceMapContent, original, file);
-		if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
-		this.streamFull.push(file);
-		this.streamJs.push(file);
+
+		this.pendingIO++;
+
+		this.applySourceMap(sourceMapContent, original, file).then(appliedSourceMap => {
+			if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
+			this.streamFull.push(file);
+			this.streamJs.push(file);
+
+			this.pendingIO--;
+			this.mightFinish();
+		});
 	}
 
-	writeDts(base: string, fileName: string, content: string, cwd: string) {
+	async writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
-			contents: new Buffer(content),
+			contents: Buffer.from(content),
 			cwd,
 			base
 		});
-		this.streamFull.push(file);
-		this.streamDts.push(file);
+
+		this.pendingIO++;
+
+		this.applySourceMap(declarationMapContent, original, file).then(appliedSourceMap => {
+			if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
+			this.streamFull.push(file);
+			this.streamDts.push(file);
+
+			this.pendingIO--;
+			this.mightFinish();
+		});
 	}
 
-	private applySourceMap(sourceMapContent: string, original: input.File, output: VinylFile) {
+	private async applySourceMap(sourceMapContent: string, original: input.File, output: VinylFile) {
 		if (sourceMapContent === undefined) return undefined;
 
 		const map = JSON.parse(sourceMapContent);
@@ -62,12 +81,12 @@ export class Output {
 
 		delete map.sourceRoot;
 
-		const generator = sourceMap.SourceMapGenerator.fromSourceMap(new sourceMap.SourceMapConsumer(map));
+		const consumer = await new sourceMap.SourceMapConsumer(map);
+		const generator = sourceMap.SourceMapGenerator.fromSourceMap(consumer);
 
 		const sourceMapOrigins = this.project.singleOutput
 			? this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName))
 			: [original];
-
 
 		for (const sourceFile of sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
@@ -78,8 +97,9 @@ export class Output {
 			// We should only apply the input mappings if the input mapping isn't empty,
 			// since `generator.applySourceMap` has a really bad performance on big inputs.
 			if (inputMap.mappings !== '') {
-				const consumer = new sourceMap.SourceMapConsumer(inputMap);
-				generator.applySourceMap(consumer);
+				const inputConsumer = await new sourceMap.SourceMapConsumer(inputMap);
+				generator.applySourceMap(inputConsumer);
+				inputConsumer.destroy();
 			}
 
 			if (!inputMap.sources || !inputMap.sourcesContent) continue;
@@ -89,6 +109,7 @@ export class Output {
 				generator.setSourceContent(utils.forwardSlashes(relative), inputMap.sourcesContent[i]);
 			}
 		}
+		consumer.destroy();
 		return generator.toString();
 
 		function relativeToOutput(fileName: string) {
@@ -99,7 +120,18 @@ export class Output {
 
 	finish(result: reporter.CompilationResult) {
 		this.result = result;
-		if (this.project.reporter.finish) this.project.reporter.finish(result);
+
+		this.mightFinish();
+	}
+	
+	private mightFinish() {
+		if (this.result === undefined || this.pendingIO !== 0) return;
+
+		if (this.project.reporter.finish) this.project.reporter.finish(this.result);
+
+		if (reporter.countErrors(this.result) !== 0) {
+			this.streamFull.emit('error', new Error("TypeScript: Compilation failed"));
+		}
 
 		this.streamFull.emit('finish');
 		this.streamFull.push(null);
@@ -122,6 +154,5 @@ export class Output {
 		// call reporter callback
 		if (this.project.reporter.error) this.project.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
 		// & emit the error on the stream.
-		this.streamFull.emit('error', error);
 	}
 }

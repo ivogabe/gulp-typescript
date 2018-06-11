@@ -55,6 +55,16 @@ export interface Reporter {
 	finish?: (results: CompilationResult) => void;
 }
 
+export function countErrors(results: CompilationResult) {
+	return results.transpileErrors
+		+ results.optionsErrors
+		+ results.syntaxErrors
+		+ results.globalErrors
+		+ results.semanticErrors
+		+ results.declarationErrors
+		+ results.emitErrors;
+}
+
 function defaultFinishHandler(results: CompilationResult) {
 	let hasError = false;
 	const showErrorCount = (count: number, type: string) => {

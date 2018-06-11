@@ -11,6 +11,7 @@ const diff = require('gulp-diff');
 const tsVersions = {
 	dev: './typescript/dev',
 	release23: './typescript/2.3',
+	release29: './typescript/2.9'
 };
 
 function findTSDefinition(location) {
@@ -35,9 +36,9 @@ const tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) 
 });
 
 // Clean
-gulp.task('clean', function(cb) {
+function clean(cb) {
 	rimraf(paths.releaseBeta, cb);
-});
+}
 gulp.task('clean-test', function(cb) {
 	rimraf('test/output', cb);
 });
@@ -46,28 +47,28 @@ gulp.task('clean-release', function(cb) {
 });
 
 // Compile sources
-gulp.task('scripts', ['clean'], function() {
+const compile = gulp.series(clean, function compile() {
 	return gulp.src(paths.scripts.concat(paths.definitionTypeScript))
 		.pipe(tsProject())
 		.pipe(gulp.dest(paths.releaseBeta));
 });
 
+
 // Type checking against multiple versions of TypeScript
-gulp.task('typecheck-dev', function() {
+function typecheckDev() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.dev)
 	])).pipe(createProject({ noEmit: true })());
-});
-
-gulp.task('typecheck-2.3', function() {
+}
+function typecheck2_3() {
 	return gulp.src(paths.scripts.concat([
 		'!definitions/typescript.d.ts',
 		findTSDefinition(tsVersions.release23)
 	])).pipe(createProject({ noEmit: true })());
-});
+}
 
-gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
+const typecheck = gulp.parallel(typecheckDev, typecheck2_3);
 
 // Tests
 
@@ -75,6 +76,7 @@ gulp.task('typecheck', ['typecheck-dev', 'typecheck-2.3']);
 const libs = [
 	['2.7', undefined],
 	['2.3', require(tsVersions.release23)],
+	['2.9', require(tsVersions.release29)],
 	['dev', require(tsVersions.dev)]
 ];
 
@@ -128,18 +130,18 @@ async function runTest(name) {
 	}));
 }
 
-gulp.task('test-run', ['clean-test', 'scripts'], async function() {
+gulp.task('test-run', gulp.series('clean-test', async function testRun() {
 	fs.mkdirSync('test/output/');
 	for (const testName of tests) {
 		await runTest(testName);
 	}
-});
+}));
 
 /**
  * Executes all the test tasks and then compares their output against the expected output (defined in
  * `test/baseline`).
  */
-gulp.task('test', ['test-run'], function() {
+gulp.task('test', gulp.series('test-run', function testVerify() {
 	let failed = false;
 	function onError(error) {
 		failed = true;
@@ -155,21 +157,23 @@ gulp.task('test', ['test-run'], function() {
 				throw new Error('Tests failed');
 			}
 		});
-});
+}));
 
 // Accept new baselines
-gulp.task('test-baselines-accept', function(cb) {
+gulp.task('test-baselines-accept', function testBaselinesAccept(cb) {
 	rimraf('test/baselines', function() {
 		gulp.src('test/output/**').pipe(gulp.dest('test/baselines')).on('finish', cb);
 	});
 });
 
-gulp.task('release', function() {
+gulp.task('release', function release() {
 	return gulp.src(paths.releaseBeta + '/**').pipe(gulp.dest(paths.release));
 });
 
-gulp.task('watch', ['scripts'], function() {
-	gulp.watch(paths.scripts, ['scripts']);
-});
+// Expose main tasks
+gulp.task('scripts', compile);
+gulp.task('default', gulp.series(compile, gulp.parallel(typecheck, 'test')));
 
-gulp.task('default', ['scripts', 'typecheck', 'test']);
+gulp.task('watch', gulp.series('scripts', function watch() {
+	gulp.watch(paths.scripts, compile);
+}));

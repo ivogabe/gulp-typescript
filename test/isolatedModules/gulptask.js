@@ -10,7 +10,8 @@ module.exports = function(newTS, lib, output, reporter) {
 	var tsResult = tsProject.src()
 		.pipe(plumber())
 		.pipe(sourcemaps.init())
-		.pipe(tsProject(reporter));
+		.pipe(tsProject(reporter))
+		.on('error', () => {});
 
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js

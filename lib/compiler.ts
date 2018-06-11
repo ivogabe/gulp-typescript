@@ -18,9 +18,11 @@ interface OutputFile {
 
 	jsFileName?: string;
 	dtsFileName?: string;
+	dtsMapFileName?: string;
 	jsContent?: string;
 	jsMapContent?: string;
 	dtsContent?: string;
+	dtsMapContent?: string;
 }
 
 /**
@@ -125,12 +127,16 @@ export class ProjectCompiler implements ICompiler {
 	}
 
 	private attachContentToFile(file: OutputFile, fileName: string, content: string) {
-		const [, extension] = utils.splitExtension(fileName, ['d.ts']);
+		const [, extension] = utils.splitExtension(fileName, ['d.ts', 'd.ts.map']);
 		switch (extension) {
 			case 'js':
 			case 'jsx':
 				file.jsFileName = fileName;
 				file.jsContent = content;
+				break;
+			case 'd.ts.map':
+				file.dtsMapFileName = fileName;
+				file.dtsMapContent = content;
 				break;
 			case 'd.ts':
 				file.dtsFileName = fileName;
@@ -149,7 +155,7 @@ export class ProjectCompiler implements ICompiler {
 
 		result.emitSkipped = emitOutput.emitSkipped;
 	}
-	private emitFile({ file, jsFileName, dtsFileName, jsContent, dtsContent, jsMapContent }: OutputFile, currentDirectory: string) {
+	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }: OutputFile, currentDirectory: string) {
 		if (!jsFileName) return;
 
 		let base: string;
@@ -184,7 +190,7 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 		if (dtsContent !== undefined) {
-			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, file ? file.gulp.cwd : currentDirectory);
+			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 	}
 
@@ -270,7 +276,7 @@ export class FileCompiler implements ICompiler {
 
 		mapString = mapString.substring(start.length);
 
-		let map: RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
+		let map: RawSourceMap = JSON.parse(Buffer.from(mapString, 'base64').toString());
 		// TODO: Set paths correctly
 		// map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
 		// map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
