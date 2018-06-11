@@ -175,5 +175,5 @@ gulp.task('scripts', compile);
 gulp.task('default', gulp.series(compile, gulp.parallel(typecheck, 'test')));
 
 gulp.task('watch', gulp.series('scripts', function watch() {
-	gulp.watch(paths.scripts, ['scripts']);
+	gulp.watch(paths.scripts, compile);
 }));

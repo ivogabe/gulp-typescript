@@ -7,6 +7,7 @@ module.exports = function(newTS, lib, output, reporter) {
 		.pipe(sourcemaps.init())
 		.pipe(concat('all.ts'))
 		.pipe(newTS({ typescript: lib, declaration: true }, reporter))
+		.on('error', () => {})
 		.pipe(sourcemaps.write('.'))
 		.pipe(gulp.dest(output));
 };

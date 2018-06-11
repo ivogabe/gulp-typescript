@@ -144,9 +144,6 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 		super({objectMode: true});
 
 		this.project = project;
-
-		// Prevent "Unhandled stream error in pipe" when a compilation error occurs.
-		this.on('error', () => {});
 	}
 
 	private project: ProjectInfo;

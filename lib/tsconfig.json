@@ -6,10 +6,6 @@
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
 		"declaration": true,
-		"preserveConstEnums": true,
-		"lib": [
-			"dom",
-			"es2015"
-		]
+		"preserveConstEnums": true
 	}
 }

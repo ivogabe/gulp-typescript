@@ -88,7 +88,6 @@ export class Output {
 			? this.project.input.getFileNames(true).map(fName => this.project.input.getFile(fName))
 			: [original];
 
-
 		for (const sourceFile of sourceMapOrigins) {
 			if (!sourceFile || !sourceFile.gulp || !sourceFile.gulp.sourceMap) continue;
 
@@ -130,6 +129,10 @@ export class Output {
 
 		if (this.project.reporter.finish) this.project.reporter.finish(this.result);
 
+		if (reporter.countErrors(this.result) !== 0) {
+			this.streamFull.emit('error', new Error("TypeScript: Compilation failed"));
+		}
+
 		this.streamFull.emit('finish');
 		this.streamFull.push(null);
 		this.streamJs.push(null);
@@ -151,6 +154,5 @@ export class Output {
 		// call reporter callback
 		if (this.project.reporter.error) this.project.reporter.error(<reporter.TypeScriptError> error, this.project.typescript);
 		// & emit the error on the stream.
-		this.streamFull.emit('error', error);
 	}
 }
