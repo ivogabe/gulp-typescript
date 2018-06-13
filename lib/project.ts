@@ -22,6 +22,7 @@ interface PartialProject {
 	rawConfig?: any;
 	config?: TsConfig;
 	options?: ts.CompilerOptions;
+	projectReferences?: ReadonlyArray<ts.ProjectReference>;
 }
 export interface Project {
 	(reporter?: Reporter): ICompileStream;
@@ -34,6 +35,7 @@ export interface Project {
 	readonly rawConfig: any;
 	readonly config: TsConfig;
 	readonly options: ts.CompilerOptions;
+	readonly projectReferences: ReadonlyArray<ts.ProjectReference> | undefined;
 }
 
 export interface ProjectInfo {
@@ -42,12 +44,13 @@ export interface ProjectInfo {
 	compiler: ICompiler;
 	singleOutput: boolean;
 	options: ts.CompilerOptions;
+	projectReferences: ReadonlyArray<ts.ProjectReference>;
 	typescript: typeof ts;
 	directory: string;
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts) {
+export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts) {
 	const input = new FileCache(typescript, options);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
@@ -88,12 +91,14 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 	project.rawConfig = rawConfig;
 	project.config = config;
 	project.options = options;
+	project.projectReferences = projectReferences;
 
 	const projectInfo: ProjectInfo = {
 		input,
 		singleOutput,
 		compiler,
 		options,
+		projectReferences,
 		typescript,
 		directory: projectDirectory,
 		// Set when `project` is called

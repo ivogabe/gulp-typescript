@@ -11,6 +11,7 @@ const diff = require('gulp-diff');
 const tsVersions = {
 	dev: './typescript/dev',
 	release23: './typescript/2.3',
+	release27: './typescript/2.7',
 	release29: './typescript/2.9'
 };
 
@@ -74,7 +75,7 @@ const typecheck = gulp.parallel(typecheckDev, typecheck2_3);
 
 // We run every test on multiple typescript versions:
 const libs = [
-	['2.7', undefined],
+	['2.7', require(tsVersions.release27)],
 	['2.3', require(tsVersions.release23)],
 	['2.9', require(tsVersions.release29)],
 	['dev', require(tsVersions.dev)]
