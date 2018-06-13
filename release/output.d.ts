@@ -13,11 +13,15 @@ export declare class Output {
     streamDts: stream.Readable;
     private pendingIO;
     writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File): void;
-    writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File): Promise<void>;
-    private applySourceMap(sourceMapContent, original, output);
+    private writeJsAsync;
+    writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File): void;
+    private writeDtsAsync;
+    private applySourceMap;
+    private pipeRejection;
     finish(result: reporter.CompilationResult): void;
-    private mightFinish();
-    private getError(info);
+    private mightFinish;
+    private getError;
     diagnostic(info: ts.Diagnostic): void;
     error(error: reporter.TypeScriptError): void;
 }
+//# sourceMappingURL=output.d.ts.map

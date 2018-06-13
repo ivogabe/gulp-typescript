@@ -15,6 +15,7 @@ export interface Project {
     readonly rawConfig: any;
     readonly config: TsConfig;
     readonly options: ts.CompilerOptions;
+    readonly projectReferences: ReadonlyArray<ts.ProjectReference> | undefined;
 }
 export interface ProjectInfo {
     input: FileCache;
@@ -22,12 +23,14 @@ export interface ProjectInfo {
     compiler: ICompiler;
     singleOutput: boolean;
     options: ts.CompilerOptions;
+    projectReferences: ReadonlyArray<ts.ProjectReference>;
     typescript: typeof ts;
     directory: string;
     reporter: Reporter;
 }
-export declare function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts): Project;
+export declare function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts): Project;
 export interface ICompileStream extends NodeJS.ReadWriteStream {
     js: stream.Readable;
     dts: stream.Readable;
 }
+//# sourceMappingURL=project.d.ts.map

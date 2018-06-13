@@ -98,8 +98,11 @@ async function runTest(name) {
 	const newGulpTs = require('./release-2/main');
 	const testTask = require(`./${path.posix.join(testDir, 'gulptask.js')}`);
 
+	const matchingLibs = testTask.match ? libs.filter(([, tsLib]) => testTask.match(tsLib)) : libs;
+	if (matchingLibs.length === 0) return Promise.resolve();
+
 	fs.mkdirSync(outputDir);
-	return Promise.all(libs.map(([tsVersion, tsLib]) => {
+	return Promise.all(matchingLibs.map(([tsVersion, tsLib]) => {
 		return new Promise((resolve, reject) => {
 			const errors = [];
 			let finishInfo;

@@ -32,7 +32,17 @@ class ProjectCompiler {
         this.project.options.sourceMap = this.hasSourceMap;
         const currentDirectory = utils.getCommonBasePathOfArray(rootFilenames.map(fileName => this.project.input.getFile(fileName).gulp.cwd));
         this.host = new host_1.Host(this.project.typescript, currentDirectory, this.project.input, this.project.options);
-        this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
+        // Calling `createProgram` with an object is only supported in 3.0. Only call this overload
+        // if we have project references (also only supported in 3.0)
+        this.program = this.project.projectReferences
+            ? this.project.typescript.createProgram({
+                rootNames: rootFilenames,
+                options: this.project.options,
+                projectReferences: this.project.projectReferences,
+                host: this.host,
+                oldProgram: this.program
+            })
+            : this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
         const result = reporter_1.emptyCompilationResult(this.project.options.noEmit);
         result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
         result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());

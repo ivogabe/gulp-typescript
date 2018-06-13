@@ -4,3 +4,4 @@ export interface TsConfig {
     exclude?: string[];
     compilerOptions?: any;
 }
+//# sourceMappingURL=types.d.ts.map

@@ -18,7 +18,7 @@ const reporter_1 = require("./reporter");
 const input_1 = require("./input");
 const output_1 = require("./output");
 const compiler_1 = require("./compiler");
-function setupProject(projectDirectory, configFileName, rawConfig, config, options, typescript) {
+function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript) {
     const input = new input_1.FileCache(typescript, options);
     const compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
     let running = false;
@@ -51,11 +51,13 @@ function setupProject(projectDirectory, configFileName, rawConfig, config, optio
     project.rawConfig = rawConfig;
     project.config = config;
     project.options = options;
+    project.projectReferences = projectReferences;
     const projectInfo = {
         input,
         singleOutput,
         compiler,
         options,
+        projectReferences,
         typescript,
         directory: projectDirectory,
         // Set when `project` is called

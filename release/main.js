@@ -86,6 +86,7 @@ function reportErrors(errors, typescript, ignore = []) {
         let projectDirectory = process.cwd();
         let typescript;
         let compilerOptions;
+        let projectReferences;
         let fileName;
         let rawConfig;
         if (fileNameOrSettings !== undefined) {
@@ -118,10 +119,11 @@ function reportErrors(errors, typescript, ignore = []) {
                     reportErrors(parsed.errors, typescript, [18003]);
                 }
                 compilerOptions = parsed.options;
+                projectReferences = parsed.projectReferences;
             }
         }
         normalizeCompilerOptions(compilerOptions, typescript);
-        const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
+        const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript);
         return project;
     }
     compile.createProject = createProject;
