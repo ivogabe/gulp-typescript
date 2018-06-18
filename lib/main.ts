@@ -151,6 +151,7 @@ module compile {
 		let projectDirectory = process.cwd();
 		let typescript: typeof ts;
 		let compilerOptions: ts.CompilerOptions;
+		let projectReferences: ReadonlyArray<ts.ProjectReference>;
 		let fileName: string;
 
 		let rawConfig: any;
@@ -199,11 +200,12 @@ module compile {
 				}
 
 				compilerOptions = parsed.options;
+				projectReferences = parsed.projectReferences;
 			}
 		}
 
 		normalizeCompilerOptions(compilerOptions, typescript);
-		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
+		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript);
 
 		return project;
 	}

@@ -47,3 +47,4 @@ declare module compile {
     function filter(...args: any[]): void;
 }
 export = compile;
+//# sourceMappingURL=main.d.ts.map

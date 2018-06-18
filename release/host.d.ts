@@ -20,3 +20,4 @@ export declare class Host implements ts.CompilerHost {
     getDirectories: (path: string) => string[];
     directoryExists: (path: string) => boolean;
 }
+//# sourceMappingURL=host.d.ts.map

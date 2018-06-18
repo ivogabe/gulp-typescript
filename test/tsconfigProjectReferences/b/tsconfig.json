@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "outFile": "b.js"
+    },
+    "files": [
+        "b.ts"
+    ],
+    "references": [
+        { "path": "../a", "prepend": true }
+    ]
+}

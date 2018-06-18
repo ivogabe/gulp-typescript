@@ -23,23 +23,9 @@ class Output {
         this.streamDts = streamDts;
     }
     writeJs(base, fileName, content, sourceMapContent, cwd, original) {
-        const file = new VinylFile({
-            path: fileName,
-            contents: Buffer.from(content),
-            cwd,
-            base
-        });
-        this.pendingIO++;
-        this.applySourceMap(sourceMapContent, original, file).then(appliedSourceMap => {
-            if (appliedSourceMap)
-                file.sourceMap = JSON.parse(appliedSourceMap);
-            this.streamFull.push(file);
-            this.streamJs.push(file);
-            this.pendingIO--;
-            this.mightFinish();
-        });
+        this.pipeRejection(this.writeJsAsync(base, fileName, content, sourceMapContent, cwd, original), this.streamJs);
     }
-    writeDts(base, fileName, content, declarationMapContent, cwd, original) {
+    writeJsAsync(base, fileName, content, sourceMapContent, cwd, original) {
         return __awaiter(this, void 0, void 0, function* () {
             const file = new VinylFile({
                 path: fileName,
@@ -48,7 +34,29 @@ class Output {
                 base
             });
             this.pendingIO++;
-            this.applySourceMap(declarationMapContent, original, file).then(appliedSourceMap => {
+            yield this.applySourceMap(sourceMapContent, original, file).then(appliedSourceMap => {
+                if (appliedSourceMap)
+                    file.sourceMap = JSON.parse(appliedSourceMap);
+                this.streamFull.push(file);
+                this.streamJs.push(file);
+                this.pendingIO--;
+                this.mightFinish();
+            });
+        });
+    }
+    writeDts(base, fileName, content, declarationMapContent, cwd, original) {
+        this.pipeRejection(this.writeDtsAsync(base, fileName, content, declarationMapContent, cwd, original), this.streamDts);
+    }
+    writeDtsAsync(base, fileName, content, declarationMapContent, cwd, original) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const file = new VinylFile({
+                path: fileName,
+                contents: Buffer.from(content),
+                cwd,
+                base
+            });
+            this.pendingIO++;
+            yield this.applySourceMap(declarationMapContent, original, file).then(appliedSourceMap => {
                 if (appliedSourceMap)
                     file.sourceMap = JSON.parse(appliedSourceMap);
                 this.streamFull.push(file);
@@ -100,6 +108,13 @@ class Output {
                 const absolute = path.resolve(directory, fileName);
                 return utils.forwardSlashes(path.relative(output.base, absolute));
             }
+        });
+    }
+    // Avoids UnhandledPromiseRejectionWarning in NodeJS
+    pipeRejection(promise, alternateStream) {
+        promise.catch(err => {
+            this.streamFull.emit("error", err);
+            alternateStream.emit("error", err);
         });
     }
     finish(result) {

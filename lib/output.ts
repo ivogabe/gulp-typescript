@@ -29,6 +29,10 @@ export class Output {
 	private pendingIO = 0;
 
 	writeJs(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
+		this.pipeRejection(this.writeJsAsync(base, fileName, content, sourceMapContent, cwd, original), this.streamJs);
+	}
+
+	private async writeJsAsync(base: string, fileName: string, content: string, sourceMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
 			contents: Buffer.from(content),
@@ -38,7 +42,7 @@ export class Output {
 
 		this.pendingIO++;
 
-		this.applySourceMap(sourceMapContent, original, file).then(appliedSourceMap => {
+		await this.applySourceMap(sourceMapContent, original, file).then(appliedSourceMap => {
 			if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
 			this.streamFull.push(file);
 			this.streamJs.push(file);
@@ -48,7 +52,11 @@ export class Output {
 		});
 	}
 
-	async writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
+	writeDts(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
+		this.pipeRejection(this.writeDtsAsync(base, fileName, content, declarationMapContent, cwd, original), this.streamDts);
+	}
+
+	private async writeDtsAsync(base: string, fileName: string, content: string, declarationMapContent: string, cwd: string, original: input.File) {
 		const file = new VinylFile({
 			path: fileName,
 			contents: Buffer.from(content),
@@ -58,7 +66,7 @@ export class Output {
 
 		this.pendingIO++;
 
-		this.applySourceMap(declarationMapContent, original, file).then(appliedSourceMap => {
+		await this.applySourceMap(declarationMapContent, original, file).then(appliedSourceMap => {
 			if (appliedSourceMap) file.sourceMap = JSON.parse(appliedSourceMap);
 			this.streamFull.push(file);
 			this.streamDts.push(file);
@@ -118,12 +126,20 @@ export class Output {
 		}
 	}
 
+	// Avoids UnhandledPromiseRejectionWarning in NodeJS
+	private pipeRejection<T>(promise: Promise<T>, alternateStream: stream.Readable) {
+		promise.catch(err => {
+			this.streamFull.emit("error", err);
+			alternateStream.emit("error", err);
+		});
+	}
+
 	finish(result: reporter.CompilationResult) {
 		this.result = result;
 
 		this.mightFinish();
 	}
-	
+
 	private mightFinish() {
 		if (this.result === undefined || this.pendingIO !== 0) return;
 

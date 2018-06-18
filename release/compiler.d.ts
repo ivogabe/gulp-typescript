@@ -18,11 +18,11 @@ export declare class ProjectCompiler implements ICompiler {
     prepare(project: ProjectInfo): void;
     inputFile(file: File): void;
     inputDone(): void;
-    private attachContentToFile(file, fileName, content);
-    private emit(result, callback);
-    private emitFile({file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent}, currentDirectory);
-    private reportDiagnostics(diagnostics);
-    private removeSourceMapComment(content);
+    private attachContentToFile;
+    private emit;
+    private emitFile;
+    private reportDiagnostics;
+    private removeSourceMapComment;
 }
 export declare class FileCompiler implements ICompiler {
     host: Host;
@@ -31,7 +31,8 @@ export declare class FileCompiler implements ICompiler {
     private previousOutput;
     private compilationResult;
     prepare(project: ProjectInfo): void;
-    private write(file, fileName, diagnostics, content, sourceMap);
+    private write;
     inputFile(file: File): void;
     inputDone(): void;
 }
+//# sourceMappingURL=compiler.d.ts.map
