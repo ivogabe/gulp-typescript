@@ -122,7 +122,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.log('[' + colors.gray('gulp-typescript') + '] '
-				+ colors.bgred(error.diagnostic.code + '')
+				+ colors.bgRed(error.diagnostic.code + '')
 				+ ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 
