@@ -83,7 +83,7 @@ function fullReporter(fullFilename = false) {
     return {
         error: (error, typescript) => {
             console.log('[' + colors.gray('gulp-typescript') + '] '
-                + colors.bgred(error.diagnostic.code + '')
+                + colors.bgRed(error.diagnostic.code + '')
                 + ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n')));
             if (error.tsFile) {
                 console.log('> ' + colors.gray('file: ') + (fullFilename ? error.fullFilename : error.relativeFilename) + colors.gray(':'));
