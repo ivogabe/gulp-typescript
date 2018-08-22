@@ -9,7 +9,7 @@ import { Reporter, defaultReporter } from './reporter';
 import { FileCache } from './input';
 import { Output } from './output';
 import { ICompiler, ProjectCompiler, FileCompiler } from './compiler';
-import { TsConfig } from './types';
+import { FinalTransformers, TsConfig } from './types';
 
 interface PartialProject {
 	(reporter?: Reporter): ICompileStream;
@@ -50,7 +50,7 @@ export interface ProjectInfo {
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts) {
+export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers) {
 	const input = new FileCache(typescript, options);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
@@ -69,7 +69,7 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 		running = true;
 
 		input.reset();
-		compiler.prepare(projectInfo);
+		compiler.prepare(projectInfo, finalTransformers);
 
 		const stream = new CompileStream(projectInfo);
 		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts);

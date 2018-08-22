@@ -5,10 +5,11 @@ import { File, FileChangeState } from './input';
 import { Host } from './host';
 import { ProjectInfo } from './project';
 import { CompilationResult, emptyCompilationResult } from './reporter';
+import { FinalTransformers } from './types';
 import * as utils from './utils';
 
 export interface ICompiler {
-	prepare(project: ProjectInfo): void;
+	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers): void;
 	inputFile(file: File): void;
 	inputDone(): void;
 }
@@ -29,12 +30,14 @@ interface OutputFile {
  * Compiles a whole project, with full type checking
  */
 export class ProjectCompiler implements ICompiler {
+	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
 	program: ts.Program;
 	private hasSourceMap: boolean;
 
-	prepare(project: ProjectInfo) {
+	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers) {
+		this.finalTransformers = finalTransformers;
 		this.project = project;
 		this.hasSourceMap = false;
 	}
@@ -158,7 +161,13 @@ export class ProjectCompiler implements ICompiler {
 		}
 	}
 	private emit(result: CompilationResult, callback: ts.WriteFileCallback) {
-		const emitOutput = this.program.emit(undefined, callback);
+		const emitOutput = this.program.emit(
+			undefined,
+			callback,
+			undefined,
+			false,
+			this.finalTransformers ? this.finalTransformers() : undefined,
+		);
 
 		result.emitErrors += emitOutput.diagnostics.length;
 		this.reportDiagnostics(emitOutput.diagnostics);
@@ -228,6 +237,7 @@ interface FileResult {
 	sourceMap: string;
 }
 export class FileCompiler implements ICompiler {
+	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
 
@@ -236,7 +246,8 @@ export class FileCompiler implements ICompiler {
 
 	private compilationResult: CompilationResult = undefined;
 
-	prepare(project: ProjectInfo) {
+	prepare(project: ProjectInfo, finalTransformers: FinalTransformers) {
+		this.finalTransformers = finalTransformers;
 		this.project = project;
 		this.project.input.noParse = true;
 		this.compilationResult = emptyCompilationResult(this.project.options.noEmit);
@@ -267,14 +278,15 @@ export class FileCompiler implements ICompiler {
 			return;
 		}
 
-		const diagnostics: ts.Diagnostic[] = [];
-		const outputString = this.project.typescript.transpile(
-			file.content,
-			this.project.options,
-			file.fileNameOriginal,
-			diagnostics
-		);
-		let index = outputString.lastIndexOf('\n')
+		const output: ts.TranspileOutput = this.project.typescript.transpileModule(file.content, {
+			compilerOptions: this.project.options,
+			fileName: file.fileNameOriginal,
+			reportDiagnostics: true,
+			transformers: this.finalTransformers ? this.finalTransformers() : undefined,
+		});
+
+		const outputString = output.outputText;
+		let index = outputString.lastIndexOf('\n');
 		let mapString = outputString.substring(index + 1);
 		if (mapString.substring(0, 1) === '\r') mapString = mapString.substring(1);
 
@@ -294,7 +306,7 @@ export class FileCompiler implements ICompiler {
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		const [, extension] = utils.splitExtension(map.file); // js or jsx
 
-		this.write(file, fileNameExtensionless + '.' + extension, diagnostics, outputString.substring(0, index), JSON.stringify(map));
+		this.write(file, fileNameExtensionless + '.' + extension, output.diagnostics, outputString.substring(0, index), JSON.stringify(map));
 	}
 
 	inputDone() {

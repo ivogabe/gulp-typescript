@@ -53,6 +53,15 @@ Almost all options from TypeScript are supported.
 - `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
 - `allowJs` (boolean) - Allow JavaScript files to be compiled.
 - `rootDir` - Specifies the root directory of input files. Only use to control the output directory structure with `outDir`.
+- `getCustomTransformers` `(string | (() => ts.CustomTransformers | undefined))` - Provide custom transformers, example:
+
+```js
+getCustomTransformers: () => ({
+    before: [
+        styledComponentsTransformer(),
+    ]
+})
+```
 
 See the [TypeScript wiki](https://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
 These options are not supported:
