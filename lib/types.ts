@@ -4,3 +4,15 @@ export interface TsConfig {
 	exclude?: string[];
 	compilerOptions?: any;
 }
+
+export interface VinylFile {
+	contents: Buffer | NodeJS.ReadableStream | null;
+	cwd: string;
+	base: string;
+	path: string;
+	dirname: string;
+	basename: string;
+	stem: string;
+	extname: string;
+	sourceMap?: any;
+}

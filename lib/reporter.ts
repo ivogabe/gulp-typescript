@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as colors from 'ansi-colors';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 
 export interface TypeScriptError extends Error {
 	fullFilename?: string;
