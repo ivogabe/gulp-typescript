@@ -64,7 +64,7 @@
     "node": ">= 8"
   },
   "dependencies": {
-    "ansi-colors": "^2.0.2",
+    "ansi-colors": "^3.0.5",
     "plugin-error": "^1.0.1",
     "source-map": "^0.7.3",
     "through2": "^2.0.3",
@@ -72,12 +72,11 @@
     "vinyl": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^8.5.2",
-    "@types/plugin-error": "^0.1.0",
-    "@types/source-map": "^0.5.2",
-    "@types/through2": "^2.0.33",
-    "@types/vinyl": "^2.0.2",
-    "@types/vinyl-fs": "^2.4.8",
+    "@types/node": "8.5.2",
+    "@types/plugin-error": "0.1.0",
+    "@types/through2": "2.0.33",
+    "@types/vinyl": "2.0.2",
+    "@types/vinyl-fs": "2.4.9",
     "gulp": "^4.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-diff": "^1.0.0",
@@ -86,7 +85,7 @@
     "gulp-sourcemaps": "^2.6.4",
     "merge-stream": "^1.0.1",
     "rimraf": "^2.6.2",
-    "typescript": "^3.0.0-dev.20180609"
+    "typescript": "3.0.3"
   },
   "peerDependencies": {
     "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev || ~3.0.0 || >=3.0.0-dev || >=3.1.0-dev"
