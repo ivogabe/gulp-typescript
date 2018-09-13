@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as colors from 'ansi-colors';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 
 export interface TypeScriptError extends Error {
 	fullFilename?: string;
@@ -104,9 +104,8 @@ export function defaultReporter(): Reporter {
 }
 
 export function longReporter(): Reporter {
-	const typescript: typeof ts = require('typescript');
 	return {
-		error: (error: TypeScriptError) => {
+		error: (error: TypeScriptError, typescript: typeof ts) => {
 			if (error.tsFile) {
 				console.log('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
 					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
