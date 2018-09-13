@@ -149,7 +149,6 @@ gulp.task('test', gulp.series('test-run', function testVerify() {
 	let failed = false;
 	function onError(error) {
 		failed = true;
-		console.log(error)
 	}
 	return gulp.src('test/output/**/*.*')
 		.pipe(plumber())

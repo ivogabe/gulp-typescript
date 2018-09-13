@@ -35,28 +35,28 @@ function compile(param?: any, theReporter?: _reporter.Reporter): compile.Compile
 
 function getFinalTransformers(getCustomTransformers?: GetCustomTransformers): FinalTransformers {
 	if (typeof getCustomTransformers === 'function') {
-		return getCustomTransformers
+		return getCustomTransformers;
 	}
 
 	if (typeof getCustomTransformers === 'string') {
 		try {
-			getCustomTransformers = require(getCustomTransformers)
+			getCustomTransformers = require(getCustomTransformers);
 		} catch (err) {
 			throw new Error(
 				`Failed to load customTransformers from "${getCustomTransformers}": ${err.message}`
-			)
+			);
 		}
 
 		if (typeof getCustomTransformers !== 'function') {
 			throw new Error(
 				`Custom transformers in "${getCustomTransformers}" should export a function, got ${typeof getCustomTransformers}`
-			)
+			);
 		}
 
-		return getCustomTransformers
+		return getCustomTransformers;
 	}
 
-	return null
+	return null;
 }
 
 function getTypeScript(typescript: typeof ts) {
@@ -72,7 +72,7 @@ function getTypeScript(typescript: typeof ts) {
 }
 
 function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings {
-	const { customTransformers, declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
+	const { getCustomTransformers, declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
 
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
@@ -195,7 +195,6 @@ module compile {
 			}
 
 			finalTransformers = getFinalTransformers(settings.getCustomTransformers);
-			delete settings.getCustomTransformers;
 
 			typescript = getTypeScript(settings.typescript);
 			settings = checkAndNormalizeSettings(settings);

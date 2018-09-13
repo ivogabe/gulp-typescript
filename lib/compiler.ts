@@ -166,7 +166,7 @@ export class ProjectCompiler implements ICompiler {
 			callback,
 			undefined,
 			false,
-			this.finalTransformers ? this.finalTransformers() : undefined,
+			this.finalTransformers ? this.finalTransformers(this.program) : undefined,
 		);
 
 		result.emitErrors += emitOutput.diagnostics.length;

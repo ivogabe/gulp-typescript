@@ -4,6 +4,7 @@ var transformer = require('./simpleTransformer');
 module.exports = function(newTS, lib, output, reporter) {
 	var getCustomTransformers = function () {
 		return {
+			// This transformer simply clean file contents.
 			before: [transformer],
 		};
 	};

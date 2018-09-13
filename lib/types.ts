@@ -1,8 +1,8 @@
 import * as ts from 'typescript';
 
-export type FinalTransformers = undefined | (() => ts.CustomTransformers)
+export type FinalTransformers = undefined | ((program?: ts.Program) => ts.CustomTransformers)
 
-export type GetCustomTransformers = string | (() => ts.CustomTransformers | undefined)
+export type GetCustomTransformers = string | ((program?: ts.Program) => ts.CustomTransformers | undefined)
 
 export interface TsConfig {
 	files?: string[];
