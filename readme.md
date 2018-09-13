@@ -56,11 +56,13 @@ Almost all options from TypeScript are supported.
 - `getCustomTransformers` `(string | (() => ts.CustomTransformers | undefined))` - Provide custom transformers, example:
 
 ```js
+const styledComponentsTransformer = require('typescript-plugin-styled-components').default;
+
 getCustomTransformers: () => ({
     before: [
         styledComponentsTransformer(),
     ]
-})
+});
 ```
 
 See the [TypeScript wiki](https://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
