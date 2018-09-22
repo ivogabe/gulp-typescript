@@ -1,0 +1,12 @@
+﻿{
+	"compilerOptions": {
+		"module": "amd",
+		"types": []
+	},
+	"files": [
+		"test-transformers.ts"
+	],
+	"exclude": [
+		"simpleTransformer.js"
+	]
+}

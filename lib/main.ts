@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as _project from './project';
 import * as utils from './utils';
 import * as _reporter from './reporter';
-import { TsConfig } from './types';
+import { FinalTransformers, GetCustomTransformers, TsConfig } from './types';
 
 function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
@@ -33,6 +33,32 @@ function compile(param?: any, theReporter?: _reporter.Reporter): compile.Compile
 	return proj(theReporter);
 }
 
+function getFinalTransformers(getCustomTransformers?: GetCustomTransformers): FinalTransformers {
+	if (typeof getCustomTransformers === 'function') {
+		return getCustomTransformers;
+	}
+
+	if (typeof getCustomTransformers === 'string') {
+		try {
+			getCustomTransformers = require(getCustomTransformers);
+		} catch (err) {
+			throw new Error(
+				`Failed to load customTransformers from "${getCustomTransformers}": ${err.message}`
+			);
+		}
+
+		if (typeof getCustomTransformers !== 'function') {
+			throw new Error(
+				`Custom transformers in "${getCustomTransformers}" should export a function, got ${typeof getCustomTransformers}`
+			);
+		}
+
+		return getCustomTransformers;
+	}
+
+	return null;
+}
+
 function getTypeScript(typescript: typeof ts) {
 	if (typescript) return typescript;
 	try {
@@ -46,7 +72,7 @@ function getTypeScript(typescript: typeof ts) {
 }
 
 function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings {
-	const { declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
+	const { getCustomTransformers, declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
 
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
@@ -124,6 +150,7 @@ module compile {
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
 
+		getCustomTransformers?: GetCustomTransformers;
 		typescript?: typeof ts;
 
 		isolatedModules?: boolean;
@@ -146,6 +173,7 @@ module compile {
 	export function createProject(tsConfigFileName: string, settings?: Settings): Project;
 	export function createProject(settings?: Settings): Project;
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
+		let finalTransformers: FinalTransformers;
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
@@ -165,6 +193,8 @@ module compile {
 			} else {
 				settings = fileNameOrSettings || {};
 			}
+
+			finalTransformers = getFinalTransformers(settings.getCustomTransformers);
 
 			typescript = getTypeScript(settings.typescript);
 			settings = checkAndNormalizeSettings(settings);
@@ -205,7 +235,7 @@ module compile {
 		}
 
 		normalizeCompilerOptions(compilerOptions, typescript);
-		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript);
+		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript, finalTransformers);
 
 		return project;
 	}
