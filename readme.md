@@ -53,17 +53,6 @@ Almost all options from TypeScript are supported.
 - `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
 - `allowJs` (boolean) - Allow JavaScript files to be compiled.
 - `rootDir` - Specifies the root directory of input files. Only use to control the output directory structure with `outDir`.
-- `getCustomTransformers` `(string | (() => ts.CustomTransformers | undefined))` - Provide custom transformers, example:
-
-```js
-const styledComponentsTransformer = require('typescript-plugin-styled-components').default;
-
-getCustomTransformers: () => ({
-    before: [
-        styledComponentsTransformer(),
-    ]
-});
-```
 
 See the [TypeScript wiki](https://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
 These options are not supported:
@@ -235,6 +224,24 @@ gulp.task('scripts', function() {
 Some examples can be found in [ivogabe/gulp-typescript-sourcemaps-demo](https://github.com/ivogabe/gulp-typescript-sourcemaps-demo).
 
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
+
+Custom transforms
+-----------------
+You can pass aditional transforms to the compiler pipeline. We aligned with the interface of [awesome-typescript-loader](https://github.com/s-panferov/awesome-typescript-loader). You can specify transforms by setting the `getCustomTransformers` option.
+
+The option expects a string, pointing at a module that exposes the transforms, or a function that returns the transforms. Its type is `getCustomTransformers: (string | ((program: ts.Program) => ts.CustomTransformers | undefined))`.
+
+```js
+const styledComponentsTransformer = require('typescript-plugin-styled-components').default;
+
+const project = ts.createProject('test/customTransformers/tsconfig.json', {
+    getCustomTransformers: () => ({
+        before: [
+            styledComponentsTransformer(),
+        ]
+    });
+});
+```
 
 Reporters
 ---------
