@@ -89,4 +89,7 @@ export class Host implements ts.CompilerHost {
 	getDirectories = (path: string) => this.fallback.getDirectories(path);
 
 	directoryExists = (path: string) => this.fallback.directoryExists(path);
+
+	readDirectory = (path: string, extensions?: ReadonlyArray<string>, exclude?: ReadonlyArray<string>, include?: ReadonlyArray<string>, depth?: number) =>
+		this.fallback.readDirectory(path, extensions, exclude, include, depth);
 }
