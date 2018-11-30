@@ -31,6 +31,24 @@ function compile(param, theReporter) {
     }
     return proj(theReporter);
 }
+function getFinalTransformers(getCustomTransformers) {
+    if (typeof getCustomTransformers === 'function') {
+        return getCustomTransformers;
+    }
+    if (typeof getCustomTransformers === 'string') {
+        try {
+            getCustomTransformers = require(getCustomTransformers);
+        }
+        catch (err) {
+            throw new Error(`Failed to load customTransformers from "${getCustomTransformers}": ${err.message}`);
+        }
+        if (typeof getCustomTransformers !== 'function') {
+            throw new Error(`Custom transformers in "${getCustomTransformers}" should export a function, got ${typeof getCustomTransformers}`);
+        }
+        return getCustomTransformers;
+    }
+    return null;
+}
 function getTypeScript(typescript) {
     if (typescript)
         return typescript;
@@ -43,7 +61,7 @@ function getTypeScript(typescript) {
     }
 }
 function checkAndNormalizeSettings(settings) {
-    const { declarationFiles, noExternalResolve, sortOutput, typescript } = settings, standardSettings = __rest(settings, ["declarationFiles", "noExternalResolve", "sortOutput", "typescript"]);
+    const { getCustomTransformers, declarationFiles, noExternalResolve, sortOutput, typescript } = settings, standardSettings = __rest(settings, ["getCustomTransformers", "declarationFiles", "noExternalResolve", "sortOutput", "typescript"]);
     if (settings.sourceRoot !== undefined) {
         console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.');
     }
@@ -81,6 +99,7 @@ function reportErrors(errors, typescript, ignore = []) {
 (function (compile) {
     compile.reporter = _reporter;
     function createProject(fileNameOrSettings, settings) {
+        let finalTransformers;
         let tsConfigFileName = undefined;
         let tsConfigContent = undefined;
         let projectDirectory = process.cwd();
@@ -100,6 +119,7 @@ function reportErrors(errors, typescript, ignore = []) {
             else {
                 settings = fileNameOrSettings || {};
             }
+            finalTransformers = getFinalTransformers(settings.getCustomTransformers);
             typescript = getTypeScript(settings.typescript);
             settings = checkAndNormalizeSettings(settings);
             const settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
@@ -123,7 +143,7 @@ function reportErrors(errors, typescript, ignore = []) {
             }
         }
         normalizeCompilerOptions(compilerOptions, typescript);
-        const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript);
+        const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript, finalTransformers);
         return project;
     }
     compile.createProject = createProject;

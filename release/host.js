@@ -29,6 +29,7 @@ class Host {
         this.realpath = (path) => this.fallback.realpath(path);
         this.getDirectories = (path) => this.fallback.getDirectories(path);
         this.directoryExists = (path) => this.fallback.directoryExists(path);
+        this.readDirectory = (rootDir, extensions, excludes, includes, depth) => this.fallback.readDirectory(rootDir, extensions, excludes, includes, depth);
         this.typescript = typescript;
         this.fallback = typescript.createCompilerHost(options);
         this.currentDirectory = currentDirectory;

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const ts = require("typescript");
 const path = require("path");
 const input_1 = require("./input");
 const host_1 = require("./host");
@@ -9,7 +10,8 @@ const utils = require("./utils");
  * Compiles a whole project, with full type checking
  */
 class ProjectCompiler {
-    prepare(project) {
+    prepare(project, finalTransformers) {
+        this.finalTransformers = finalTransformers;
         this.project = project;
         this.hasSourceMap = false;
     }
@@ -44,18 +46,25 @@ class ProjectCompiler {
             })
             : this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
         const result = reporter_1.emptyCompilationResult(this.project.options.noEmit);
-        result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
-        result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
-        result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
-        result.semanticErrors = this.reportDiagnostics(this.program.getSemanticDiagnostics());
+        const optionErrors = this.program.getOptionsDiagnostics();
+        const syntaxErrors = this.program.getSyntacticDiagnostics();
+        const globalErrors = this.program.getGlobalDiagnostics();
+        const semanticErrors = this.program.getSemanticDiagnostics();
+        result.optionsErrors = optionErrors.length;
+        result.syntaxErrors = syntaxErrors.length;
+        result.globalErrors = globalErrors.length;
+        result.semanticErrors = semanticErrors.length;
+        let declarationErrors = [];
         if (this.project.options.declaration) {
-            result.declarationErrors = this.program.getDeclarationDiagnostics().length;
+            declarationErrors = this.program.getDeclarationDiagnostics();
+            result.declarationErrors = declarationErrors.length;
         }
+        const preEmitDiagnostics = [...optionErrors, ...syntaxErrors, ...globalErrors, ...semanticErrors, ...declarationErrors];
         if (this.project.singleOutput) {
             const output = {
                 file: undefined
             };
-            this.emit(result, (fileName, content) => {
+            this.emit(result, preEmitDiagnostics, (fileName, content) => {
                 this.attachContentToFile(output, fileName, content);
             });
             this.emitFile(output, currentDirectory);
@@ -68,7 +77,7 @@ class ProjectCompiler {
                 const file = this.project.input.getFile(fileName);
                 output[fileName] = { file };
             }
-            this.emit(result, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
+            this.emit(result, preEmitDiagnostics, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
                 if (sourceFiles.length !== 1) {
                     throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
                 }
@@ -106,11 +115,19 @@ class ProjectCompiler {
                 break;
         }
     }
-    emit(result, callback) {
-        const emitOutput = this.program.emit(undefined, callback);
-        result.emitErrors += emitOutput.diagnostics.length;
-        this.reportDiagnostics(emitOutput.diagnostics);
+    emit(result, preEmitDiagnostics, callback) {
+        const emitOutput = this.program.emit(undefined, callback, undefined, false, this.finalTransformers ? this.finalTransformers(this.program) : undefined);
         result.emitSkipped = emitOutput.emitSkipped;
+        // `emitOutput.diagnostics` might contain diagnostics that were already part of `preEmitDiagnostics`.
+        // See https://github.com/Microsoft/TypeScript/issues/20876
+        // We use sortAndDeduplicateDiagnostics to remove duplicate diagnostics.
+        // We then count the number of diagnostics in `diagnostics` that we not in `preEmitDiagnostics`
+        // to count the number of emit diagnostics.
+        const diagnostics = ts.sortAndDeduplicateDiagnostics([...preEmitDiagnostics, ...emitOutput.diagnostics]);
+        result.emitErrors += diagnostics.length - preEmitDiagnostics.length;
+        for (const error of diagnostics) {
+            this.project.output.diagnostic(error);
+        }
     }
     emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }, currentDirectory) {
         if (!jsFileName)
@@ -148,14 +165,11 @@ class ProjectCompiler {
             this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
         }
         if (dtsContent !== undefined) {
+            if (dtsMapContent !== undefined) {
+                dtsContent = this.removeSourceMapComment(dtsContent);
+            }
             this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
         }
-    }
-    reportDiagnostics(diagnostics) {
-        for (const error of diagnostics) {
-            this.project.output.diagnostic(error);
-        }
-        return diagnostics.length;
     }
     removeSourceMapComment(content) {
         // By default the TypeScript automaticly inserts a source map comment.
@@ -173,7 +187,8 @@ class FileCompiler {
         this.previousOutput = {};
         this.compilationResult = undefined;
     }
-    prepare(project) {
+    prepare(project, finalTransformers) {
+        this.finalTransformers = finalTransformers;
         this.project = project;
         this.project.input.noParse = true;
         this.compilationResult = reporter_1.emptyCompilationResult(this.project.options.noEmit);
@@ -196,8 +211,13 @@ class FileCompiler {
             this.write(file, old.fileName, old.diagnostics, old.content, old.sourceMap);
             return;
         }
-        const diagnostics = [];
-        const outputString = this.project.typescript.transpile(file.content, this.project.options, file.fileNameOriginal, diagnostics);
+        const output = this.project.typescript.transpileModule(file.content, {
+            compilerOptions: this.project.options,
+            fileName: file.fileNameOriginal,
+            reportDiagnostics: true,
+            transformers: this.finalTransformers ? this.finalTransformers() : undefined,
+        });
+        const outputString = output.outputText;
         let index = outputString.lastIndexOf('\n');
         let mapString = outputString.substring(index + 1);
         if (mapString.substring(0, 1) === '\r')
@@ -214,7 +234,7 @@ class FileCompiler {
         // map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
         const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
         const [, extension] = utils.splitExtension(map.file); // js or jsx
-        this.write(file, fileNameExtensionless + '.' + extension, diagnostics, outputString.substring(0, index), JSON.stringify(map));
+        this.write(file, fileNameExtensionless + '.' + extension, output.diagnostics, outputString.substring(0, index), JSON.stringify(map));
     }
     inputDone() {
         this.project.output.finish(this.compilationResult);

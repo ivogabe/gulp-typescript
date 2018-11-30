@@ -24,4 +24,3 @@ export declare class Output {
     diagnostic(info: ts.Diagnostic): void;
     error(error: reporter.TypeScriptError): void;
 }
-//# sourceMappingURL=output.d.ts.map

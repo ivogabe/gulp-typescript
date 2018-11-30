@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 export interface TypeScriptError extends Error {
     fullFilename?: string;
     relativeFilename?: string;
@@ -41,4 +41,3 @@ export declare function nullReporter(): Reporter;
 export declare function defaultReporter(): Reporter;
 export declare function longReporter(): Reporter;
 export declare function fullReporter(fullFilename?: boolean): Reporter;
-//# sourceMappingURL=reporter.d.ts.map

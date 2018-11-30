@@ -18,7 +18,7 @@ const reporter_1 = require("./reporter");
 const input_1 = require("./input");
 const output_1 = require("./output");
 const compiler_1 = require("./compiler");
-function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript) {
+function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript, finalTransformers) {
     const input = new input_1.FileCache(typescript, options);
     const compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
     let running = false;
@@ -34,7 +34,7 @@ function setupProject(projectDirectory, configFileName, rawConfig, config, optio
         }
         running = true;
         input.reset();
-        compiler.prepare(projectInfo);
+        compiler.prepare(projectInfo, finalTransformers);
         const stream = new CompileStream(projectInfo);
         projectInfo.output = new output_1.Output(projectInfo, stream, stream.js, stream.dts);
         projectInfo.reporter = reporter || reporter_1.defaultReporter();

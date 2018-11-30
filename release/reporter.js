@@ -63,9 +63,8 @@ function defaultReporter() {
 }
 exports.defaultReporter = defaultReporter;
 function longReporter() {
-    const typescript = require('typescript');
     return {
-        error: (error) => {
+        error: (error, typescript) => {
             if (error.tsFile) {
                 console.log('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
                     + '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
