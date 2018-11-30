@@ -228,6 +228,9 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 		if (dtsContent !== undefined) {
+			if (dtsMapContent !== undefined) {
+				dtsContent = this.removeSourceMapComment(dtsContent);
+			}
 			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 	}
