@@ -2,17 +2,11 @@ gulp-typescript
 ===============
 A gulp plugin for handling TypeScript compilation workflow. The plugin exposes TypeScript's compiler options to gulp using TypeScript API.
 
+This plugin works best with gulp 4. If you cannot update to this version, please see the section "Gulp 3" below.
+
 Updating from version 2? See the [breaking changes in version 3](http://dev.ivogabe.com/gulp-typescript-3/).
 
 [![Build Status](https://travis-ci.org/ivogabe/gulp-typescript.svg?branch=master)](https://travis-ci.org/ivogabe/gulp-typescript)
-
-Features
---------
-- Incremental compilation (so faster builds)
-- Error reporting
-- Different output streams for .js, .d.ts files.
-- Support for sourcemaps using gulp-sourcemaps
-- Compile once, and filter different targets
 
 How to install
 --------------
@@ -22,7 +16,7 @@ npm install --global gulp-cli
 ```
 ##### 2. Install gulp in the project dependency
 ```shell
-npm install gulp
+npm install gulp@4
 ```
 ##### 3. Install gulp-typescript & TypeScript
 ```shell
@@ -245,7 +239,7 @@ const project = ts.createProject('test/customTransformers/tsconfig.json', {
 
 Reporters
 ---------
-By default, errors are logged to the console and the build crashes on compiler errors. In watch mode, the build does not throw, meaning that consequent builds are still ran. If you do not want to crash the gulp process, you must catch the error. You then need to add `.on('error', () => {})` after `.pipe(tsProject())` or `.pipe(ts(..))`.
+By default, errors are logged to the console and the build crashes on compiler errors. In watch mode, the build does not throw, meaning that consequent builds are still ran. Note that gulp 4 is required for this behaviour. If you are still using gulp 3, see  the section "Gulp 3" below.
 
 If you want to change the way that messages are logged to the console (or some other output), you can provide a reporter. You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
 ```javascript
@@ -259,6 +253,19 @@ Available reporters are:
 - fullReporter (`ts.reporter.fullReporter(showFullFilename?: boolean)`) - Show full error messages, with source.
 
 If you want to build a custom reporter, you take a look at `lib/reporter.ts`, that file declares an interface which a reporter should implement.
+
+Gulp 3
+------
+This plugin works best with gulp 4. If you cannot update to this version, you may experience problems when using incremental compilations with a watcher. A compilation error will namely crash the process, which is desired in a CI environment. Gulp 4 prevents that the process crashes in watch mode. This does not happen in gulp 3, so you will need to handle that manually.
+
+You should attach an error handler to catch those compilation errors.
+
+```js
+gulp.src(..)
+  .pipe(ts(..))
+  .on('error', () => { /* Ignore compiler errors */})
+  .pipe(gulp.dest(..))
+```
 
 Build gulp-typescript
 ------------
