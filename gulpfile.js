@@ -3,7 +3,7 @@ const rimraf = require('rimraf');
 const fs = require('fs');
 const path = require('path');
 const mergeStream = require('merge-stream');
-const ts = require('./release-2/main');
+const ts = require('./release/main');
 
 const plumber = require('gulp-plumber');
 const diff = require('gulp-diff');

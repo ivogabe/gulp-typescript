@@ -3,4 +3,3 @@ declare class Hello {
 }
 declare var a: Hello;
 declare var b: Symbol;
-//# sourceMappingURL=concat.d.ts.map
