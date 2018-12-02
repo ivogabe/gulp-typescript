@@ -67,7 +67,7 @@
     "ansi-colors": "^3.0.5",
     "plugin-error": "^1.0.1",
     "source-map": "^0.7.3",
-    "through2": "^2.0.3",
+    "through2": "^3.0.0",
     "vinyl-fs": "^3.0.3",
     "vinyl": "^2.1.0"
   },
@@ -88,7 +88,7 @@
     "typescript": "3.2.1"
   },
   "peerDependencies": {
-    "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev || ~3.0.0 || >=3.0.0-dev || >=3.1.0-dev"
+    "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev || ~3.0.0 || >=3.0.0-dev || >=3.1.0-dev || >= 3.2.0-dev || >= 3.3.0-dev"
   },
   "scripts": {
     "test": "gulp"
