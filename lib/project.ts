@@ -126,7 +126,7 @@ function src(this: Project) {
 						this.typescript.sys,
 						path.resolve(this.projectDirectory),
 						undefined,
-						path.basename(this.configFileName));
+						this.configFileName);
 
 	for (const error of errors) {
 		console.log(error.messageText);
