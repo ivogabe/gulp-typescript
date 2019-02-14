@@ -1,0 +1,10 @@
+{
+    "transpileErrors": 0,
+    "optionsErrors": 0,
+    "syntaxErrors": 0,
+    "globalErrors": 0,
+    "semanticErrors": 0,
+    "declarationErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": false
+}

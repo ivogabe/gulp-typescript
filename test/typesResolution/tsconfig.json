@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"module": "amd",
+		"types": []
+	},
+	"include": [
+		"test-3.ts"
+	]
+}
