@@ -76,7 +76,7 @@ function src() {
         base = path.resolve(this.projectDirectory, this.options["rootDir"]);
     }
     const _a = this.rawConfig, { extends: _extends } = _a, config = __rest(_a, ["extends"]);
-    const { fileNames, errors } = this.typescript.parseJsonConfigFileContent(config, this.typescript.sys, path.resolve(this.projectDirectory), undefined, path.basename(this.configFileName));
+    const { fileNames, errors } = this.typescript.parseJsonConfigFileContent(config, this.typescript.sys, path.resolve(this.projectDirectory), undefined, this.configFileName);
     for (const error of errors) {
         console.log(error.messageText);
     }
