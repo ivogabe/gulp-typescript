@@ -1,0 +1,9 @@
+{
+        "extends": "../tsconfig",
+        "compilerOptions": {
+                "types": ["node"]
+        },
+	"files": [
+		"other-3.ts"
+	]
+}

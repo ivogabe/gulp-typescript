@@ -132,7 +132,7 @@ function reportErrors(errors, typescript, ignore = []) {
                 if (tsConfig.error) {
                     console.log(tsConfig.error.messageText);
                 }
-                let parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, getTsconfigSystem(typescript), path.resolve(projectDirectory), compilerOptions, path.basename(tsConfigFileName));
+                let parsed = typescript.parseJsonConfigFileContent(tsConfig.config || {}, getTsconfigSystem(typescript), path.resolve(projectDirectory), compilerOptions, tsConfigFileName);
                 rawConfig = parsed.raw;
                 tsConfigContent = parsed.raw;
                 if (parsed.errors) {

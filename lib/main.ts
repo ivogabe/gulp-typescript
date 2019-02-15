@@ -219,7 +219,7 @@ module compile {
 						getTsconfigSystem(typescript),
 						path.resolve(projectDirectory),
 						compilerOptions,
-						path.basename(tsConfigFileName));
+						tsConfigFileName);
 
 				rawConfig = parsed.raw;
 

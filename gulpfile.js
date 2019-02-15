@@ -1,6 +1,7 @@
 const gulp = require('gulp');
 const rimraf = require('rimraf');
 const fs = require('fs');
+const childProcess = require('child_process');
 const path = require('path');
 const mergeStream = require('merge-stream');
 const ts = require('./release/main');
@@ -34,6 +35,23 @@ const paths = {
 
 const tests = fs.readdirSync(path.join(__dirname, 'test')).filter(function(dir) {
 	return dir !== 'baselines' && dir !== 'output' && dir.substr(0, 1) !== '.';
+});
+
+// Some issues with path computations can only be detected with
+// `gulp-typescript` running in a process that has a specific cwd. In the test
+// suite, such tests have a `gulpfile.js` in their top directory.
+const execTests = tests.filter(function(dir) {
+	const fullPath = path.join('test', dir, 'gulpfile.js');
+	try {
+		fs.accessSync(fullPath);
+		return true;
+	}
+	catch (ex) {
+		if (ex.code !== "ENOENT") {
+			throw ex;
+		}
+		return false;
+	}
 });
 
 // Clean
@@ -134,11 +152,31 @@ async function runTest(name) {
 	}));
 }
 
-gulp.task('test-run', gulp.series('clean-test', async function testRun() {
+async function runExecTest(testName) {
+	const testDir = path.posix.join('test', testName);
+
+	return new Promise((resolve, reject) => {
+		childProcess.execFile("gulp", {
+			cwd: testDir,
+		}, (err) => {
+			if (err) {
+				reject(err);
+			}
+			resolve();
+		});
+	});
+}
+
+gulp.task('test-run', gulp.series('clean-test', async () => {
 	fs.mkdirSync('test/output/');
+	for (const testName of execTests) {
+		await runExecTest(testName);
+	}
+
 	for (const testName of tests) {
 		await runTest(testName);
 	}
+
 }));
 
 /**
