@@ -1,1 +1,0 @@
-{"version":3,"sources":["other-3.ts"],"names":[],"mappings":";;;IAAA;QAAA;QAEA,CAAC;QAAD,YAAC;IAAD,CAFA,AAEC,IAAA;IAFY,sBAAK","file":"other-3.js","sourcesContent":["export class Hello {\n\tvalue: string;\n}"],"sourceRoot":"../../../../basic/"}
