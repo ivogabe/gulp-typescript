@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as colors from 'ansi-colors';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 
 export interface TypeScriptError extends Error {
 	fullFilename?: string;
@@ -55,6 +55,16 @@ export interface Reporter {
 	finish?: (results: CompilationResult) => void;
 }
 
+export function countErrors(results: CompilationResult) {
+	return results.transpileErrors
+		+ results.optionsErrors
+		+ results.syntaxErrors
+		+ results.globalErrors
+		+ results.semanticErrors
+		+ results.declarationErrors
+		+ results.emitErrors;
+}
+
 function defaultFinishHandler(results: CompilationResult) {
 	let hasError = false;
 	const showErrorCount = (count: number, type: string) => {
@@ -94,9 +104,8 @@ export function defaultReporter(): Reporter {
 }
 
 export function longReporter(): Reporter {
-	const typescript: typeof ts = require('typescript');
 	return {
-		error: (error: TypeScriptError) => {
+		error: (error: TypeScriptError, typescript: typeof ts) => {
 			if (error.tsFile) {
 				console.log('[' + colors.gray('gulp-typescript') + '] ' + colors.red(error.fullFilename
 					+ '(' + error.startPosition.line + ',' + error.startPosition.character + '): ')
@@ -112,7 +121,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 	return {
 		error: (error: TypeScriptError, typescript: typeof ts) => {
 			console.log('[' + colors.gray('gulp-typescript') + '] '
-				+ colors.bgred(error.diagnostic.code + '')
+				+ colors.bgRed(error.diagnostic.code + '')
 				+ ' ' + colors.red(typescript.flattenDiagnosticMessageText(error.diagnostic.messageText, '\n'))
 			);
 

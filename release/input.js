@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var path = require("path");
-var utils = require("./utils");
+const path = require("path");
+const utils = require("./utils");
 var FileChangeState;
 (function (FileChangeState) {
     FileChangeState[FileChangeState["New"] = 0] = "New";
@@ -18,20 +18,20 @@ var FileKind;
 var File;
 (function (File) {
     function fromContent(fileName, content) {
-        var kind = FileKind.Source;
+        let kind = FileKind.Source;
         if (path.extname(fileName).toLowerCase() === 'json')
             kind = FileKind.Config;
         return {
             fileNameNormalized: utils.normalizePath(fileName),
             fileNameOriginal: fileName,
-            content: content,
-            kind: kind
+            content,
+            kind
         };
     }
     File.fromContent = fromContent;
     function fromGulp(file) {
-        var str = file.contents.toString('utf8');
-        var data = fromContent(file.path, str);
+        let str = file.contents.toString('utf8');
+        let data = fromContent(file.path, str);
         data.gulp = file;
         return data;
     }
@@ -57,19 +57,19 @@ var File;
     }
     File.getChangeState = getChangeState;
 })(File = exports.File || (exports.File = {}));
-var FileDictionary = /** @class */ (function () {
-    function FileDictionary(typescript) {
+class FileDictionary {
+    constructor(typescript) {
         this.files = {};
         this.firstSourceFile = undefined;
         this.typescript = typescript;
     }
-    FileDictionary.prototype.addGulp = function (gFile) {
+    addGulp(gFile) {
         return this.addFile(File.fromGulp(gFile));
-    };
-    FileDictionary.prototype.addContent = function (fileName, content) {
+    }
+    addContent(fileName, content) {
         return this.addFile(File.fromContent(fileName, content));
-    };
-    FileDictionary.prototype.addFile = function (file) {
+    }
+    addFile(file) {
         if (file.kind === FileKind.Source) {
             this.initTypeScriptSourceFile(file);
             if (!this.firstSourceFile)
@@ -77,69 +77,57 @@ var FileDictionary = /** @class */ (function () {
         }
         this.files[file.fileNameNormalized] = file;
         return file;
-    };
-    FileDictionary.prototype.getFile = function (name) {
+    }
+    getFile(name) {
         return this.files[utils.normalizePath(name)];
-    };
-    FileDictionary.prototype.getFileNames = function (onlyGulp) {
-        if (onlyGulp === void 0) { onlyGulp = false; }
-        var fileNames = [];
-        for (var fileName in this.files) {
+    }
+    getFileNames(onlyGulp = false) {
+        const fileNames = [];
+        for (const fileName in this.files) {
             if (!this.files.hasOwnProperty(fileName))
                 continue;
-            var file = this.files[fileName];
+            let file = this.files[fileName];
             if (onlyGulp && !file.gulp)
                 continue;
             fileNames.push(file.fileNameOriginal);
         }
         return fileNames;
-    };
-    FileDictionary.prototype.getSourceFileNames = function (onlyGulp) {
-        var fileNames = this.getFileNames(onlyGulp);
-        var sourceFileNames = fileNames
-            .filter(function (fileName) { return fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts'; });
+    }
+    getSourceFileNames(onlyGulp) {
+        const fileNames = this.getFileNames(onlyGulp);
+        const sourceFileNames = fileNames
+            .filter(fileName => fileName.substr(fileName.length - 5).toLowerCase() !== '.d.ts');
         if (sourceFileNames.length === 0) {
             // Only definition files, so we will calculate the common base path based on the
             // paths of the definition files.
             return fileNames;
         }
         return sourceFileNames;
-    };
-    Object.defineProperty(FileDictionary.prototype, "commonBasePath", {
-        get: function () {
-            var _this = this;
-            var fileNames = this.getSourceFileNames(true);
-            return utils.getCommonBasePathOfArray(fileNames.map(function (fileName) {
-                var file = _this.files[utils.normalizePath(fileName)];
-                return path.resolve(process.cwd(), file.gulp.base);
-            }));
-        },
-        // This empty setter will prevent that TS emits 'readonly' modifier.
-        // 'readonly' is not supported in current stable release.
-        set: function (value) { },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileDictionary.prototype, "commonSourceDirectory", {
-        get: function () {
-            var _this = this;
-            var fileNames = this.getSourceFileNames();
-            return utils.getCommonBasePathOfArray(fileNames.map(function (fileName) {
-                var file = _this.files[utils.normalizePath(fileName)];
-                return path.dirname(file.fileNameNormalized);
-            }));
-        },
-        // This empty setter will prevent that TS emits 'readonly' modifier.
-        // 'readonly' is not supported in current stable release.
-        set: function (value) { },
-        enumerable: true,
-        configurable: true
-    });
-    return FileDictionary;
-}());
+    }
+    get commonBasePath() {
+        const fileNames = this.getSourceFileNames(true);
+        return utils.getCommonBasePathOfArray(fileNames.map(fileName => {
+            const file = this.files[utils.normalizePath(fileName)];
+            return path.resolve(process.cwd(), file.gulp.base);
+        }));
+    }
+    // This empty setter will prevent that TS emits 'readonly' modifier.
+    // 'readonly' is not supported in current stable release.
+    set commonBasePath(value) { }
+    get commonSourceDirectory() {
+        const fileNames = this.getSourceFileNames();
+        return utils.getCommonBasePathOfArray(fileNames.map(fileName => {
+            const file = this.files[utils.normalizePath(fileName)];
+            return path.dirname(file.fileNameNormalized);
+        }));
+    }
+    // This empty setter will prevent that TS emits 'readonly' modifier.
+    // 'readonly' is not supported in current stable release.
+    set commonSourceDirectory(value) { }
+}
 exports.FileDictionary = FileDictionary;
-var FileCache = /** @class */ (function () {
-    function FileCache(typescript, options) {
+class FileCache {
+    constructor(typescript, options) {
         this.previous = undefined;
         this.noParse = false; // true when using a file based compiler.
         this.version = 0;
@@ -147,100 +135,82 @@ var FileCache = /** @class */ (function () {
         this.options = options;
         this.createDictionary();
     }
-    FileCache.prototype.addGulp = function (gFile) {
+    addGulp(gFile) {
         return this.current.addGulp(gFile);
-    };
-    FileCache.prototype.addContent = function (fileName, content) {
+    }
+    addContent(fileName, content) {
         return this.current.addContent(fileName, content);
-    };
-    FileCache.prototype.reset = function () {
+    }
+    reset() {
         this.version++;
         this.previous = this.current;
         this.createDictionary();
-    };
-    FileCache.prototype.createDictionary = function () {
-        var _this = this;
+    }
+    createDictionary() {
         this.current = new FileDictionary(this.typescript);
-        this.current.initTypeScriptSourceFile = function (file) { return _this.initTypeScriptSourceFile(file); };
-    };
-    FileCache.prototype.initTypeScriptSourceFile = function (file) {
+        this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
+    }
+    initTypeScriptSourceFile(file) {
         if (this.noParse)
             return;
         if (this.previous) {
-            var previous = this.previous.getFile(file.fileNameOriginal);
+            let previous = this.previous.getFile(file.fileNameOriginal);
             if (File.equal(previous, file)) {
                 file.ts = previous.ts; // Re-use previous source file.
                 return;
             }
         }
         file.ts = this.typescript.createSourceFile(file.fileNameOriginal, file.content, this.options.target);
-    };
-    FileCache.prototype.getFile = function (name) {
+    }
+    getFile(name) {
         return this.current.getFile(name);
-    };
-    FileCache.prototype.getFileChange = function (name) {
-        var previous;
+    }
+    getFileChange(name) {
+        let previous;
         if (this.previous) {
             previous = this.previous.getFile(name);
         }
-        var current = this.current.getFile(name);
+        let current = this.current.getFile(name);
         return {
-            previous: previous,
-            current: current,
+            previous,
+            current,
             state: File.getChangeState(previous, current)
         };
-    };
-    FileCache.prototype.getFileNames = function (onlyGulp) {
-        if (onlyGulp === void 0) { onlyGulp = false; }
+    }
+    getFileNames(onlyGulp = false) {
         return this.current.getFileNames(onlyGulp);
-    };
-    Object.defineProperty(FileCache.prototype, "firstSourceFile", {
-        get: function () {
-            return this.current.firstSourceFile;
-        },
-        // This empty setter will prevent that TS emits 'readonly' modifier.
-        // 'readonly' is not supported in current stable release.
-        set: function (value) { },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileCache.prototype, "commonBasePath", {
-        get: function () {
-            return this.current.commonBasePath;
-        },
-        set: function (value) { },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileCache.prototype, "commonSourceDirectory", {
-        get: function () {
-            return this.current.commonSourceDirectory;
-        },
-        set: function (value) { },
-        enumerable: true,
-        configurable: true
-    });
-    FileCache.prototype.isChanged = function (onlyGulp) {
-        if (onlyGulp === void 0) { onlyGulp = false; }
+    }
+    get firstSourceFile() {
+        return this.current.firstSourceFile;
+    }
+    // This empty setter will prevent that TS emits 'readonly' modifier.
+    // 'readonly' is not supported in current stable release.
+    set firstSourceFile(value) { }
+    get commonBasePath() {
+        return this.current.commonBasePath;
+    }
+    set commonBasePath(value) { }
+    get commonSourceDirectory() {
+        return this.current.commonSourceDirectory;
+    }
+    set commonSourceDirectory(value) { }
+    isChanged(onlyGulp = false) {
         if (!this.previous)
             return true;
-        var files = this.getFileNames(onlyGulp);
-        var oldFiles = this.previous.getFileNames(onlyGulp);
+        const files = this.getFileNames(onlyGulp);
+        const oldFiles = this.previous.getFileNames(onlyGulp);
         if (files.length !== oldFiles.length)
             return true;
-        for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
-            var fileName = files_1[_i];
+        for (const fileName of files) {
             if (oldFiles.indexOf(fileName) === -1)
                 return true;
         }
-        for (var _a = 0, files_2 = files; _a < files_2.length; _a++) {
-            var fileName = files_2[_a];
-            var change = this.getFileChange(fileName);
+        for (const fileName of files) {
+            const change = this.getFileChange(fileName);
             if (change.state !== FileChangeState.Equal)
                 return true;
         }
         return false;
-    };
-    return FileCache;
-}());
+    }
+}
 exports.FileCache = FileCache;

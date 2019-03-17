@@ -2,17 +2,11 @@ gulp-typescript
 ===============
 A gulp plugin for handling TypeScript compilation workflow. The plugin exposes TypeScript's compiler options to gulp using TypeScript API.
 
+This plugin works best with gulp 4. If you cannot update to this version, please see the section "Gulp 3" below.
+
 Updating from version 2? See the [breaking changes in version 3](http://dev.ivogabe.com/gulp-typescript-3/).
 
 [![Build Status](https://travis-ci.org/ivogabe/gulp-typescript.svg?branch=master)](https://travis-ci.org/ivogabe/gulp-typescript)
-
-Features
---------
-- Incremental compilation (so faster builds)
-- Error reporting
-- Different output streams for .js, .d.ts files.
-- Support for sourcemaps using gulp-sourcemaps
-- Compile once, and filter different targets
 
 How to install
 --------------
@@ -22,7 +16,7 @@ npm install --global gulp-cli
 ```
 ##### 2. Install gulp in the project dependency
 ```shell
-npm install gulp
+npm install gulp@4
 ```
 ##### 3. Install gulp-typescript & TypeScript
 ```shell
@@ -56,7 +50,7 @@ Almost all options from TypeScript are supported.
 
 See the [TypeScript wiki](https://www.typescriptlang.org/docs/handbook/compiler-options.html) for a complete list.
 These options are not supported:
-- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`) - Use  [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps) instead.
+- Sourcemap options (`sourceMap`, `inlineSourceMap`, `inlineSources`, `sourceRoot`, `declarationMap`) - Use  [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps) instead.
 - `watch` - Use `gulp.watch` instead. See the paragraph "Incremental compilation".
 - `project` - See "Using `tsconfig.json`".
 - Obvious: `help`, `version`
@@ -181,7 +175,9 @@ var tsProject = ts.createProject('tsconfig.json', {
 
 Source maps
 ----------
-gulp-typescript supports source maps by the usage of the gulp-sourcemaps plugin. Configuring the paths of source maps can be hard. The easiest way to get working source maps is to inline the sources of your TypeScript files in the source maps. This will of course increase the size of the source maps. The following example demonstrates this approach:
+gulp-typescript supports source maps by the usage of the gulp-sourcemaps plugin. It works for both JavaScript and definition (`.d.ts`) files. You don't have to set `sourceMap` or `declarationMap` in your configuration. When you use gulp-sourcemaps, they will be generated automatically.
+
+Configuring the paths of source maps can be hard. The easiest way to get working source maps is to inline the sources of your TypeScript files in the source maps. This will of course increase the size of the source maps. The following example demonstrates this approach:
 
 ```javascript
 var gulp = require('gulp')
@@ -223,9 +219,29 @@ Some examples can be found in [ivogabe/gulp-typescript-sourcemaps-demo](https://
 
 For more information, see [gulp-sourcemaps](https://github.com/floridoo/gulp-sourcemaps).
 
+Custom transforms
+-----------------
+You can pass aditional transforms to the compiler pipeline. We aligned with the interface of [awesome-typescript-loader](https://github.com/s-panferov/awesome-typescript-loader). You can specify transforms by setting the `getCustomTransformers` option.
+
+The option expects a string, pointing at a module that exposes the transforms, or a function that returns the transforms. Its type is `getCustomTransformers: (string | ((program: ts.Program) => ts.CustomTransformers | undefined))`.
+
+```js
+const styledComponentsTransformer = require('typescript-plugin-styled-components').default;
+
+const project = ts.createProject('test/customTransformers/tsconfig.json', {
+    getCustomTransformers: () => ({
+        before: [
+            styledComponentsTransformer(),
+        ]
+    });
+});
+```
+
 Reporters
 ---------
-You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
+By default, errors are logged to the console and the build crashes on compiler errors. In watch mode, the build does not throw, meaning that consequent builds are still ran. Note that gulp 4 is required for this behaviour. If you are still using gulp 3, see  the section "Gulp 3" below.
+
+If you want to change the way that messages are logged to the console (or some other output), you can provide a reporter. You can specify a custom reporter as the second argument of the main function, or as the only argument when using a `tsProject`:
 ```javascript
 ts(options, reporter);
 tsProject(reporter);
@@ -237,6 +253,19 @@ Available reporters are:
 - fullReporter (`ts.reporter.fullReporter(showFullFilename?: boolean)`) - Show full error messages, with source.
 
 If you want to build a custom reporter, you take a look at `lib/reporter.ts`, that file declares an interface which a reporter should implement.
+
+Gulp 3
+------
+This plugin works best with gulp 4. If you cannot update to this version, you may experience problems when using incremental compilations with a watcher. A compilation error will namely crash the process, which is desired in a CI environment. Gulp 4 prevents that the process crashes in watch mode. This does not happen in gulp 3, so you will need to handle that manually.
+
+You should attach an error handler to catch those compilation errors.
+
+```js
+gulp.src(..)
+  .pipe(ts(..))
+  .on('error', () => { /* Ignore compiler errors */})
+  .pipe(gulp.dest(..))
+```
 
 Build gulp-typescript
 ------------

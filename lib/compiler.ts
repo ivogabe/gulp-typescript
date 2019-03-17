@@ -5,10 +5,11 @@ import { File, FileChangeState } from './input';
 import { Host } from './host';
 import { ProjectInfo } from './project';
 import { CompilationResult, emptyCompilationResult } from './reporter';
+import { FinalTransformers } from './types';
 import * as utils from './utils';
 
 export interface ICompiler {
-	prepare(project: ProjectInfo): void;
+	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers): void;
 	inputFile(file: File): void;
 	inputDone(): void;
 }
@@ -29,12 +30,14 @@ interface OutputFile {
  * Compiles a whole project, with full type checking
  */
 export class ProjectCompiler implements ICompiler {
+	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
 	program: ts.Program;
 	private hasSourceMap: boolean;
 
-	prepare(project: ProjectInfo) {
+	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers) {
+		this.finalTransformers = finalTransformers;
 		this.project = project;
 		this.hasSourceMap = false;
 	}
@@ -72,23 +75,44 @@ export class ProjectCompiler implements ICompiler {
 			this.project.options
 		);
 
-		this.program = this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
+		// Calling `createProgram` with an object is only supported in 3.0. Only call this overload
+		// if we have project references (also only supported in 3.0)
+		this.program = this.project.projectReferences
+			? this.project.typescript.createProgram({
+				rootNames: rootFilenames,
+				options: this.project.options,
+				projectReferences: this.project.projectReferences,
+				host: this.host,
+				oldProgram: this.program
+			})
+			: this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
 
 		const result = emptyCompilationResult(this.project.options.noEmit);
-		result.optionsErrors = this.reportDiagnostics(this.program.getOptionsDiagnostics());
-		result.syntaxErrors = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
-		result.globalErrors = this.reportDiagnostics(this.program.getGlobalDiagnostics());
-		result.semanticErrors = this.reportDiagnostics(this.program.getSemanticDiagnostics());
+
+		const optionErrors = this.program.getOptionsDiagnostics();
+		const syntaxErrors = this.program.getSyntacticDiagnostics();
+		const globalErrors = this.program.getGlobalDiagnostics();
+		const semanticErrors = this.program.getSemanticDiagnostics();
+
+		result.optionsErrors = optionErrors.length;
+		result.syntaxErrors = syntaxErrors.length;
+		result.globalErrors = globalErrors.length;
+		result.semanticErrors = semanticErrors.length;
+
+		let declarationErrors: ReadonlyArray<ts.DiagnosticWithLocation> = [];
 		if (this.project.options.declaration) {
-			result.declarationErrors = this.program.getDeclarationDiagnostics().length;
+			declarationErrors = this.program.getDeclarationDiagnostics();
+			result.declarationErrors = declarationErrors.length;
 		}
+
+		const preEmitDiagnostics: ReadonlyArray<ts.DiagnosticWithLocation> = [...optionErrors, ...syntaxErrors, ...globalErrors, ...semanticErrors, ...declarationErrors];
 
 		if (this.project.singleOutput) {
 			const output: OutputFile = {
 				file: undefined
 			};
 
-			this.emit(result, (fileName, content) => {
+			this.emit(result, preEmitDiagnostics, (fileName, content) => {
 				this.attachContentToFile(output, fileName, content);
 			});
 
@@ -105,7 +129,7 @@ export class ProjectCompiler implements ICompiler {
 				output[fileName] = { file };
 			}
 
-			this.emit(result, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
+			this.emit(result, preEmitDiagnostics, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
 				if (sourceFiles.length !== 1) {
 					throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
 				}
@@ -147,13 +171,27 @@ export class ProjectCompiler implements ICompiler {
 				break;
 		}
 	}
-	private emit(result: CompilationResult, callback: ts.WriteFileCallback) {
-		const emitOutput = this.program.emit(undefined, callback);
-
-		result.emitErrors += emitOutput.diagnostics.length;
-		this.reportDiagnostics(emitOutput.diagnostics);
-
+	private emit(result: CompilationResult, preEmitDiagnostics: ReadonlyArray<ts.DiagnosticWithLocation>, callback: ts.WriteFileCallback) {
+		const emitOutput = this.program.emit(
+			undefined,
+			callback,
+			undefined,
+			false,
+			this.finalTransformers ? this.finalTransformers(this.program) : undefined,
+		);
 		result.emitSkipped = emitOutput.emitSkipped;
+
+		// `emitOutput.diagnostics` might contain diagnostics that were already part of `preEmitDiagnostics`.
+		// See https://github.com/Microsoft/TypeScript/issues/20876
+		// We use sortAndDeduplicateDiagnostics to remove duplicate diagnostics.
+		// We then count the number of diagnostics in `diagnostics` that we not in `preEmitDiagnostics`
+		// to count the number of emit diagnostics.
+		const diagnostics = ts.sortAndDeduplicateDiagnostics([...preEmitDiagnostics, ...emitOutput.diagnostics]);
+		result.emitErrors += diagnostics.length - preEmitDiagnostics.length;
+
+		for (const error of diagnostics) {
+			this.project.output.diagnostic(error);
+		}
 	}
 	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }: OutputFile, currentDirectory: string) {
 		if (!jsFileName) return;
@@ -190,15 +228,11 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.writeJs(base, jsFileName, jsContent, jsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
 		if (dtsContent !== undefined) {
+			if (dtsMapContent !== undefined) {
+				dtsContent = this.removeSourceMapComment(dtsContent);
+			}
 			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
-	}
-
-	private reportDiagnostics(diagnostics: ReadonlyArray<ts.Diagnostic>) {
-		for (const error of diagnostics) {
-			this.project.output.diagnostic(error);
-		}
-		return diagnostics.length;
 	}
 
 	private removeSourceMapComment(content: string): string {
@@ -218,6 +252,7 @@ interface FileResult {
 	sourceMap: string;
 }
 export class FileCompiler implements ICompiler {
+	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
 
@@ -226,7 +261,8 @@ export class FileCompiler implements ICompiler {
 
 	private compilationResult: CompilationResult = undefined;
 
-	prepare(project: ProjectInfo) {
+	prepare(project: ProjectInfo, finalTransformers: FinalTransformers) {
+		this.finalTransformers = finalTransformers;
 		this.project = project;
 		this.project.input.noParse = true;
 		this.compilationResult = emptyCompilationResult(this.project.options.noEmit);
@@ -257,14 +293,15 @@ export class FileCompiler implements ICompiler {
 			return;
 		}
 
-		const diagnostics: ts.Diagnostic[] = [];
-		const outputString = this.project.typescript.transpile(
-			file.content,
-			this.project.options,
-			file.fileNameOriginal,
-			diagnostics
-		);
-		let index = outputString.lastIndexOf('\n')
+		const output: ts.TranspileOutput = this.project.typescript.transpileModule(file.content, {
+			compilerOptions: this.project.options,
+			fileName: file.fileNameOriginal,
+			reportDiagnostics: true,
+			transformers: this.finalTransformers ? this.finalTransformers() : undefined,
+		});
+
+		const outputString = output.outputText;
+		let index = outputString.lastIndexOf('\n');
 		let mapString = outputString.substring(index + 1);
 		if (mapString.substring(0, 1) === '\r') mapString = mapString.substring(1);
 
@@ -276,7 +313,7 @@ export class FileCompiler implements ICompiler {
 
 		mapString = mapString.substring(start.length);
 
-		let map: RawSourceMap = JSON.parse(new Buffer(mapString, 'base64').toString());
+		let map: RawSourceMap = JSON.parse(Buffer.from(mapString, 'base64').toString());
 		// TODO: Set paths correctly
 		// map.sourceRoot = path.resolve(file.gulp.cwd, file.gulp.base);
 		// map.sources[0] = path.relative(map.sourceRoot, file.gulp.path);
@@ -284,7 +321,7 @@ export class FileCompiler implements ICompiler {
 		const [fileNameExtensionless] = utils.splitExtension(file.fileNameOriginal);
 		const [, extension] = utils.splitExtension(map.file); // js or jsx
 
-		this.write(file, fileNameExtensionless + '.' + extension, diagnostics, outputString.substring(0, index), JSON.stringify(map));
+		this.write(file, fileNameExtensionless + '.' + extension, output.diagnostics, outputString.substring(0, index), JSON.stringify(map));
 	}
 
 	inputDone() {

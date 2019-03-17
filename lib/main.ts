@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as _project from './project';
 import * as utils from './utils';
 import * as _reporter from './reporter';
-import { TsConfig } from './types';
+import { FinalTransformers, GetCustomTransformers, TsConfig } from './types';
 
 function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
@@ -33,6 +33,32 @@ function compile(param?: any, theReporter?: _reporter.Reporter): compile.Compile
 	return proj(theReporter);
 }
 
+function getFinalTransformers(getCustomTransformers?: GetCustomTransformers): FinalTransformers {
+	if (typeof getCustomTransformers === 'function') {
+		return getCustomTransformers;
+	}
+
+	if (typeof getCustomTransformers === 'string') {
+		try {
+			getCustomTransformers = require(getCustomTransformers);
+		} catch (err) {
+			throw new Error(
+				`Failed to load customTransformers from "${getCustomTransformers}": ${err.message}`
+			);
+		}
+
+		if (typeof getCustomTransformers !== 'function') {
+			throw new Error(
+				`Custom transformers in "${getCustomTransformers}" should export a function, got ${typeof getCustomTransformers}`
+			);
+		}
+
+		return getCustomTransformers;
+	}
+
+	return null;
+}
+
 function getTypeScript(typescript: typeof ts) {
 	if (typescript) return typescript;
 	try {
@@ -46,7 +72,7 @@ function getTypeScript(typescript: typeof ts) {
 }
 
 function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings {
-	const { declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
+	const { getCustomTransformers, declarationFiles, noExternalResolve, sortOutput, typescript, ...standardSettings } = settings;
 
 	if (settings.sourceRoot !== undefined) {
 		console.warn('gulp-typescript: sourceRoot isn\'t supported any more. Use sourceRoot option of gulp-sourcemaps instead.')
@@ -70,12 +96,18 @@ function checkAndNormalizeSettings(settings: compile.Settings): compile.Settings
 	return standardSettings;
 }
 
-function normalizeCompilerOptions(options: ts.CompilerOptions): void {
+function normalizeCompilerOptions(options: ts.CompilerOptions, typescript: typeof ts): void {
 	options.sourceMap = true;
 	(options as any).suppressOutputPathCheck = true;
 	options.inlineSourceMap = false;
 	options.sourceRoot = undefined;
 	options.inlineSources = false;
+
+	// For TS >=2.9, we set `declarationMap` to true, if `declaration` is set.
+	// We check for this version by checking whether `createFileLevelUniqueName` exists.
+	if ("createFileLevelUniqueName" in typescript && options.declaration && !options.isolatedModules) {
+		options.declarationMap = true;
+	}
 }
 
 function reportErrors(errors: ts.Diagnostic[], typescript: typeof ts, ignore: number[] = []): void {
@@ -118,6 +150,7 @@ module compile {
 		noExternalResolve?: boolean;
 		sortOutput?: boolean;
 
+		getCustomTransformers?: GetCustomTransformers;
 		typescript?: typeof ts;
 
 		isolatedModules?: boolean;
@@ -140,11 +173,13 @@ module compile {
 	export function createProject(tsConfigFileName: string, settings?: Settings): Project;
 	export function createProject(settings?: Settings): Project;
 	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
+		let finalTransformers: FinalTransformers;
 		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
 		let typescript: typeof ts;
 		let compilerOptions: ts.CompilerOptions;
+		let projectReferences: ReadonlyArray<ts.ProjectReference>;
 		let fileName: string;
 
 		let rawConfig: any;
@@ -158,6 +193,8 @@ module compile {
 			} else {
 				settings = fileNameOrSettings || {};
 			}
+
+			finalTransformers = getFinalTransformers(settings.getCustomTransformers);
 
 			typescript = getTypeScript(settings.typescript);
 			settings = checkAndNormalizeSettings(settings);
@@ -182,7 +219,7 @@ module compile {
 						getTsconfigSystem(typescript),
 						path.resolve(projectDirectory),
 						compilerOptions,
-						path.basename(tsConfigFileName));
+						tsConfigFileName);
 
 				rawConfig = parsed.raw;
 
@@ -193,11 +230,12 @@ module compile {
 				}
 
 				compilerOptions = parsed.options;
+				projectReferences = parsed.projectReferences;
 			}
 		}
 
-		normalizeCompilerOptions(compilerOptions);
-		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, typescript);
+		normalizeCompilerOptions(compilerOptions, typescript);
+		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript, finalTransformers);
 
 		return project;
 	}

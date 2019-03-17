@@ -7,7 +7,8 @@ module.exports = function(newTS, lib, output, reporter) {
 	});
 
 	var tsResult = tsProject.src()
-		.pipe(tsProject(reporter));
+		.pipe(tsProject(reporter))
+		.on('error', () => {});
 
 	return tsResult.pipe(gulp.dest(output));
 }

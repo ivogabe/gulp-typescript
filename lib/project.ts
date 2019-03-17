@@ -9,7 +9,7 @@ import { Reporter, defaultReporter } from './reporter';
 import { FileCache } from './input';
 import { Output } from './output';
 import { ICompiler, ProjectCompiler, FileCompiler } from './compiler';
-import { TsConfig } from './types';
+import { FinalTransformers, TsConfig } from './types';
 
 interface PartialProject {
 	(reporter?: Reporter): ICompileStream;
@@ -22,6 +22,7 @@ interface PartialProject {
 	rawConfig?: any;
 	config?: TsConfig;
 	options?: ts.CompilerOptions;
+	projectReferences?: ReadonlyArray<ts.ProjectReference>;
 }
 export interface Project {
 	(reporter?: Reporter): ICompileStream;
@@ -34,6 +35,7 @@ export interface Project {
 	readonly rawConfig: any;
 	readonly config: TsConfig;
 	readonly options: ts.CompilerOptions;
+	readonly projectReferences: ReadonlyArray<ts.ProjectReference> | undefined;
 }
 
 export interface ProjectInfo {
@@ -42,12 +44,13 @@ export interface ProjectInfo {
 	compiler: ICompiler;
 	singleOutput: boolean;
 	options: ts.CompilerOptions;
+	projectReferences: ReadonlyArray<ts.ProjectReference>;
 	typescript: typeof ts;
 	directory: string;
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, typescript: typeof ts) {
+export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers) {
 	const input = new FileCache(typescript, options);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
@@ -66,7 +69,7 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 		running = true;
 
 		input.reset();
-		compiler.prepare(projectInfo);
+		compiler.prepare(projectInfo, finalTransformers);
 
 		const stream = new CompileStream(projectInfo);
 		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts);
@@ -88,12 +91,14 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 	project.rawConfig = rawConfig;
 	project.config = config;
 	project.options = options;
+	project.projectReferences = projectReferences;
 
 	const projectInfo: ProjectInfo = {
 		input,
 		singleOutput,
 		compiler,
 		options,
+		projectReferences,
 		typescript,
 		directory: projectDirectory,
 		// Set when `project` is called
@@ -121,7 +126,7 @@ function src(this: Project) {
 						this.typescript.sys,
 						path.resolve(this.projectDirectory),
 						undefined,
-						path.basename(this.configFileName));
+						this.configFileName);
 
 	for (const error of errors) {
 		console.log(error.messageText);
@@ -144,9 +149,6 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 		super({objectMode: true});
 
 		this.project = project;
-
-		// Prevent "Unhandled stream error in pipe" when a compilation error occurs.
-		this.on('error', () => {});
 	}
 
 	private project: ProjectInfo;

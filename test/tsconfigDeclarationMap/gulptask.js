@@ -7,12 +7,13 @@ module.exports = function(newTS, lib, output, reporter) {
 	});
 
 	var tsResult = project.src()
-	.pipe(sourcemaps.init())
-	.pipe(project(reporter));
+		.pipe(sourcemaps.init())
+		.pipe(project(reporter))
+		.on('error', () => {});
 
 	tsResult.dts
-	.pipe(sourcemaps.write("."))
-	.pipe(gulp.dest(output + '/dts'));
+		.pipe(sourcemaps.write("."))
+		.pipe(gulp.dest(output + '/dts'));
 
 
 	return tsResult.js

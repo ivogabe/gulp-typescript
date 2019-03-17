@@ -1,17 +1,16 @@
-/// <reference types="vinyl" />
 import * as ts from 'typescript';
 import * as utils from './utils';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 export declare enum FileChangeState {
     New = 0,
     Equal = 1,
     Modified = 2,
     Deleted = 3,
-    NotFound = 4,
+    NotFound = 4
 }
 export declare enum FileKind {
     Source = 0,
-    Config = 1,
+    Config = 1
 }
 export interface FileChange {
     previous: File;
@@ -39,11 +38,11 @@ export declare class FileDictionary {
     constructor(typescript: typeof ts);
     addGulp(gFile: VinylFile): File;
     addContent(fileName: string, content: string): File;
-    private addFile(file);
+    private addFile;
     getFile(name: string): File;
     initTypeScriptSourceFile: (file: File) => void;
     getFileNames(onlyGulp?: boolean): string[];
-    private getSourceFileNames(onlyGulp?);
+    private getSourceFileNames;
     commonBasePath: string;
     commonSourceDirectory: string;
 }
@@ -58,8 +57,8 @@ export declare class FileCache {
     addGulp(gFile: VinylFile): File;
     addContent(fileName: string, content: string): File;
     reset(): void;
-    private createDictionary();
-    private initTypeScriptSourceFile(file);
+    private createDictionary;
+    private initTypeScriptSourceFile;
     getFile(name: string): File;
     getFileChange(name: string): FileChange;
     getFileNames(onlyGulp?: boolean): string[];

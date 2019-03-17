@@ -1,6 +1,5 @@
-/// <reference types="vinyl" />
 import * as ts from 'typescript';
-import * as VinylFile from 'vinyl';
+import { VinylFile } from './types';
 export interface TypeScriptError extends Error {
     fullFilename?: string;
     relativeFilename?: string;
@@ -37,6 +36,7 @@ export interface Reporter {
     error?: (error: TypeScriptError, typescript: typeof ts) => void;
     finish?: (results: CompilationResult) => void;
 }
+export declare function countErrors(results: CompilationResult): number;
 export declare function nullReporter(): Reporter;
 export declare function defaultReporter(): Reporter;
 export declare function longReporter(): Reporter;

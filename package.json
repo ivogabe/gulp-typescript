@@ -1,6 +1,6 @@
 {
   "name": "gulp-typescript",
-  "version": "4.0.2",
+  "version": "5.0.1",
   "description": "A typescript compiler for gulp with incremental compilation support.",
   "homepage": "https://github.com/ivogabe/gulp-typescript",
   "bugs": "https://github.com/ivogabe/gulp-typescript/issues",
@@ -60,34 +60,35 @@
   "main": "release/main.js",
   "types": "release/main.d.ts",
   "typings": "release/main.d.ts",
+  "engines": {
+    "node": ">= 8"
+  },
   "dependencies": {
-    "ansi-colors": "^1.0.1",
-    "plugin-error": "^0.1.2",
-    "source-map": "^0.6.1",
-    "through2": "^2.0.3",
-    "vinyl-fs": "^3.0.0",
+    "ansi-colors": "^3.0.5",
+    "plugin-error": "^1.0.1",
+    "source-map": "^0.7.3",
+    "through2": "^3.0.0",
+    "vinyl-fs": "^3.0.3",
     "vinyl": "^2.1.0"
   },
   "devDependencies": {
-    "@types/ansi-colors": "^1.0.0",
-    "@types/node": "^8.5.2",
-    "@types/plugin-error": "^0.1.0",
-    "@types/source-map": "^0.5.2",
-    "@types/through2": "^2.0.33",
-    "@types/vinyl": "^2.0.2",
-    "@types/vinyl-fs": "^2.4.8",
-    "gulp": "^3.9.1",
+    "@types/node": "8.5.2",
+    "@types/plugin-error": "0.1.0",
+    "@types/through2": "2.0.33",
+    "@types/vinyl": "2.0.2",
+    "@types/vinyl-fs": "2.4.9",
+    "gulp": "^4.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-diff": "^1.0.0",
-    "gulp-header": "^1.8.9",
-    "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^2.6.2",
+    "gulp-header": "^2.0.5",
+    "gulp-plumber": "^1.2.0",
+    "gulp-sourcemaps": "^2.6.4",
     "merge-stream": "^1.0.1",
     "rimraf": "^2.6.2",
-    "typescript": "2.7.1"
+    "typescript": "3.2.1"
   },
   "peerDependencies": {
-    "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev"
+    "typescript": "~2.7.1 || >=2.8.0-dev || >=2.9.0-dev || ~3.0.0 || >=3.0.0-dev || >=3.1.0-dev || >= 3.2.0-dev || >= 3.3.0-dev"
   },
   "scripts": {
     "test": "gulp"

@@ -1,0 +1,1 @@
+{"version":3,"sources":["app/bar.ts"],"names":[],"mappings":"AAAA,cAAM,KAAK;IACV,KAAK,EAAE,MAAM,CAAC;CACd","file":"outFile.d.ts","sourcesContent":["class Hello {\n\tvalue: string;\n}"]}

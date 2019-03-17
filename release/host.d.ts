@@ -19,4 +19,5 @@ export declare class Host implements ts.CompilerHost {
     realpath: (path: string) => string;
     getDirectories: (path: string) => string[];
     directoryExists: (path: string) => boolean;
+    readDirectory: (rootDir: string, extensions: string[], excludes: string[], includes: string[], depth?: number) => string[];
 }

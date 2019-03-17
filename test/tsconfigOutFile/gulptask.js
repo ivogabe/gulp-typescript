@@ -8,7 +8,8 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	return project.src()
 		.pipe(sourcemaps.init())
-		.pipe(project(reporter)).js
+		.pipe(project(reporter))
+		.on('error', () => {}).js
 		.pipe(sourcemaps.write("."))
 		.pipe(gulp.dest(output + "js"));
 }

@@ -5,7 +5,8 @@ module.exports = function(newTS, lib, output, reporter) {
 	var tsProject = newTS.createProject('test/bom/tsconfig.json', { typescript: lib });
 	
 	var tsResult = tsProject.src()
-		.pipe(tsProject(reporter));
+		.pipe(tsProject(reporter))
+		.on('error', () => {});
 
 	tsResult.dts.pipe(gulp.dest(output + '/dts'));
 	return tsResult.js

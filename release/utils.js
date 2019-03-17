@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var path = require("path");
-var colors = require("ansi-colors");
+const path = require("path");
+const colors = require("ansi-colors");
 function forwardSlashes(fileName) {
     return fileName.replace(/\\/g, '/');
 }
@@ -18,16 +18,15 @@ exports.normalizePath = normalizePath;
  */
 function splitExtension(fileName, knownExtensions) {
     if (knownExtensions) {
-        for (var _i = 0, knownExtensions_1 = knownExtensions; _i < knownExtensions_1.length; _i++) {
-            var ext_1 = knownExtensions_1[_i];
-            var index_1 = fileName.length - ext_1.length - 1;
-            if (fileName.substr(index_1) === '.' + ext_1) {
-                return [fileName.substr(0, index_1), ext_1];
+        for (const ext of knownExtensions) {
+            const index = fileName.length - ext.length - 1;
+            if (fileName.substr(index) === '.' + ext) {
+                return [fileName.substr(0, index), ext];
             }
         }
     }
-    var ext = path.extname(fileName).toLowerCase().substr(1);
-    var index = fileName.length - ext.length;
+    const ext = path.extname(fileName).toLowerCase().substr(1);
+    const index = fileName.length - ext.length;
     return [fileName.substr(0, index - 1), ext];
 }
 exports.splitExtension = splitExtension;
@@ -35,10 +34,10 @@ exports.splitExtension = splitExtension;
  * Finds the common base path of two directories
  */
 function getCommonBasePath(a, b) {
-    var aSplit = a.split(/\\|\//); // Split on '/' or '\'.
-    var bSplit = b.split(/\\|\//);
-    var commonLength = 0;
-    for (var i = 0; i < aSplit.length && i < bSplit.length; i++) {
+    const aSplit = a.split(/\\|\//); // Split on '/' or '\'.
+    const bSplit = b.split(/\\|\//);
+    let commonLength = 0;
+    for (let i = 0; i < aSplit.length && i < bSplit.length; i++) {
         if (aSplit[i] !== bSplit[i])
             break;
         commonLength += aSplit[i].length + 1;
@@ -53,10 +52,10 @@ function getCommonBasePathOfArray(paths) {
 }
 exports.getCommonBasePathOfArray = getCommonBasePathOfArray;
 function getError(info, typescript, file) {
-    var err = new Error();
+    const err = new Error();
     err.name = 'TypeScript error';
     err.diagnostic = info;
-    var codeAndMessageText = typescript.DiagnosticCategory[info.category].toLowerCase() +
+    const codeAndMessageText = typescript.DiagnosticCategory[info.category].toLowerCase() +
         ' TS' +
         info.code +
         ': ' +
@@ -65,7 +64,7 @@ function getError(info, typescript, file) {
         err.message = codeAndMessageText;
         return err;
     }
-    var fileName = info.file.fileName;
+    let fileName = info.file.fileName;
     if (file) {
         err.tsFile = file.ts;
         err.fullFilename = file.fileNameOriginal;
@@ -81,8 +80,8 @@ function getError(info, typescript, file) {
     else {
         err.fullFilename = info.file.fileName;
     }
-    var startPos = typescript.getLineAndCharacterOfPosition(info.file, info.start);
-    var endPos = typescript.getLineAndCharacterOfPosition(info.file, info.start + info.length);
+    const startPos = typescript.getLineAndCharacterOfPosition(info.file, info.start);
+    const endPos = typescript.getLineAndCharacterOfPosition(info.file, info.start + info.length);
     err.startPosition = {
         position: info.start,
         line: startPos.line,

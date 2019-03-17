@@ -1,6 +1,7 @@
 import * as ts from 'typescript';
 import * as _project from './project';
 import * as _reporter from './reporter';
+import { GetCustomTransformers } from './types';
 declare function compile(proj: _project.Project, theReporter?: _reporter.Reporter): compile.CompileStream;
 declare function compile(settings: compile.Settings, theReporter?: _reporter.Reporter): compile.CompileStream;
 declare function compile(): compile.CompileStream;
@@ -30,6 +31,7 @@ declare module compile {
         declarationFiles?: boolean;
         noExternalResolve?: boolean;
         sortOutput?: boolean;
+        getCustomTransformers?: GetCustomTransformers;
         typescript?: typeof ts;
         isolatedModules?: boolean;
         rootDir?: string;
