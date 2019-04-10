@@ -50,17 +50,24 @@ export interface ProjectInfo {
 	reporter: Reporter;
 }
 
-export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers) {
+export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers, useFileCompiler: boolean | undefined) {
 	const input = new FileCache(typescript, options);
-	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
-	let running = false;
+	if (useFileCompiler && !options.isolatedModules) {
+		throw Error("useFileCompiler: true can only be used if config.compilerOptions.isolatedModules is also set to true");
+	}
+    let compiler: ICompiler;
 
-	if (options.isolatedModules) {
+	if (options.isolatedModules && (useFileCompiler === undefined || useFileCompiler === true)) {
+        compiler = new FileCompiler();
 		options.newLine = typescript.NewLineKind.LineFeed;
 		options.sourceMap = false;
 		options.declaration = false;
 		options.inlineSourceMap = true;
-	}
+    }
+    else {
+        compiler = new ProjectCompiler();
+    }
+	let running = false;
 
 	const project: PartialProject = (reporter) => {
 		if (running) {

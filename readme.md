@@ -44,7 +44,7 @@ Almost all options from TypeScript are supported.
 - `noEmitOnError` (boolean) - Do not emit outputs if any type checking errors were reported.
 - `noEmitHelpers` (boolean) - Do not generate custom helper functions like __extends in compiled output.
 - `preserveConstEnums` (boolean) - Do not erase const enum declarations in generated code. 
-- `isolatedModules` (boolean) - Compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+.
+- `isolatedModules` (boolean) - By default, this option compiles files seperately and doesn't check types, which causes a big speed increase. You have to use gulp-plumber and TypeScript 1.5+. If you use the `createProject` API (see below) and specify `useFileCompiler: false`, the meaning changes to match that of `tsc`. That is, you *will* get type-checking at the cost of slower compilation. In addition, TypeScript will error on constructs that would prevent safe separate compilation.
 - `allowJs` (boolean) - Allow JavaScript files to be compiled.
 - `rootDir` - Specifies the root directory of input files. Only use to control the output directory structure with `outDir`.
 
@@ -60,7 +60,8 @@ API overview
 gulp-typescript can be imported using `const ts = require('gulp-typescript');`. It provides the following functions:
 
 - `ts(options?)` - Returns a gulp stream that compiles TypeScript files using the specified options.
-- `ts.createProject(options?)`, `ts.createProject(tsconfig filename, options?)` - Returns a project. The intended usage is to create a project outside of a task with `const tsProject = ts.createProject(..);`. Within a task, `tsProject()` can be used to compile a stream of TypeScript files.
+- `ts.createProject(options?)`, `ts.createProject(tsconfig filename?: string, options?: CompilerOptions, gulpTsOptions?: GulpTsOptions)` - Returns a project. The intended usage is to create a project outside of a task with `const tsProject = ts.createProject(..);`. Within a task, `tsProject()` can be used to compile a stream of TypeScript files. The shape of `GulpTsOptions` is `{ useFileCompiler: boolean, typescript: TS }`. `useFileCompiler` defaults to `true` when `isolatedModules` is `true`. Specify `useFileCompiler: false` to use the project compiler even if `isolatedModules` is `true`.
+> The important differences are that the project compiler does type checking but the file compiler is faster and more more memory-efficient. Using `isolatedModules` and `useFileCompiler: false` together does extra type-checking that ensures that `useFileCompiler: true` *would* be safe.
 - `tsProject.src()` - Returns a stream containing the source files (.ts) from a tsconfig file. It can only be used if you create a project with a `tsconfig.json` file. It is a replacement for `gulp.src(..)`.
 
 Both `ts(..)` and `tsProject()` provide sub-streams that only contain the JavaScript or declaration files. An example is shown later in the readme.

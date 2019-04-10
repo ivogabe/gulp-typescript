@@ -1,0 +1,12 @@
+TypeScript error: error TS5053: Option 'sourceMap' cannot be specified with option 'inlineSourceMap'.
+TypeScript error: [31mtest/useFileCompiler/test-3.ts(5,10): [39merror TS1205: Cannot re-export a type when the '--isolatedModules' flag is provided.
+{
+    "transpileErrors": 0,
+    "optionsErrors": 1,
+    "syntaxErrors": 0,
+    "globalErrors": 0,
+    "semanticErrors": 1,
+    "declarationErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": false
+}

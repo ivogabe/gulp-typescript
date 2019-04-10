@@ -18,16 +18,23 @@ const reporter_1 = require("./reporter");
 const input_1 = require("./input");
 const output_1 = require("./output");
 const compiler_1 = require("./compiler");
-function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript, finalTransformers) {
+function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript, finalTransformers, useFileCompiler) {
     const input = new input_1.FileCache(typescript, options);
-    const compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
-    let running = false;
-    if (options.isolatedModules) {
+    if (useFileCompiler && !options.isolatedModules) {
+        throw Error("useFileCompiler: true can only be used if config.compilerOptions.isolatedModules is also set to true");
+    }
+    let compiler;
+    if (options.isolatedModules && (useFileCompiler === undefined || useFileCompiler === true)) {
+        compiler = new compiler_1.FileCompiler();
         options.newLine = typescript.NewLineKind.LineFeed;
         options.sourceMap = false;
         options.declaration = false;
         options.inlineSourceMap = true;
     }
+    else {
+        compiler = new compiler_1.ProjectCompiler();
+    }
+    let running = false;
     const project = (reporter) => {
         if (running) {
             throw new Error('gulp-typescript: A project cannot be used in two compilations at the same time. Create multiple projects with createProject instead.');

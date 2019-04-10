@@ -1,0 +1,1 @@
+{"version":3,"sources":["other-3.ts"],"names":[],"mappings":";;AAAA;IAAA;IAEA,CAAC;IAAD,YAAC;AAAD,CAFA,AAEC,IAAA;AAFY,sBAAK;AAIL,QAAA,KAAK,GAAG,CAAC,CAAC","file":"other-3.js","sourcesContent":["export class Klass {\n\tvalue: string;\n}\n\nexport const value = 3;\n\nexport type Alias = number;"],"sourceRoot":"../../../../useFileCompiler/"}

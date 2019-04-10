@@ -28,7 +28,7 @@ export interface ProjectInfo {
     directory: string;
     reporter: Reporter;
 }
-export declare function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers): Project;
+export declare function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers, useFileCompiler: boolean | undefined): Project;
 export interface ICompileStream extends NodeJS.ReadWriteStream {
     js: stream.Readable;
     dts: stream.Readable;

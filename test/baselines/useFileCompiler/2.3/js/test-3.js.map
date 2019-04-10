@@ -1,0 +1,1 @@
+{"version":3,"sources":["test-3.ts"],"names":[],"mappings":";;AAAA,qCAAgD;AAIhC,gBAJA,eAAK,CAIA;AAAE,gBAJA,eAAK,CAIA;AAF5B,IAAM,CAAC,GAAU,eAAK,CAAC","file":"test-3.js","sourcesContent":["import { Alias, Klass, value } from \"./other-3\";\n\nconst n: Alias = value;\n\nexport { Alias, Klass, value };"],"sourceRoot":"../../../../useFileCompiler/"}

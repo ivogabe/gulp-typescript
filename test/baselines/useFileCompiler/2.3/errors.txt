@@ -1,0 +1,12 @@
+TypeScript error: [31mtest/useFileCompiler/excluded-dir/test.ts(1,1): [39merror TS2304: Cannot find name 'notCompiled'.
+TypeScript error: [31mtest/useFileCompiler/excluded-file.ts(1,1): [39merror TS2304: Cannot find name 'notCompiled'.
+{
+    "transpileErrors": 0,
+    "optionsErrors": 0,
+    "syntaxErrors": 0,
+    "globalErrors": 0,
+    "semanticErrors": 2,
+    "declarationErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": false
+}

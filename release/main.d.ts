@@ -41,11 +41,15 @@ declare module compile {
         [name: string]: any;
         sourceRoot?: string;
     }
+    interface GulpTsSettings {
+        useFileCompiler?: boolean;
+        typescript?: typeof ts;
+    }
     type Project = _project.Project;
     type CompileStream = _project.ICompileStream;
     export import reporter = _reporter;
-    function createProject(tsConfigFileName: string, settings?: Settings): Project;
-    function createProject(settings?: Settings): Project;
+    function createProject(tsConfigFileName: string, settings?: Settings, gulpTsSettings?: GulpTsSettings): Project;
+    function createProject(settings?: Settings, gulpTsSettings?: GulpTsSettings): Project;
     function filter(...args: any[]): void;
 }
 export = compile;

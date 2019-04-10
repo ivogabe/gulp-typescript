@@ -59,7 +59,11 @@ function getFinalTransformers(getCustomTransformers?: GetCustomTransformers): Fi
 	return null;
 }
 
-function getTypeScript(typescript: typeof ts) {
+function getTypeScript(settingsTs: typeof ts, gulpTsSettingsTs: typeof ts) {
+	if (settingsTs && gulpTsSettingsTs && settingsTs !== gulpTsSettingsTs) {
+		throw Error("settings.typescript and gulpTsSettings.typescript aren't equal. Please specify only one or use the same `typescript` for both.");
+	}
+	const typescript = settingsTs || gulpTsSettingsTs;
 	if (typescript) return typescript;
 	try {
 		return require('typescript');
@@ -166,78 +170,97 @@ module compile {
 		// Unsupported by gulp-typescript
 		sourceRoot?: string; // Use sourceRoot in gulp-sourcemaps instead
 	}
+
+	export interface GulpTsSettings {
+		useFileCompiler?: boolean;
+		typescript?: typeof ts;
+	}
+
 	export type Project = _project.Project;
 	export type CompileStream = _project.ICompileStream;
 	export import reporter = _reporter;
 
-	export function createProject(tsConfigFileName: string, settings?: Settings): Project;
-	export function createProject(settings?: Settings): Project;
-	export function createProject(fileNameOrSettings?: string | Settings, settings?: Settings): Project {
+	function _createProject({
+		tsConfigFileName,
+		settings,
+		gulpTsSettings
+	}: {
+		tsConfigFileName: string | undefined;
+		settings: Settings;
+		gulpTsSettings: GulpTsSettings;
+	}): Project {
 		let finalTransformers: FinalTransformers;
-		let tsConfigFileName: string = undefined;
 		let tsConfigContent: TsConfig = undefined;
 		let projectDirectory = process.cwd();
 		let typescript: typeof ts;
 		let compilerOptions: ts.CompilerOptions;
 		let projectReferences: ReadonlyArray<ts.ProjectReference>;
-		let fileName: string;
 
 		let rawConfig: any;
 
-		if (fileNameOrSettings !== undefined) {
-			if (typeof fileNameOrSettings === 'string') {
-				fileName = fileNameOrSettings;
-				tsConfigFileName = path.resolve(process.cwd(), fileName);
-				projectDirectory = path.dirname(tsConfigFileName);
-				if (settings === undefined) settings = {};
-			} else {
-				settings = fileNameOrSettings || {};
+		finalTransformers = getFinalTransformers(settings.getCustomTransformers);
+
+		typescript = getTypeScript(settings.typescript, gulpTsSettings.typescript);
+		settings = checkAndNormalizeSettings(settings);
+
+		const settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
+
+		if (settingsResult.errors) {
+			reportErrors(settingsResult.errors, typescript);
+		}
+
+		compilerOptions = settingsResult.options;
+
+		if (tsConfigFileName !== undefined) {
+			let tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
+			if (tsConfig.error) {
+				console.log(tsConfig.error.messageText);
 			}
 
-			finalTransformers = getFinalTransformers(settings.getCustomTransformers);
+			let parsed: ts.ParsedCommandLine =
+				typescript.parseJsonConfigFileContent(
+					tsConfig.config || {},
+					getTsconfigSystem(typescript),
+					path.resolve(projectDirectory),
+					compilerOptions,
+					tsConfigFileName);
 
-			typescript = getTypeScript(settings.typescript);
-			settings = checkAndNormalizeSettings(settings);
+			rawConfig = parsed.raw;
 
-			const settingsResult = typescript.convertCompilerOptionsFromJson(settings, projectDirectory);
+			tsConfigContent = parsed.raw;
 
-			if (settingsResult.errors) {
-				reportErrors(settingsResult.errors, typescript);
+			if (parsed.errors) {
+				reportErrors(parsed.errors, typescript, [18003]);
 			}
 
-			compilerOptions = settingsResult.options;
-
-			if (fileName !== undefined) {
-				let tsConfig = typescript.readConfigFile(tsConfigFileName, typescript.sys.readFile);
-				if (tsConfig.error) {
-					console.log(tsConfig.error.messageText);
-				}
-
-				let parsed: ts.ParsedCommandLine =
-					typescript.parseJsonConfigFileContent(
-						tsConfig.config || {},
-						getTsconfigSystem(typescript),
-						path.resolve(projectDirectory),
-						compilerOptions,
-						tsConfigFileName);
-
-				rawConfig = parsed.raw;
-
-				tsConfigContent = parsed.raw;
-
-				if (parsed.errors) {
-					reportErrors(parsed.errors, typescript, [18003]);
-				}
-
-				compilerOptions = parsed.options;
-				projectReferences = parsed.projectReferences;
-			}
+			compilerOptions = parsed.options;
+			projectReferences = parsed.projectReferences;
 		}
 
 		normalizeCompilerOptions(compilerOptions, typescript);
-		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript, finalTransformers);
+		const project = _project.setupProject(projectDirectory, tsConfigFileName, rawConfig, tsConfigContent, compilerOptions, projectReferences, typescript, finalTransformers, gulpTsSettings.useFileCompiler);
 
 		return project;
+	}
+
+	export function createProject(tsConfigFileName: string, settings?: Settings, gulpTsSettings?: GulpTsSettings): Project;
+	export function createProject(settings?: Settings, gulpTsSettings?: GulpTsSettings): Project;
+
+	export function createProject(fileNameOrSettings?: string | Settings, settingsOrGulpTsSettings?: Settings | GulpTsSettings, gulpTsSettingsParam?: GulpTsSettings): Project {
+		// overload: createProject(tsConfigFileName, settings, gulpTsSettings)
+		if (typeof fileNameOrSettings === 'string') {
+			return _createProject({
+				tsConfigFileName: fileNameOrSettings,
+				settings: settingsOrGulpTsSettings || {},
+				gulpTsSettings: gulpTsSettingsParam || {} }
+			);
+		}
+		// overload: createProject(settings, gulpTsSettings)
+		return _createProject({
+			tsConfigFileName: undefined,
+			settings: fileNameOrSettings || {},
+			gulpTsSettings: settingsOrGulpTsSettings as GulpTsSettings || {} }
+		);
 	}
 
 	export function filter(...args: any[]) {
