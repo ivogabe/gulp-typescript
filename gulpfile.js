@@ -156,7 +156,7 @@ async function runExecTest(testName) {
 	const testDir = path.posix.join('test', testName);
 
 	return new Promise((resolve, reject) => {
-		childProcess.execFile("gulp", {
+		childProcess.exec("gulp", {
 			cwd: testDir,
 		}, (err) => {
 			if (err) {
