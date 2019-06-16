@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 
 module.exports = function(newTS, lib, output, reporter) {
-	var project = newTS.createProject('test/tsconfigIncremental/src/tsconfig.json', {
+	var project = newTS.createProject('test/tsConfigIncremental/src/tsconfig.json', {
 		typescript: lib
 	});
 
