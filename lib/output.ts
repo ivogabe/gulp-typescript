@@ -9,21 +9,24 @@ import * as reporter from './reporter';
 import * as project from './project';
 
 export class Output {
-	constructor(_project: project.ProjectInfo, streamFull: stream.Readable, streamJs: stream.Readable, streamDts: stream.Readable) {
+	constructor(_project: project.ProjectInfo, streamFull: stream.Readable, streamJs: stream.Readable, streamDts: stream.Readable, streamBuildInfo: stream.Readable) {
 		this.project = _project;
 		this.streamFull = streamFull;
 		this.streamJs = streamJs;
 		this.streamDts = streamDts;
+		this.streamBuildInfo = streamBuildInfo;
 	}
 
 	project: project.ProjectInfo;
 	result: reporter.CompilationResult;
-	// .js and .d.ts files
+	// .js and .d.ts and .tsbuildinfo files
 	streamFull: stream.Readable;
 	// .js files
 	streamJs: stream.Readable;
 	// .d.ts files
 	streamDts: stream.Readable;
+	// .tsbuildinfo files
+	streamBuildInfo: stream.Readable;
 
 	// Number of pending IO operatrions
 	private pendingIO = 0;
@@ -74,6 +77,18 @@ export class Output {
 			this.pendingIO--;
 			this.mightFinish();
 		});
+	}
+
+	writeBuildInfo(base: string, fileName: string, content: string, cwd: string) {
+		const file = new VinylFile({
+			path: fileName,
+			contents: Buffer.from(content),
+			cwd,
+			base
+		});
+
+		this.streamFull.push(file);
+		this.streamBuildInfo.push(file);
 	}
 
 	private async applySourceMap(sourceMapContent: string, original: input.File, output: VinylFile) {

@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"outFile": "outFile.js",
+		"declaration": true,
+		"incremental": true,
+		"composite": true,
+		"types": []
+	}
+}
