@@ -132,6 +132,11 @@ function src(this: Project) {
 		console.log(error.messageText);
 	}
 
+	if (fileNames.length === 0) {
+		// Empty stream required as vinyl-fs@3 no longer supports "allowEmpty"
+		return new stream.Readable({objectMode: true, read() { this.push(null) }})
+	}
+	
 	if (base === undefined) base = utils.getCommonBasePathOfArray(
 		fileNames.filter(file => file.substr(-5) !== ".d.ts")
 			.map(file => path.dirname(file)));
