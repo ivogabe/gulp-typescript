@@ -59,11 +59,7 @@ function getFinalTransformers(getCustomTransformers?: GetCustomTransformers): Fi
 	return null;
 }
 
-function getTypeScript(settingsTs: typeof ts, gulpTsSettingsTs: typeof ts) {
-	if (settingsTs && gulpTsSettingsTs && settingsTs !== gulpTsSettingsTs) {
-		throw Error("settings.typescript and gulpTsSettings.typescript aren't equal. Please specify only one or use the same `typescript` for both.");
-	}
-	const typescript = settingsTs || gulpTsSettingsTs;
+function getTypeScript(typescript: typeof ts) {
 	if (typescript) return typescript;
 	try {
 		return require('typescript');
@@ -155,7 +151,6 @@ module compile {
 		sortOutput?: boolean;
 
 		getCustomTransformers?: GetCustomTransformers;
-		typescript?: typeof ts;
 
 		isolatedModules?: boolean;
 
