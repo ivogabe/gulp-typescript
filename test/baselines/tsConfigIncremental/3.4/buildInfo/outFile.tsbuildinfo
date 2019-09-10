@@ -1,0 +1,27 @@
+{
+  "bundle": {
+    "commonSourceDirectory": "C:/Projects/github/gulp-typescript/test/tsConfigIncremental/src/",
+    "sourceFiles": [
+      "C:/Projects/github/gulp-typescript/test/tsConfigIncremental/src/app/bar.ts"
+    ],
+    "js": {
+      "sections": [
+        {
+          "pos": 0,
+          "end": 94,
+          "kind": "text"
+        }
+      ]
+    },
+    "dts": {
+      "sections": [
+        {
+          "pos": 0,
+          "end": 43,
+          "kind": "text"
+        }
+      ]
+    }
+  },
+  "version": "3.4.5"
+}

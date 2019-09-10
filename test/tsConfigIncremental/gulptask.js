@@ -1,4 +1,5 @@
 var gulp = require('gulp');
+var compareVersions = require('compare-versions');
 
 module.exports = function(newTS, lib, output, reporter) {
 	var project = newTS.createProject('test/tsConfigIncremental/src/tsconfig.json', {
@@ -17,4 +18,8 @@ module.exports = function(newTS, lib, output, reporter) {
 
 	return tsResult.js
 		.pipe(gulp.dest(output + "js"));
-}
+};
+
+module.exports.match = function (lib) {
+	return /^\d+/.test(lib.version) && compareVersions.compare(lib.version, '3.4', '>=');
+};
