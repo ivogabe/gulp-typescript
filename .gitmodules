@@ -15,3 +15,7 @@
 	path = typescript/2.7
 	url = https://github.com/Microsoft/TypeScript.git
 	branch = release-2.7
+[submodule "typescript/3.4"]
+	path = typescript/3.4
+	url = https://github.com/Microsoft/TypeScript
+	branch = release-3.4

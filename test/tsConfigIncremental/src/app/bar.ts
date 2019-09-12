@@ -1,0 +1,3 @@
+class Hello {
+	value: string;
+}

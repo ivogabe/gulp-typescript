@@ -72,7 +72,7 @@ export function setupProject(projectDirectory: string, configFileName: string, r
 		compiler.prepare(projectInfo, finalTransformers);
 
 		const stream = new CompileStream(projectInfo);
-		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts);
+		projectInfo.output = new Output(projectInfo, stream, stream.js, stream.dts, stream.buildInfo);
 		projectInfo.reporter = reporter || defaultReporter();
 
 		stream.on('finish', () => {
@@ -143,6 +143,7 @@ function src(this: Project) {
 export interface ICompileStream extends NodeJS.ReadWriteStream {
 	js: stream.Readable;
 	dts: stream.Readable;
+	buildInfo: stream.Readable;
 }
 class CompileStream extends stream.Duplex implements ICompileStream {
 	constructor(project: ProjectInfo) {
@@ -188,6 +189,7 @@ class CompileStream extends stream.Duplex implements ICompileStream {
 
 	js: stream.Readable = new CompileOutputStream();
 	dts: stream.Readable = new CompileOutputStream();
+	buildInfo: stream.Readable = new CompileOutputStream();
 }
 class CompileOutputStream extends stream.Readable {
 	constructor() {

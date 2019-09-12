@@ -24,6 +24,8 @@ interface OutputFile {
 	jsMapContent?: string;
 	dtsContent?: string;
 	dtsMapContent?: string;
+	buildinfoFileName?: string;
+	buildinfoContent?: string;
 }
 
 /**
@@ -169,6 +171,10 @@ export class ProjectCompiler implements ICompiler {
 			case 'map':
 				file.jsMapContent = content;
 				break;
+			case 'tsbuildinfo':
+				file.buildinfoFileName = fileName;
+				file.buildinfoContent = content;
+				break;
 		}
 	}
 	private emit(result: CompilationResult, preEmitDiagnostics: ReadonlyArray<ts.DiagnosticWithLocation>, callback: ts.WriteFileCallback) {
@@ -193,7 +199,7 @@ export class ProjectCompiler implements ICompiler {
 			this.project.output.diagnostic(error);
 		}
 	}
-	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }: OutputFile, currentDirectory: string) {
+	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent, buildinfoFileName, buildinfoContent }: OutputFile, currentDirectory: string) {
 		if (!jsFileName) return;
 
 		let base: string;
@@ -233,6 +239,10 @@ export class ProjectCompiler implements ICompiler {
 			}
 			this.project.output.writeDts(baseDeclarations, dtsFileName, dtsContent, dtsMapContent, file ? file.gulp.cwd : currentDirectory, file);
 		}
+		if (buildinfoContent !== undefined) {
+			this.project.output.writeBuildInfo(base, buildinfoFileName, buildinfoContent, file ? file.gulp.cwd : currentDirectory);
+		}
+
 	}
 
 	private removeSourceMapComment(content: string): string {

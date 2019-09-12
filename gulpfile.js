@@ -13,7 +13,8 @@ const tsVersions = {
 	dev: './typescript/dev',
 	release23: './typescript/2.3',
 	release27: './typescript/2.7',
-	release29: './typescript/2.9'
+	release29: './typescript/2.9',
+	release34: './typescript/3.4'
 };
 
 function findTSDefinition(location) {
@@ -96,6 +97,7 @@ const libs = [
 	['2.7', require(tsVersions.release27)],
 	['2.3', require(tsVersions.release23)],
 	['2.9', require(tsVersions.release29)],
+	['3.4', require(tsVersions.release34)],
 	['dev', require(tsVersions.dev)]
 ];
 
@@ -156,7 +158,7 @@ async function runExecTest(testName) {
 	const testDir = path.posix.join('test', testName);
 
 	return new Promise((resolve, reject) => {
-		childProcess.execFile("gulp", {
+		childProcess.exec("gulp", {
 			cwd: testDir,
 		}, (err) => {
 			if (err) {
