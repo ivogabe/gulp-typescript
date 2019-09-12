@@ -1,0 +1,19 @@
+TypeScript error: [31mtest/noEmitOnError/a.ts(1,1): [39merror TS2304: Cannot find name 'foo'.
+TypeScript error: [31mtest/noEmitOnError/a.ts(2,5): [39merror TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,2): [39merror TS1109: Expression expected.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,3): [39merror TS1127: Invalid character.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,4): [39merror TS2581: Cannot find name '$'. Do you need to install type definitions for jQuery? Try `npm i @types/jquery`.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,6): [39merror TS1109: Expression expected.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,7): [39merror TS1109: Expression expected.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,8): [39merror TS1109: Expression expected.
+TypeScript error: [31mtest/noEmitOnError/a.ts(3,9): [39merror TS1109: Expression expected.
+{
+    "transpileErrors": 0,
+    "optionsErrors": 0,
+    "syntaxErrors": 6,
+    "globalErrors": 0,
+    "semanticErrors": 3,
+    "declarationErrors": 0,
+    "emitErrors": 0,
+    "emitSkipped": true
+}
