@@ -130,6 +130,7 @@ export class ProjectCompiler implements ICompiler {
 			}
 
 			this.emit(result, preEmitDiagnostics, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
+				if (sourceFiles === undefined) return; // .tsbuildinfo file, ignore
 				if (sourceFiles.length !== 1) {
 					throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
 				}
