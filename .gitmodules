@@ -2,16 +2,6 @@
 	path = typescript/dev
 	url = https://github.com/Microsoft/TypeScript.git
 
-[submodule "typescript/2.3"]
-	path = typescript/2.3
+[submodule "typescript/3.6"]
+	path = typescript/3.6
 	url = https://github.com/Microsoft/TypeScript.git
-[submodule "2.9"]
-	path = 2.9
-	url = https://github.com/Microsoft/TypeScript
-[submodule "typescript/2.9"]
-	path = typescript/2.9
-	url = https://github.com/Microsoft/TypeScript
-[submodule "typescript/2.7"]
-	path = typescript/2.7
-	url = https://github.com/Microsoft/TypeScript.git
-	branch = release-2.7

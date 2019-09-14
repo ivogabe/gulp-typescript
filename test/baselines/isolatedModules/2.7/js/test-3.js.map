@@ -1,1 +1,0 @@
-{"version":3,"sources":["test-3.ts"],"names":[],"mappings":";;;IAEA,IAAI,CAAC,GAAG,IAAI,KAAK,CAAC,KAAK,EAAE,CAAC;IAC1B,OAAO,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,CAAC,CAAC","file":"test-3.js","sourcesContent":["import other = require('./other-3');\n. // Syntax error\nvar a = new other.Hello();\nconsole.log(a.value);"],"sourceRoot":"../../../../isolatedModules/"}
