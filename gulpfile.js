@@ -158,6 +158,11 @@ async function runExecTest(testName) {
 }
 
 gulp.task('test-run', gulp.series('clean-test', async () => {
+	console.log("Running tests with TypeScript versions:");
+	for (const key of Object.keys(tsVersions)) {
+		console.log(key + ": " + require(tsVersions[key]).version);
+	}
+
 	fs.mkdirSync('test/output/');
 	for (const testName of execTests) {
 		await runExecTest(testName);
