@@ -12,8 +12,10 @@ export function forwardSlashes(fileName: string) {
 	return fileName.replace(/\\/g, '/')
 }
 
-export function normalizePath(pathString: string) {
-	return path.normalize(pathString).toLowerCase();
+export function normalizePath(caseSensitive: boolean, pathString: string) {
+	const normalized = path.normalize(pathString);
+	if (!caseSensitive) return normalized.toLowerCase();
+	return normalized;
 }
 
 /**

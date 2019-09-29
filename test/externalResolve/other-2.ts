@@ -1,4 +1,4 @@
-/// <reference path="REFERENCED.d.ts"/>
+/// <reference path="referenced.d.ts"/>
 
 import someModule = require('someModule');
 

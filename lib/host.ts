@@ -44,14 +44,14 @@ export class Host implements ts.CompilerHost {
 		return '\n';
 	}
 	useCaseSensitiveFileNames() {
-		return false;
+		return this.fallback.useCaseSensitiveFileNames();
 	}
 
 	getCurrentDirectory = () => {
 		return this.currentDirectory;
 	}
 	getCanonicalFileName(filename: string) {
-		return utils.normalizePath(filename);
+		return utils.normalizePath(this.useCaseSensitiveFileNames(), filename);
 	}
 	getDefaultLibFileName(options: ts.CompilerOptions) {
 		return this.fallback.getDefaultLibFileName(options);

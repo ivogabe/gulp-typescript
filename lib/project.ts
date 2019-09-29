@@ -51,7 +51,8 @@ export interface ProjectInfo {
 }
 
 export function setupProject(projectDirectory: string, configFileName: string, rawConfig: any, config: TsConfig, options: ts.CompilerOptions, projectReferences: ReadonlyArray<ts.ProjectReference>, typescript: typeof ts, finalTransformers: FinalTransformers) {
-	const input = new FileCache(typescript, options);
+	const caseSensitive = typescript.createCompilerHost(options).useCaseSensitiveFileNames();
+	const input = new FileCache(typescript, options, caseSensitive);
 	const compiler: ICompiler = options.isolatedModules ? new FileCompiler() : new ProjectCompiler();
 	let running = false;
 
