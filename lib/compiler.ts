@@ -194,8 +194,6 @@ export class ProjectCompiler implements ICompiler {
 		}
 	}
 	private emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }: OutputFile, currentDirectory: string) {
-		if (!jsFileName) return;
-
 		let base: string;
 		let baseDeclarations: string;
 		if (file) {
@@ -215,7 +213,9 @@ export class ProjectCompiler implements ICompiler {
 		} else {
 			base = this.project.directory;
 			baseDeclarations = base;
-			jsFileName = path.resolve(base, jsFileName);
+			if (jsFileName !== undefined) {
+				jsFileName = path.resolve(base, jsFileName);
+			}
 			if (dtsFileName !== undefined) {
 				dtsFileName = path.resolve(base, dtsFileName);
 			}
