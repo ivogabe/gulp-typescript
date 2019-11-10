@@ -33,7 +33,7 @@ export class ProjectCompiler implements ICompiler {
 	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
-	program: ts.Program;
+	program: ts.EmitAndSemanticDiagnosticsBuilderProgram;
 	private hasSourceMap: boolean;
 
 	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers) {
@@ -68,24 +68,20 @@ export class ProjectCompiler implements ICompiler {
 			rootFilenames.map(fileName => this.project.input.getFile(fileName).gulp.cwd)
 		);
 
-		this.host = new Host(
-			this.project.typescript,
-			currentDirectory,
-			this.project.input,
-			this.project.options
-		);
-
-		// Calling `createProgram` with an object is only supported in 3.0. Only call this overload
-		// if we have project references (also only supported in 3.0)
-		this.program = this.project.projectReferences
-			? this.project.typescript.createProgram({
+		if (this.program === undefined) {
+			this.host = new Host(
+				this.project.typescript,
+				currentDirectory,
+				this.project.input,
+				this.project.options
+			);
+			this.program = this.project.typescript.createIncrementalProgram({
 				rootNames: rootFilenames,
 				options: this.project.options,
 				projectReferences: this.project.projectReferences,
-				host: this.host,
-				oldProgram: this.program
-			})
-			: this.project.typescript.createProgram(rootFilenames, this.project.options, this.host, this.program);
+				host: this.host
+			});
+		}
 
 		const result = emptyCompilationResult(this.project.options.noEmit);
 
@@ -178,7 +174,7 @@ export class ProjectCompiler implements ICompiler {
 			callback,
 			undefined,
 			false,
-			this.finalTransformers ? this.finalTransformers(this.program) : undefined,
+			this.finalTransformers ? this.finalTransformers(this.program.getProgram()) : undefined,
 		);
 		result.emitSkipped = emitOutput.emitSkipped;
 

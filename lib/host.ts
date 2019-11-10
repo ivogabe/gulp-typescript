@@ -81,7 +81,10 @@ export class Host implements ts.CompilerHost {
 		let sourceFile = this.input.getFile(fileName);
 		if (sourceFile) return sourceFile.ts;
 
-		return this.fallback.getSourceFile(fileName, languageVersion, onError);
+		const file = this.fallback.getSourceFile(fileName, languageVersion, onError);
+		if (file === undefined) return undefined;
+		(file as any).version = this.input.versionString;
+		return file;
 	}
 
 	realpath = (path: string) => this.fallback.realpath(path);
