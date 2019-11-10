@@ -1,1 +1,0 @@
-{"version":3,"sources":["apple.ts","banana.ts"],"names":[],"mappings":"AAAA;IAAA;IAAA,CAAA;IAAA,YAAA;AAAA,CAAA,IAAA;ACAA;IAAA;IAAA,CAAA;IAAA,aAAA;AAAA,CAAA,IAAA","file":"all.js","sourcesContent":["class Apple {}","class Banana {}"]}

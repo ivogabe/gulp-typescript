@@ -11,9 +11,7 @@ const diff = require('gulp-diff');
 
 const tsVersions = {
 	dev: './typescript/dev',
-	release23: './typescript/2.3',
-	release27: './typescript/2.7',
-	release29: './typescript/2.9'
+	release36: './typescript/3.6'
 };
 
 function findTSDefinition(location) {
@@ -80,22 +78,14 @@ function typecheckDev() {
 		findTSDefinition(tsVersions.dev)
 	])).pipe(createProject({ noEmit: true })());
 }
-function typecheck2_3() {
-	return gulp.src(paths.scripts.concat([
-		'!definitions/typescript.d.ts',
-		findTSDefinition(tsVersions.release23)
-	])).pipe(createProject({ noEmit: true })());
-}
 
-const typecheck = gulp.parallel(typecheckDev, typecheck2_3);
+const typecheck = gulp.parallel(typecheckDev);
 
 // Tests
 
 // We run every test on multiple typescript versions:
 const libs = [
-	['2.7', require(tsVersions.release27)],
-	['2.3', require(tsVersions.release23)],
-	['2.9', require(tsVersions.release29)],
+	['3.6', require(tsVersions.release36)],
 	['dev', require(tsVersions.dev)]
 ];
 
@@ -168,6 +158,11 @@ async function runExecTest(testName) {
 }
 
 gulp.task('test-run', gulp.series('clean-test', async () => {
+	console.log("Running tests with TypeScript versions:");
+	for (const key of Object.keys(tsVersions)) {
+		console.log(key + ": " + require(tsVersions[key]).version);
+	}
+
 	fs.mkdirSync('test/output/');
 	for (const testName of execTests) {
 		await runExecTest(testName);

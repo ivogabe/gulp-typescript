@@ -30,20 +30,20 @@ export interface File {
 	ts?: ts.SourceFile;
 }
 export module File {
-	export function fromContent(fileName: string, content: string): File {
+	export function fromContent(caseSensitive: boolean, fileName: string, content: string): File {
 		let kind = FileKind.Source;
 		if (path.extname(fileName).toLowerCase() === 'json') kind = FileKind.Config;
 
 		return {
-			fileNameNormalized: utils.normalizePath(fileName),
+			fileNameNormalized: utils.normalizePath(caseSensitive, fileName),
 			fileNameOriginal: fileName,
 			content,
 			kind
 		};
 	}
-	export function fromGulp(file: VinylFile): File {
+	export function fromGulp(caseSensitive: boolean, file: VinylFile): File {
 		let str = (<Buffer> file.contents).toString('utf8');
-		let data = fromContent(file.path, str);
+		let data = fromContent(caseSensitive, file.path, str);
 		data.gulp = file;
 
 		return data;
@@ -71,17 +71,19 @@ export module File {
 export class FileDictionary {
 	files: utils.Map<File> = {};
 	firstSourceFile: File = undefined;
+	caseSensitive: boolean;
 	typescript: typeof ts;
 
-	constructor(typescript: typeof ts) {
+	constructor(caseSensitive: boolean, typescript: typeof ts) {
+		this.caseSensitive = caseSensitive;
 		this.typescript = typescript;
 	}
 
 	addGulp(gFile: VinylFile) {
-		return this.addFile(File.fromGulp(gFile));
+		return this.addFile(File.fromGulp(this.caseSensitive, gFile));
 	}
 	addContent(fileName: string, content: string) {
-		return this.addFile(File.fromContent(fileName, content));
+		return this.addFile(File.fromContent(this.caseSensitive, fileName, content));
 	}
 	private addFile(file: File) {
 		if (file.kind === FileKind.Source) {
@@ -93,7 +95,7 @@ export class FileDictionary {
 	}
 
 	getFile(name: string) {
-		return this.files[utils.normalizePath(name)];
+		return this.files[utils.normalizePath(this.caseSensitive, name)];
 	}
 
 	initTypeScriptSourceFile: (file: File) => void;
@@ -126,7 +128,7 @@ export class FileDictionary {
 		const fileNames = this.getSourceFileNames(true);
 		return utils.getCommonBasePathOfArray(
 			fileNames.map(fileName => {
-				const file = this.files[utils.normalizePath(fileName)];
+				const file = this.files[utils.normalizePath(this.caseSensitive, fileName)];
 				return path.resolve(process.cwd(), file.gulp.base);
 			})
 		);
@@ -139,7 +141,7 @@ export class FileDictionary {
 		const fileNames = this.getSourceFileNames();
 		return utils.getCommonBasePathOfArray(
 			fileNames.map(fileName => {
-				const file = this.files[utils.normalizePath(fileName)];
+				const file = this.files[utils.normalizePath(this.caseSensitive, fileName)];
 				return path.dirname(file.fileNameNormalized);
 			})
 		);
@@ -153,14 +155,16 @@ export class FileCache {
 	previous: FileDictionary = undefined;
 	current: FileDictionary;
 	options: ts.CompilerOptions;
+	caseSensitive: boolean;
 	noParse: boolean = false; // true when using a file based compiler.
 
 	typescript: typeof ts;
 	version: number = 0;
 
-	constructor(typescript: typeof ts, options: ts.CompilerOptions) {
+	constructor(typescript: typeof ts, options: ts.CompilerOptions, caseSensitive: boolean) {
 		this.typescript = typescript;
 		this.options = options;
+		this.caseSensitive = caseSensitive;
 		this.createDictionary();
 	}
 
@@ -178,7 +182,7 @@ export class FileCache {
 	}
 
 	private createDictionary() {
-		this.current = new FileDictionary(this.typescript);
+		this.current = new FileDictionary(this.caseSensitive, this.typescript);
 		this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
 	}
 

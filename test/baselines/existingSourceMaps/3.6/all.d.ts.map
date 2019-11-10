@@ -1,0 +1,1 @@
+{"version":3,"sources":["apple.ts","banana.ts"],"names":[],"mappings":"AAAA,cAAA,KAAA;CAAA;ACAA,cAAA,MAAA;CAAA","file":"all.d.ts","sourcesContent":["class Apple {}","class Banana {}"]}

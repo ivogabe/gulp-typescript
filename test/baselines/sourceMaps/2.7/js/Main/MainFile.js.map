@@ -1,1 +1,0 @@
-{"version":3,"sources":["MainFile.ts"],"names":[],"mappings":";;AAEA,IAAI,GAAG,GAAS;IACZ,GAAG,EAAE,EAAE;CACV,CAAC;AAEF,OAAO,CAAC,GAAG,CAAC,GAAG,CAAC,GAAG,CAAC,CAAC","file":"MainFile.js","sourcesContent":["import IFoo = require(\"../Outer/Foo\");\n\nvar foo: IFoo = {\n    bar: 42\n};\n\nconsole.log(foo.bar);"]}
