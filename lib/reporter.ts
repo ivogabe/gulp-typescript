@@ -132,7 +132,7 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 				const logLine = (lineIndex: number, errorStart: number, errorEnd?: number) => {
 					const line = lines[lineIndex];
 					if (errorEnd === undefined) errorEnd = line.length;
-					console.log('> ' + colors.gray('[' + lineIndex + '] ')
+					console.log('> ' + colors.gray('[' + (lineIndex + 1) + '] ')
 						+ line.substring(0, errorStart)
 						+ colors.red(line.substring(errorStart, errorEnd))
 						+ line.substring(errorEnd)
@@ -141,8 +141,8 @@ export function fullReporter(fullFilename: boolean = false): Reporter {
 
 				for (let i = error.startPosition.line; i <= error.endPosition.line; i++) {
 					logLine(i,
-						i === error.startPosition.line ? error.startPosition.character - 1 : 0,
-						i === error.endPosition.line ? error.endPosition.character - 1 : undefined
+						i === error.startPosition.line ? error.startPosition.character : 0,
+						i === error.endPosition.line ? error.endPosition.character : undefined
 					);
 				}
 			}
