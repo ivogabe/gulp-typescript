@@ -73,22 +73,24 @@ class ProjectCompiler {
             const output = {};
             const input = this.host.input.getFileNames(true);
             for (let i = 0; i < input.length; i++) {
-                const fileName = utils.normalizePath(input[i]);
+                const fileName = this.host.getCanonicalFileName(input[i]);
                 const file = this.project.input.getFile(fileName);
                 output[fileName] = { file };
             }
             this.emit(result, preEmitDiagnostics, (fileName, content, writeByteOrderMark, onError, sourceFiles) => {
+                if (sourceFiles === undefined)
+                    return; // .tsbuildinfo file, ignore
                 if (sourceFiles.length !== 1) {
                     throw new Error("Failure: sourceFiles in WriteFileCallback should have length 1, got " + sourceFiles.length);
                 }
-                const fileNameOriginal = utils.normalizePath(sourceFiles[0].fileName);
+                const fileNameOriginal = this.host.getCanonicalFileName(sourceFiles[0].fileName);
                 const file = output[fileNameOriginal];
                 if (!file)
                     return;
                 this.attachContentToFile(file, fileName, content);
             });
             for (let i = 0; i < input.length; i++) {
-                const fileName = utils.normalizePath(input[i]);
+                const fileName = this.host.getCanonicalFileName(input[i]);
                 this.emitFile(output[fileName], currentDirectory);
             }
         }
@@ -130,8 +132,6 @@ class ProjectCompiler {
         }
     }
     emitFile({ file, jsFileName, dtsFileName, dtsMapFileName, jsContent, dtsContent, dtsMapContent, jsMapContent }, currentDirectory) {
-        if (!jsFileName)
-            return;
         let base;
         let baseDeclarations;
         if (file) {
@@ -153,7 +153,9 @@ class ProjectCompiler {
         else {
             base = this.project.directory;
             baseDeclarations = base;
-            jsFileName = path.resolve(base, jsFileName);
+            if (jsFileName !== undefined) {
+                jsFileName = path.resolve(base, jsFileName);
+            }
             if (dtsFileName !== undefined) {
                 dtsFileName = path.resolve(base, dtsFileName);
             }
