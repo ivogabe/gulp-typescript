@@ -6,8 +6,11 @@ function forwardSlashes(fileName) {
     return fileName.replace(/\\/g, '/');
 }
 exports.forwardSlashes = forwardSlashes;
-function normalizePath(pathString) {
-    return path.normalize(pathString).toLowerCase();
+function normalizePath(caseSensitive, pathString) {
+    const normalized = path.normalize(pathString);
+    if (!caseSensitive)
+        return normalized.toLowerCase();
+    return normalized;
 }
 exports.normalizePath = normalizePath;
 /**

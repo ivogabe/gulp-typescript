@@ -39,10 +39,10 @@ class Host {
         return '\n';
     }
     useCaseSensitiveFileNames() {
-        return false;
+        return this.fallback.useCaseSensitiveFileNames();
     }
     getCanonicalFileName(filename) {
-        return utils.normalizePath(filename);
+        return utils.normalizePath(this.useCaseSensitiveFileNames(), filename);
     }
     getDefaultLibFileName(options) {
         return this.fallback.getDefaultLibFileName(options);
