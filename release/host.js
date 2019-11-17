@@ -24,12 +24,17 @@ class Host {
             let sourceFile = this.input.getFile(fileName);
             if (sourceFile)
                 return sourceFile.ts;
-            return this.fallback.getSourceFile(fileName, languageVersion, onError);
+            const file = this.fallback.getSourceFile(fileName, languageVersion, onError);
+            if (file === undefined)
+                return undefined;
+            file.version = this.input.versionString;
+            return file;
         };
         this.realpath = (path) => this.fallback.realpath(path);
         this.getDirectories = (path) => this.fallback.getDirectories(path);
         this.directoryExists = (path) => this.fallback.directoryExists(path);
         this.readDirectory = (rootDir, extensions, excludes, includes, depth) => this.fallback.readDirectory(rootDir, extensions, excludes, includes, depth);
+        this.createHash = (data) => this.fallback.createHash(data);
         this.typescript = typescript;
         this.fallback = typescript.createCompilerHost(options);
         this.currentDirectory = currentDirectory;
@@ -39,10 +44,10 @@ class Host {
         return '\n';
     }
     useCaseSensitiveFileNames() {
-        return false;
+        return this.fallback.useCaseSensitiveFileNames();
     }
     getCanonicalFileName(filename) {
-        return utils.normalizePath(filename);
+        return utils.normalizePath(this.useCaseSensitiveFileNames(), filename);
     }
     getDefaultLibFileName(options) {
         return this.fallback.getDefaultLibFileName(options);
