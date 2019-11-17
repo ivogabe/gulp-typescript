@@ -15,7 +15,7 @@ export declare class ProjectCompiler implements ICompiler {
     finalTransformers: FinalTransformers;
     host: Host;
     project: ProjectInfo;
-    program: ts.Program;
+    program: ts.BuilderProgram;
     private hasSourceMap;
     prepare(project: ProjectInfo, finalTransformers?: FinalTransformers): void;
     inputFile(file: File): void;

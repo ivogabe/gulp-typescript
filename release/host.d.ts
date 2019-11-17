@@ -20,4 +20,5 @@ export declare class Host implements ts.CompilerHost {
     getDirectories: (path: string) => string[];
     directoryExists: (path: string) => boolean;
     readDirectory: (rootDir: string, extensions: string[], excludes: string[], includes: string[], depth?: number) => string[];
+    createHash: (data: string) => string;
 }

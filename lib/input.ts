@@ -156,10 +156,11 @@ export class FileCache {
 	current: FileDictionary;
 	options: ts.CompilerOptions;
 	caseSensitive: boolean;
-	noParse: boolean = false; // true when using a file based compiler.
+	noParse = false; // true when using a file based compiler.
 
 	typescript: typeof ts;
-	version: number = 0;
+	version = 0;
+	versionString = "0";
 
 	constructor(typescript: typeof ts, options: ts.CompilerOptions, caseSensitive: boolean) {
 		this.typescript = typescript;
@@ -177,6 +178,7 @@ export class FileCache {
 
 	reset() {
 		this.version++;
+		this.versionString = this.version.toString();
 		this.previous = this.current;
 		this.createDictionary();
 	}
@@ -196,6 +198,7 @@ export class FileCache {
 			}
 		}
 		file.ts = this.typescript.createSourceFile(file.fileNameOriginal, file.content, this.options.target);
+		(file.ts as any).version = this.versionString;
 	}
 
 	getFile(name: string) {

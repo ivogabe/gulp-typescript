@@ -26,16 +26,17 @@ export interface File {
     ts?: ts.SourceFile;
 }
 export declare module File {
-    function fromContent(fileName: string, content: string): File;
-    function fromGulp(file: VinylFile): File;
+    function fromContent(caseSensitive: boolean, fileName: string, content: string): File;
+    function fromGulp(caseSensitive: boolean, file: VinylFile): File;
     function equal(a: File, b: File): boolean;
     function getChangeState(previous: File, current: File): FileChangeState;
 }
 export declare class FileDictionary {
     files: utils.Map<File>;
     firstSourceFile: File;
+    caseSensitive: boolean;
     typescript: typeof ts;
-    constructor(typescript: typeof ts);
+    constructor(caseSensitive: boolean, typescript: typeof ts);
     addGulp(gFile: VinylFile): File;
     addContent(fileName: string, content: string): File;
     private addFile;
@@ -50,10 +51,12 @@ export declare class FileCache {
     previous: FileDictionary;
     current: FileDictionary;
     options: ts.CompilerOptions;
+    caseSensitive: boolean;
     noParse: boolean;
     typescript: typeof ts;
     version: number;
-    constructor(typescript: typeof ts, options: ts.CompilerOptions);
+    versionString: string;
+    constructor(typescript: typeof ts, options: ts.CompilerOptions, caseSensitive: boolean);
     addGulp(gFile: VinylFile): File;
     addContent(fileName: string, content: string): File;
     reset(): void;

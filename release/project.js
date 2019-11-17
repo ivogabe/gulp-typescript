@@ -4,8 +4,10 @@ var __rest = (this && this.__rest) || function (s, e) {
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
         t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19,7 +21,8 @@ const input_1 = require("./input");
 const output_1 = require("./output");
 const compiler_1 = require("./compiler");
 function setupProject(projectDirectory, configFileName, rawConfig, config, options, projectReferences, typescript, finalTransformers) {
-    const input = new input_1.FileCache(typescript, options);
+    const caseSensitive = typescript.createCompilerHost(options).useCaseSensitiveFileNames();
+    const input = new input_1.FileCache(typescript, options, caseSensitive);
     const compiler = options.isolatedModules ? new compiler_1.FileCompiler() : new compiler_1.ProjectCompiler();
     let running = false;
     if (options.isolatedModules) {

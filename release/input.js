@@ -17,21 +17,21 @@ var FileKind;
 })(FileKind = exports.FileKind || (exports.FileKind = {}));
 var File;
 (function (File) {
-    function fromContent(fileName, content) {
+    function fromContent(caseSensitive, fileName, content) {
         let kind = FileKind.Source;
         if (path.extname(fileName).toLowerCase() === 'json')
             kind = FileKind.Config;
         return {
-            fileNameNormalized: utils.normalizePath(fileName),
+            fileNameNormalized: utils.normalizePath(caseSensitive, fileName),
             fileNameOriginal: fileName,
             content,
             kind
         };
     }
     File.fromContent = fromContent;
-    function fromGulp(file) {
+    function fromGulp(caseSensitive, file) {
         let str = file.contents.toString('utf8');
-        let data = fromContent(file.path, str);
+        let data = fromContent(caseSensitive, file.path, str);
         data.gulp = file;
         return data;
     }
@@ -58,16 +58,17 @@ var File;
     File.getChangeState = getChangeState;
 })(File = exports.File || (exports.File = {}));
 class FileDictionary {
-    constructor(typescript) {
+    constructor(caseSensitive, typescript) {
         this.files = {};
         this.firstSourceFile = undefined;
+        this.caseSensitive = caseSensitive;
         this.typescript = typescript;
     }
     addGulp(gFile) {
-        return this.addFile(File.fromGulp(gFile));
+        return this.addFile(File.fromGulp(this.caseSensitive, gFile));
     }
     addContent(fileName, content) {
-        return this.addFile(File.fromContent(fileName, content));
+        return this.addFile(File.fromContent(this.caseSensitive, fileName, content));
     }
     addFile(file) {
         if (file.kind === FileKind.Source) {
@@ -79,7 +80,7 @@ class FileDictionary {
         return file;
     }
     getFile(name) {
-        return this.files[utils.normalizePath(name)];
+        return this.files[utils.normalizePath(this.caseSensitive, name)];
     }
     getFileNames(onlyGulp = false) {
         const fileNames = [];
@@ -107,7 +108,7 @@ class FileDictionary {
     get commonBasePath() {
         const fileNames = this.getSourceFileNames(true);
         return utils.getCommonBasePathOfArray(fileNames.map(fileName => {
-            const file = this.files[utils.normalizePath(fileName)];
+            const file = this.files[utils.normalizePath(this.caseSensitive, fileName)];
             return path.resolve(process.cwd(), file.gulp.base);
         }));
     }
@@ -117,7 +118,7 @@ class FileDictionary {
     get commonSourceDirectory() {
         const fileNames = this.getSourceFileNames();
         return utils.getCommonBasePathOfArray(fileNames.map(fileName => {
-            const file = this.files[utils.normalizePath(fileName)];
+            const file = this.files[utils.normalizePath(this.caseSensitive, fileName)];
             return path.dirname(file.fileNameNormalized);
         }));
     }
@@ -127,12 +128,14 @@ class FileDictionary {
 }
 exports.FileDictionary = FileDictionary;
 class FileCache {
-    constructor(typescript, options) {
+    constructor(typescript, options, caseSensitive) {
         this.previous = undefined;
         this.noParse = false; // true when using a file based compiler.
         this.version = 0;
+        this.versionString = "0";
         this.typescript = typescript;
         this.options = options;
+        this.caseSensitive = caseSensitive;
         this.createDictionary();
     }
     addGulp(gFile) {
@@ -143,11 +146,12 @@ class FileCache {
     }
     reset() {
         this.version++;
+        this.versionString = this.version.toString();
         this.previous = this.current;
         this.createDictionary();
     }
     createDictionary() {
-        this.current = new FileDictionary(this.typescript);
+        this.current = new FileDictionary(this.caseSensitive, this.typescript);
         this.current.initTypeScriptSourceFile = (file) => this.initTypeScriptSourceFile(file);
     }
     initTypeScriptSourceFile(file) {
@@ -161,6 +165,7 @@ class FileCache {
             }
         }
         file.ts = this.typescript.createSourceFile(file.fileNameOriginal, file.content, this.options.target);
+        file.ts.version = this.versionString;
     }
     getFile(name) {
         return this.current.getFile(name);
