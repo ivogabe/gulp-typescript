@@ -33,7 +33,7 @@ export class ProjectCompiler implements ICompiler {
 	finalTransformers: FinalTransformers;
 	host: Host;
 	project: ProjectInfo;
-	program: ts.EmitAndSemanticDiagnosticsBuilderProgram;
+	program: ts.BuilderProgram;
 	private hasSourceMap: boolean;
 
 	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers) {
@@ -79,7 +79,8 @@ export class ProjectCompiler implements ICompiler {
 				rootNames: rootFilenames,
 				options: this.project.options,
 				projectReferences: this.project.projectReferences,
-				host: this.host
+				host: this.host,
+				createProgram: this.project.typescript.createAbstractBuilder
 			});
 		}
 
