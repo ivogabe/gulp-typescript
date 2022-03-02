@@ -101,6 +101,8 @@ class ProjectCompiler {
         switch (extension) {
             case 'js':
             case 'jsx':
+            case 'mjs':
+            case 'cjs':
                 file.jsFileName = fileName;
                 file.jsContent = content;
                 break;
