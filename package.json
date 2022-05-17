@@ -66,10 +66,10 @@
   "dependencies": {
     "ansi-colors": "^4.1.1",
     "plugin-error": "^1.0.1",
-    "source-map": "^0.7.3",
+    "source-map": "^0.8.0-beta.0",
     "through2": "^3.0.1",
-    "vinyl-fs": "^3.0.3",
-    "vinyl": "^2.2.0"
+    "vinyl": "^2.2.0",
+    "vinyl-fs": "^3.0.3"
   },
   "devDependencies": {
     "@types/node": "12.7.5",
