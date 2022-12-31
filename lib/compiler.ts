@@ -155,6 +155,8 @@ export class ProjectCompiler implements ICompiler {
 		const [, extension] = utils.splitExtension(fileName, ['d.ts', 'd.ts.map']);
 		switch (extension) {
 			case 'js':
+			case 'mjs':
+			case 'cjs':
 			case 'jsx':
 				file.jsFileName = fileName;
 				file.jsContent = content;
