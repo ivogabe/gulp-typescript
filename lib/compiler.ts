@@ -34,6 +34,7 @@ export class ProjectCompiler implements ICompiler {
 	host: Host;
 	project: ProjectInfo;
 	program: ts.Program;
+	private rootDir: string|undefined = undefined;
 	private hasSourceMap: boolean;
 
 	prepare(project: ProjectInfo, finalTransformers?: FinalTransformers) {
@@ -54,8 +55,12 @@ export class ProjectCompiler implements ICompiler {
 
 		const rootFilenames: string[] = this.project.input.getFileNames(true);
 		if (!this.project.singleOutput) {
-			if (this.project.options.rootDir === undefined) {
-				this.project.options.rootDir = utils.getCommonBasePathOfArray(
+			this.rootDir = this.project.options.rootDir;
+			if (this.rootDir === undefined && this.project.options.rootDirs !== undefined) {
+				this.rootDir = this.project.options.rootDirs[0];
+			}
+			if (this.rootDir === undefined) {
+				this.rootDir = utils.getCommonBasePathOfArray(
 					rootFilenames.filter(fileName => fileName.substr(-5) !== ".d.ts")
 						.map(fileName => this.project.input.getFile(fileName).gulp.base)
 				);
@@ -200,12 +205,12 @@ export class ProjectCompiler implements ICompiler {
 		if (file) {
 			base = file.gulp.base;
 			if (this.project.options.outDir) {
-				const baseRelative = path.relative(this.project.options.rootDir, base);
+				const baseRelative = path.relative(this.rootDir, base);
 				base = path.join(this.project.options.outDir, baseRelative);
 			}
 			baseDeclarations = base;
 			if (this.project.options.declarationDir) {
-				const baseRelative = path.relative(this.project.options.rootDir, file.gulp.base);
+				const baseRelative = path.relative(this.rootDir, file.gulp.base);
 				baseDeclarations = path.join(this.project.options.declarationDir, baseRelative);
 			}
 		} else if (this.project.options.outFile) {
